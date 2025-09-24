@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { MyAxis } from './MyAxis.js';
 import { MyTable } from './MyTable.js';
+import { MyWalls } from './MyWalls.js';
 
 /**
  *  This class contains the contents of out application
@@ -25,7 +26,12 @@ class MyContents  {
         // table related attributes
         this.table = null
         this.tableEnabled = true
-        this.lastTable
+        this.lastTableEnabled = null
+
+        // walls related attributes
+        this.walls = null
+        this.wallsEnabled = true
+        this.lastWallsEnabled = null
 
         // plane related attributes
         this.diffusePlaneColor = "#00ffff"
@@ -69,6 +75,11 @@ class MyContents  {
         if (this.table === null) { 
             this.table = new MyTable(this)
             this.app.scene.add(this.table)
+        }
+
+        if (this.walls === null) {
+            this.walls = new MyWalls(this)
+            this.app.scene.add(this.walls)
         }
 
         // add a point light on top of the model
@@ -163,6 +174,18 @@ class MyContents  {
         }
     }
 
+    updateWallsIfRequired() {
+        if (this.wallsEnabled !== this.lastWallsEnabled) {
+            this.lastWallsEnabled = this.wallsEnabled
+            if (this.wallsEnabled) {
+                this.app.scene.add(this.walls)
+            }
+            else {
+                this.app.scene.remove(this.walls)
+            }
+        }
+    }
+
     /**
      * updates the contents
      * this method is called from the render method of the app
@@ -173,6 +196,8 @@ class MyContents  {
         this.updateBoxIfRequired()
 
         this.updateTableIfRequired()
+
+        this.updateWallsIfRequired()
 
         // sets the box mesh position based on the displacement vector
         this.boxMesh.position.x = this.boxDisplacement.x

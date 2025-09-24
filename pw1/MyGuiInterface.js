@@ -42,6 +42,10 @@ class MyGuiInterface  {
         const tableFolder = this.datgui.addFolder( 'Table' );
         tableFolder.add(this.contents, 'tableEnabled', true).name("enabled");
         tableFolder.open()
+
+        const wallsFolder = this.datgui.addFolder( 'Walls' );
+        wallsFolder.add(this.contents, 'wallsEnabled', true).name("enabled");
+        wallsFolder.open()
         
         const data = {  
             'diffuse color': this.contents.diffusePlaneColor,
