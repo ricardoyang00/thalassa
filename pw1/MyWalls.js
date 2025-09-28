@@ -11,24 +11,24 @@ class MyWalls extends THREE.Object3D {
             side: THREE.DoubleSide
         })
 
-        let wallGeometry = new THREE.PlaneGeometry( 4, 2 );
+        let wallGeometry = new THREE.PlaneGeometry( 10, 2 );
         
         this.frontWall = new THREE.Mesh( wallGeometry, this.wallMaterial );
-        this.frontWall.position.set(0, 1, -2);
+        this.frontWall.position.set(0, 1, -5);
         this.add(this.frontWall);
         
         this.backWall = new THREE.Mesh( wallGeometry, this.wallMaterial );
-        this.backWall.position.set(0, 1, 2);
+        this.backWall.position.set(0, 1, 5);
         this.backWall.rotation.y = Math.PI;
         this.add(this.backWall);
         
         this.leftWall = new THREE.Mesh( wallGeometry, this.wallMaterial );
-        this.leftWall.position.set(-2, 1, 0);
+        this.leftWall.position.set(-5, 1, 0);
         this.leftWall.rotation.y = Math.PI / 2;
         this.add(this.leftWall);
         
         this.rightWall = new THREE.Mesh( wallGeometry, this.wallMaterial );
-        this.rightWall.position.set(2, 1, 0);
+        this.rightWall.position.set(5, 1, 0);
         this.rightWall.rotation.y = -Math.PI / 2;
         this.add(this.rightWall);
     }

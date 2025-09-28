@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MyAxis } from './MyAxis.js';
 import { MyTable } from './MyTable.js';
 import { MyWalls } from './MyWalls.js';
+import { MyCompoundObj } from './MyCompoundObj.js';
 
 /**
  *  This class contains the contents of out application
@@ -32,6 +33,11 @@ class MyContents  {
         this.walls = null
         this.wallsEnabled = true
         this.lastWallsEnabled = null
+
+        // compound obj related attributes
+        this.obj = null
+        this.objEnabled = true
+        this.lastObjEnabled = null
 
         // plane related attributes
         this.diffusePlaneColor = "#00ffff"
@@ -80,6 +86,16 @@ class MyContents  {
         if (this.walls === null) {
             this.walls = new MyWalls(this)
             this.app.scene.add(this.walls)
+        }
+
+        if (this.obj === null) {
+            this.obj = new MyCompoundObj(this)
+            
+            this.obj.position.set(-0.5, 1.03, 0)
+            this.obj.scale.set(0.2, 0.2, 0.2)
+            this.obj.rotation.y = Math.PI / 4
+            
+            this.app.scene.add(this.obj)
         }
 
         // add a point light on top of the model
@@ -186,6 +202,18 @@ class MyContents  {
         }
     }
 
+    updateObjIfRequired() {
+        if (this.objEnabled !== this.lastObjEnabled) {
+            this.lastObjEnabled = this.objEnabled
+            if (this.objEnabled) {
+                this.app.scene.add(this.obj)
+            }
+            else {
+                this.app.scene.remove(this.obj)
+            }
+        }
+    }
+    
     /**
      * updates the contents
      * this method is called from the render method of the app
@@ -198,6 +226,8 @@ class MyContents  {
         this.updateTableIfRequired()
 
         this.updateWallsIfRequired()
+
+        this.updateObjIfRequired()
 
         // sets the box mesh position based on the displacement vector
         this.boxMesh.position.x = this.boxDisplacement.x

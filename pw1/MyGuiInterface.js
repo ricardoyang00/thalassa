@@ -47,6 +47,10 @@ class MyGuiInterface  {
         wallsFolder.add(this.contents, 'wallsEnabled', true).name("enabled");
         wallsFolder.open()
         
+        const objFolder = this.datgui.addFolder( 'Objects' );
+        objFolder.add(this.contents, 'objEnabled', true).name("enabled");
+        objFolder.open()
+        
         const data = {  
             'diffuse color': this.contents.diffusePlaneColor,
             'specular color': this.contents.specularPlaneColor,
