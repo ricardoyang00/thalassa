@@ -50,7 +50,7 @@ class MyGuiInterface  {
         const objFolder = this.datgui.addFolder( 'Objects' );
         objFolder.add(this.contents, 'objEnabled', true).name("enabled");
         objFolder.open()
-        
+
         const data = {  
             'diffuse color': this.contents.diffusePlaneColor,
             'specular color': this.contents.specularPlaneColor,
@@ -69,6 +69,24 @@ class MyGuiInterface  {
         // note that we are using a property from the app 
         cameraFolder.add(this.app.activeCamera.position, 'x', 0, 10).name("x coord")
         cameraFolder.open()
+
+        // adds a folder to the gui interface for the spot light
+        const spotLightFolder = this.datgui.addFolder('Spotlight');
+        const spotLightData = {
+            'color': this.contents.spotLightColor
+        };
+
+        spotLightFolder.addColor(spotLightData, 'color').onChange((value) => { this.contents.updateSpotLightColor(value)});
+        spotLightFolder.add(this.contents, 'spotLightIntensity', 0, 100).name("intensity").onChange((value) => {this.contents.updateSpotLightIntensity(value)});
+        spotLightFolder.add(this.contents, 'spotLightDistance', 0, 100).name("distance").onChange((value) => {this.contents.updateSpotLightDistance(value)});
+        spotLightFolder.add(this.contents, 'spotLightAngle', 0, 90).name("angle (degrees)").onChange((value) => {this.contents.updateSpotLightAngle(value)});        
+        spotLightFolder.add(this.contents, 'spotLightPenumbra', 0, 1).name("penumbra").onChange((value) => {this.contents.updateSpotLightPenumbra(value)});
+        spotLightFolder.add(this.contents, 'spotLightDecay', 0, 2).name("decay").onChange((value) => {this.contents.updateSpotLightDecay(value)});
+        spotLightFolder.add(this.contents, 'spotLightPositionY', 0, 20).name("position Y").onChange((value) => {this.contents.updateSpotLightPositionY(value)});
+        spotLightFolder.add(this.contents, 'spotLightTargetY', -5, 5).name("target Y").onChange((value) => {this.contents.updateSpotLightTargetY(value)});
+        spotLightFolder.add(this.contents, 'spotLightVisible').name("visible").onChange((value) => {this.contents.updateSpotLightVisible(value)});
+
+        spotLightFolder.open();
     }
 }
 
