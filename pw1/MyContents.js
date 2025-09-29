@@ -3,6 +3,7 @@ import { MyAxis } from './MyAxis.js';
 import { MyTable } from './MyTable.js';
 import { MyWalls } from './MyWalls.js';
 import { MyCompoundObj } from './MyCompoundObj.js';
+import { MyShelf } from './MyShelf.js';
 
 /**
  *  This class contains the contents of out application
@@ -56,7 +57,6 @@ class MyContents  {
         this.diffusePlaneColor = "#ff0000"
         this.specularPlaneColor = "#808080"
         this.planeShininess = 100
-        
 
         const floor_texture = new THREE.TextureLoader().load('textures/floor.png');
         floor_texture.wrapS = THREE.RepeatWrapping;
@@ -65,7 +65,9 @@ class MyContents  {
 
         this.planeMaterial = new THREE.MeshPhongMaterial({ color: this.diffusePlaneColor, 
             specular: this.specularPlaneColor, emissive: "#000000", shininess: this.planeShininess, map: floor_texture })
-    
+
+        // shelf related attributes
+        this.shelf = null
     }
 
     /**
@@ -126,6 +128,14 @@ class MyContents  {
             this.obj.rotation.y = Math.PI / 4
             
             this.app.scene.add(this.obj)
+        }
+
+        if (this.shelf === null) {
+            this.shelf = new MyShelf(this)
+
+            this.shelf.rotation.y = Math.PI / 2
+            this.shelf.position.set(-4.6, 0, -4.1)
+            this.app.scene.add(this.shelf)
         }
 
         // add a point light on top of the model
