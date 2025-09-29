@@ -53,11 +53,19 @@ class MyContents  {
         this.spotLightVisible = true
 
         // plane related attributes
-        this.diffusePlaneColor = "#808080"
+        this.diffusePlaneColor = "#ff0000"
         this.specularPlaneColor = "#808080"
         this.planeShininess = 100
+        
+
+        const floor_texture = new THREE.TextureLoader().load('textures/floor.png');
+        floor_texture.wrapS = THREE.RepeatWrapping;
+        floor_texture.wrapT = THREE.RepeatWrapping;
+        floor_texture.repeat.set(10, 10);
+
         this.planeMaterial = new THREE.MeshPhongMaterial({ color: this.diffusePlaneColor, 
-            specular: this.specularPlaneColor, emissive: "#000000", shininess: this.planeShininess })
+            specular: this.specularPlaneColor, emissive: "#000000", shininess: this.planeShininess, map: floor_texture })
+    
     }
 
     /**
@@ -92,7 +100,16 @@ class MyContents  {
         }
 
         if (this.table === null) { 
-            this.table = new MyTable(this)
+            //const tableMaterial = new THREE.MeshBasicMaterial( {color: 0x563232} );
+
+            const uvTexture = new THREE.TextureLoader().load('textures/uv_grid.jpg');
+            uvTexture.wrapS = THREE.MirroredRepeatWrapping;
+            uvTexture.wrapT = THREE.MirroredRepeatWrapping;
+            uvTexture.repeat.set(3, 4);
+            const uvMaterial = new THREE.MeshPhongMaterial({ color: "#00ff00", 
+                specular: "#00ff00", emissive: "#000000", shininess: this.planeShininess, map: uvTexture })
+
+            this.table = new MyTable(this, uvMaterial)
             this.app.scene.add(this.table)
         }
 

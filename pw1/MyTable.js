@@ -2,12 +2,12 @@ import * as THREE from 'three';
 
 class MyTable extends THREE.Object3D {
 
-    constructor(app) {
+    constructor(app, tableMaterial) {
         super();
         this.app = app;
         this.type = 'Group';
 
-        const tableMaterial = new THREE.MeshBasicMaterial( {color: 0x563232} );
+        //const tableMaterial = new THREE.MeshBasicMaterial( {color: 0x563232} );
 
         const legGeometry = new THREE.CylinderGeometry( 0.05, 0.05, 1, 32);
         

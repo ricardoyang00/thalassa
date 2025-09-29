@@ -83,10 +83,25 @@ class MyGuiInterface  {
         spotLightFolder.add(this.contents, 'spotLightPenumbra', 0, 1).name("penumbra").onChange((value) => {this.contents.updateSpotLightPenumbra(value)});
         spotLightFolder.add(this.contents, 'spotLightDecay', 0, 2).name("decay").onChange((value) => {this.contents.updateSpotLightDecay(value)});
         spotLightFolder.add(this.contents, 'spotLightPositionY', 0, 20).name("position Y").onChange((value) => {this.contents.updateSpotLightPositionY(value)});
-        spotLightFolder.add(this.contents, 'spotLightTargetY', -5, 5).name("target Y").onChange((value) => {this.contents.updateSpotLightTargetY(value)});
+        spotLightFolder.add(this.contents, 'spotLightTargetY', -10, 7.5).name("target Y").onChange((value) => {this.contents.updateSpotLightTargetY(value)});
         spotLightFolder.add(this.contents, 'spotLightVisible').name("visible").onChange((value) => {this.contents.updateSpotLightVisible(value)});
 
         spotLightFolder.open();
+
+
+        // adds a folder to the gui interface for the wrap mode
+        const wrapFolder = this.datgui.addFolder('Wrap mode');
+        wrapFolder.add(
+            { mode: 'ClampToEdge' },
+            'mode',
+            { 'Clamp to Edge': 'ClampToEdge', 'Repeat': 'Repeat' }
+        ).name('Wall Wrap Mode').onChange((value) => {
+            if (this.contents && this.contents.walls && this.contents.walls.setWrapMode) {
+                this.contents.walls.setWrapMode(value);
+            }
+        });
+        wrapFolder.open();
+        
     }
 }
 
