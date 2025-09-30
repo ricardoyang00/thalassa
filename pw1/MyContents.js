@@ -8,6 +8,7 @@ import { MyGuitar } from './MyGuitar.js';
 import { MyGuitarStand } from './MyGuitarStand.js';
 import { MyLightBar } from './MyLightBar.js';
 import { MySofa } from './MySofa.js';
+import { MyPiano } from './MyPiano.js';
 
 /**
  *  This class contains the contents of out application
@@ -82,6 +83,7 @@ class MyContents  {
         this.shelf = null
         this.guitar = null
         this.guitarStand = null
+        this.piano = null
     }
 
     /**
@@ -167,6 +169,14 @@ class MyContents  {
             this.guitarStand.position.set(3.5, 0, -4)
             this.guitarStand.rotation.y = -Math.PI / 4
             this.app.scene.add(this.guitarStand)
+        }
+
+        if (this.piano === null) {
+            this.piano = new MyPiano(this)
+            this.piano.scale.set(0.8, 0.8, 0.8)
+            this.piano.rotation.z = Math.PI / 12 * 5
+            this.piano.position.set(4.75, 0.8, -3.6)
+            this.app.scene.add(this.piano)
         }
             
         // sofa
