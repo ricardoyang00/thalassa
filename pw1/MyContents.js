@@ -4,6 +4,8 @@ import { MyTable } from './MyTable.js';
 import { MyWalls } from './MyWalls.js';
 import { MyCompoundObj } from './MyCompoundObj.js';
 import { MyShelf } from './MyShelf.js';
+import { MyGuitar } from './MyGuitar.js';
+import { MyGuitarStand } from './MyGuitarStand.js';
 
 /**
  *  This class contains the contents of out application
@@ -66,8 +68,9 @@ class MyContents  {
         this.planeMaterial = new THREE.MeshPhongMaterial({ color: this.diffusePlaneColor, 
             specular: this.specularPlaneColor, emissive: "#000000", shininess: this.planeShininess, map: floor_texture })
 
-        // shelf related attributes
         this.shelf = null
+        this.guitar = null
+        this.guitarStand = null
     }
 
     /**
@@ -98,7 +101,7 @@ class MyContents  {
         if (this.axis === null) {
             // create and attach the axis to the scene
             this.axis = new MyAxis(this)
-            this.app.scene.add(this.axis)
+            //this.app.scene.add(this.axis)
         }
 
         if (this.table === null) { 
@@ -108,10 +111,11 @@ class MyContents  {
             uvTexture.wrapS = THREE.MirroredRepeatWrapping;
             uvTexture.wrapT = THREE.MirroredRepeatWrapping;
             uvTexture.repeat.set(3, 4);
-            const uvMaterial = new THREE.MeshPhongMaterial({ color: "#00ff00", 
+            const uvMaterial = new THREE.MeshBasicMaterial({ color: "#00ff00", 
                 specular: "#00ff00", emissive: "#000000", shininess: this.planeShininess, map: uvTexture })
 
             this.table = new MyTable(this, uvMaterial)
+            this.table.position.set(0, 0, -4)
             this.app.scene.add(this.table)
         }
 
@@ -123,7 +127,7 @@ class MyContents  {
         if (this.obj === null) {
             this.obj = new MyCompoundObj(this)
             
-            this.obj.position.set(-0.5, 1.03, 0)
+            this.obj.position.set(-0.5, 1.03, -4)
             this.obj.scale.set(0.2, 0.2, 0.2)
             this.obj.rotation.y = Math.PI / 4
             
@@ -132,10 +136,26 @@ class MyContents  {
 
         if (this.shelf === null) {
             this.shelf = new MyShelf(this)
-
             this.shelf.rotation.y = Math.PI / 2
             this.shelf.position.set(-4.6, 0, -4.1)
             this.app.scene.add(this.shelf)
+        }
+
+        if (this.guitar === null) {
+            this.guitar = new MyGuitar(this)
+            this.guitar.rotation.y = - Math.PI / 4
+            this.guitar.rotateX(- Math.PI / 8)
+            this.guitar.scale.set(0.3, 0.3, 0.3)
+            this.guitar.position.set(3.5, 0.83, -4)
+            this.app.scene.add(this.guitar)
+        }
+
+        if (this.guitarStand === null) {
+            this.guitarStand = new MyGuitarStand(this)
+            this.guitarStand.scale.set(1.5, 1.5, 1.5)
+            this.guitarStand.position.set(3.5, 0, -4)
+            this.guitarStand.rotation.y = -Math.PI / 4
+            this.app.scene.add(this.guitarStand)
         }
 
         // add a point light on top of the model
