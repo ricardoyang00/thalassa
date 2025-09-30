@@ -3,6 +3,7 @@ import { MyAxis } from './MyAxis.js';
 import { MyTable } from './MyTable.js';
 import { MyWalls } from './MyWalls.js';
 import { MyCompoundObj } from './MyCompoundObj.js';
+import { MyLightBar } from './MyLightBar.js';
 
 /**
  *  This class contains the contents of out application
@@ -57,6 +58,10 @@ class MyContents  {
         this.specularPlaneColor = "#808080"
         this.planeShininess = 100
         
+
+        // light bar
+        this.lightBars = []
+
 
         const floor_texture = new THREE.TextureLoader().load('textures/floor.png');
         floor_texture.wrapS = THREE.RepeatWrapping;
@@ -126,6 +131,38 @@ class MyContents  {
             this.obj.rotation.y = Math.PI / 4
             
             this.app.scene.add(this.obj)
+        }
+
+        // light bars
+        if (this.lightBars.length === 0) {
+            const barConfigs = [
+                { x: 0, y: 0.05, z: -5, rotY: 0 },
+                { x: 0, y: 0.05, z: 5,  rotY: 0 },
+                { x: -5, y: 0.05, z: 0, rotY: Math.PI / 2 },
+                { x: 5,  y: 0.05, z: 0, rotY: Math.PI / 2 },
+                { x: 0, y: 4.5, z: -5, rotY: 0 },
+                { x: 0, y: 4.5, z: 5,  rotY: 0 },
+                { x: -5, y: 4.5, z: 0, rotY: Math.PI / 2 },
+                { x: 5,  y: 4.5, z: 0, rotY: Math.PI / 2 },
+            ];
+
+            for (const cfg of barConfigs) {
+                const bar = new MyLightBar(this, {
+                    length: 10,
+                    color: "#ff00f2",
+                    intensity: 5,
+                    width: 0.1,
+                    height: 0.1,
+                });
+
+                bar.position.set(cfg.x, cfg.y, cfg.z);
+
+                // apply rotation
+                bar.rotation.set(0, cfg.rotY, 0);
+
+                this.app.scene.add(bar);
+                this.lightBars.push(bar);
+            }
         }
 
         // add a point light on top of the model
