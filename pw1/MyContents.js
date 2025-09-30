@@ -6,6 +6,8 @@ import { MyCompoundObj } from './MyCompoundObj.js';
 import { MyShelf } from './MyShelf.js';
 import { MyGuitar } from './MyGuitar.js';
 import { MyGuitarStand } from './MyGuitarStand.js';
+import { MyLightBar } from './MyLightBar.js';
+import { MySofa } from './MySofa.js';
 
 /**
  *  This class contains the contents of out application
@@ -59,6 +61,15 @@ class MyContents  {
         this.diffusePlaneColor = "#ff0000"
         this.specularPlaneColor = "#808080"
         this.planeShininess = 100
+
+        // light bar
+        this.lightBars = []
+
+        // sofa
+        this.sofa = null
+        this.sofaEnabled = true
+        this.lastSofaEnabled = null
+
 
         const floor_texture = new THREE.TextureLoader().load('textures/floor.png');
         floor_texture.wrapS = THREE.RepeatWrapping;
@@ -156,6 +167,47 @@ class MyContents  {
             this.guitarStand.position.set(3.5, 0, -4)
             this.guitarStand.rotation.y = -Math.PI / 4
             this.app.scene.add(this.guitarStand)
+        }
+            
+        // sofa
+        if (this.sofa === null) {
+            this.sofa = new MySofa(this, { width: 4.5, depth: 1.6, height: 1.1, cushionHeight: 0.45, color: 0x0b0b0b, cushionColor: 0x1a1a1a });
+            // position sofa near the table, slightly forward
+            this.sofa.position.set(3.8, 0.05, 2.5);
+            this.sofa.rotation.y = Math.PI;
+            this.app.scene.add(this.sofa);
+        }
+
+        // light bars
+        if (this.lightBars.length === 0) {
+            const barConfigs = [
+                { x: 0, y: 0.05, z: -5, rotY: 0 },
+                { x: 0, y: 0.05, z: 5,  rotY: 0 },
+                { x: -5, y: 0.05, z: 0, rotY: Math.PI / 2 },
+                { x: 5,  y: 0.05, z: 0, rotY: Math.PI / 2 },
+                { x: 0, y: 4.5, z: -5, rotY: 0 },
+                { x: 0, y: 4.5, z: 5,  rotY: 0 },
+                { x: -5, y: 4.5, z: 0, rotY: Math.PI / 2 },
+                { x: 5,  y: 4.5, z: 0, rotY: Math.PI / 2 },
+            ];
+
+            for (const cfg of barConfigs) {
+                const bar = new MyLightBar(this, {
+                    length: 10,
+                    color: "#ff00f2",
+                    intensity: 5,
+                    width: 0.1,
+                    height: 0.1,
+                });
+
+                bar.position.set(cfg.x, cfg.y, cfg.z);
+
+                // apply rotation
+                bar.rotation.set(0, cfg.rotY, 0);
+
+                this.app.scene.add(bar);
+                this.lightBars.push(bar);
+            }
         }
 
         // add a point light on top of the model
@@ -384,6 +436,18 @@ class MyContents  {
             }
         }
     }
+
+    updateSofaIfRequired() {
+        if (this.sofaEnabled !== this.lastSofaEnabled) {
+            this.lastSofaEnabled = this.sofaEnabled
+            if (this.sofaEnabled) {
+                this.app.scene.add(this.sofa)
+            }
+            else {
+                this.app.scene.remove(this.sofa)
+            }
+        }
+    }
     
     /**
      * updates the contents
@@ -400,6 +464,8 @@ class MyContents  {
 
         this.updateObjIfRequired()
 
+        this.updateSofaIfRequired()
+
         // sets the box mesh position based on the displacement vector
         this.boxMesh.position.x = this.boxDisplacement.x
         this.boxMesh.position.y = this.boxDisplacement.y
@@ -408,5 +474,6 @@ class MyContents  {
     }
 
 }
+
 
 export { MyContents };
