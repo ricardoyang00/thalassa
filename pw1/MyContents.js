@@ -4,6 +4,7 @@ import { MyTable } from './MyTable.js';
 import { MyWalls } from './MyWalls.js';
 import { MyCompoundObj } from './MyCompoundObj.js';
 import { MyLightBar } from './MyLightBar.js';
+import { MySofa } from './MySofa.js';
 
 /**
  *  This class contains the contents of out application
@@ -61,6 +62,11 @@ class MyContents  {
 
         // light bar
         this.lightBars = []
+
+        // sofa
+        this.sofa = null
+        this.sofaEnabled = true
+        this.lastSofaEnabled = null
 
 
         const floor_texture = new THREE.TextureLoader().load('textures/floor.png');
@@ -131,6 +137,15 @@ class MyContents  {
             this.obj.rotation.y = Math.PI / 4
             
             this.app.scene.add(this.obj)
+        }
+
+        // sofa
+        if (this.sofa === null) {
+            this.sofa = new MySofa(this, { width: 4.5, depth: 1.6, height: 1.1, cushionHeight: 0.45, color: 0x0b0b0b, cushionColor: 0x1a1a1a });
+            // position sofa near the table, slightly forward
+            this.sofa.position.set(3.8, 0.05, 2.5);
+            this.sofa.rotation.y = Math.PI;
+            this.app.scene.add(this.sofa);
         }
 
         // light bars
@@ -391,6 +406,18 @@ class MyContents  {
             }
         }
     }
+
+    updateSofaIfRequired() {
+        if (this.sofaEnabled !== this.lastSofaEnabled) {
+            this.lastSofaEnabled = this.sofaEnabled
+            if (this.sofaEnabled) {
+                this.app.scene.add(this.sofa)
+            }
+            else {
+                this.app.scene.remove(this.sofa)
+            }
+        }
+    }
     
     /**
      * updates the contents
@@ -406,6 +433,8 @@ class MyContents  {
         this.updateWallsIfRequired()
 
         this.updateObjIfRequired()
+
+        this.updateSofaIfRequired()
 
         // sets the box mesh position based on the displacement vector
         this.boxMesh.position.x = this.boxDisplacement.x
