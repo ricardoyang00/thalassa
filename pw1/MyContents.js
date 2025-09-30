@@ -8,6 +8,7 @@ import { MyGuitar } from './MyGuitar.js';
 import { MyGuitarStand } from './MyGuitarStand.js';
 import { MyLightBar } from './MyLightBar.js';
 import { MySofa } from './MySofa.js';
+import { MyCoffeeTable } from './MyCoffeeTable.js';
 
 /**
  *  This class contains the contents of out application
@@ -69,6 +70,10 @@ class MyContents  {
         this.sofa = null
         this.sofaEnabled = true
         this.lastSofaEnabled = null
+
+        this.coffeeTable = null
+        this.coffeeTableEnabled = true
+        this.lastCoffeeTableEnabled = null
 
 
         const floor_texture = new THREE.TextureLoader().load('textures/floor.png');
@@ -171,11 +176,21 @@ class MyContents  {
             
         // sofa
         if (this.sofa === null) {
-            this.sofa = new MySofa(this, { width: 4.5, depth: 1.6, height: 1.1, cushionHeight: 0.45, color: 0x0b0b0b, cushionColor: 0x1a1a1a });
+            this.sofa = new MySofa(this, { width: 4.5, depth: 1.6, height: 1.1, cushionHeight: 0.45, color: 0x0b0b0b, cushionColor: 0x1a1a1a, lShape: true, chaiseLength: 2.0, lSide: 'left' });
             // position sofa near the table, slightly forward
             this.sofa.position.set(3.8, 0.05, 2.5);
             this.sofa.rotation.y = Math.PI;
             this.app.scene.add(this.sofa);
+        }
+
+        // coffee table in front of sofa
+        if (this.coffeeTable === null) {
+            const topMat = new THREE.MeshPhongMaterial({ color: 0x8b5a2b });
+            this.coffeeTable = new MyCoffeeTable(this, topMat);
+            // position coffee table roughly centered in front of the sofa
+            this.coffeeTable.position.set(1.9, 0.3, 1.7);
+            this.coffeeTable.rotation.y = Math.PI/2;
+            this.app.scene.add(this.coffeeTable);
         }
 
         // light bars
