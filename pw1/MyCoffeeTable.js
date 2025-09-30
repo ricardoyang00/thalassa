@@ -13,7 +13,7 @@ class MyCoffeeTable extends THREE.Object3D {
 
         // top size: smaller than main table
         const topWidth = 2;
-        const topDepth = 0.8;
+        const topDepth = 1;
         const topThickness = 0.06;
 
         // legs positions relative to top

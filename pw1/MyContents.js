@@ -9,6 +9,7 @@ import { MyGuitarStand } from './MyGuitarStand.js';
 import { MyLightBar } from './MyLightBar.js';
 import { MySofa } from './MySofa.js';
 import { MyCoffeeTable } from './MyCoffeeTable.js';
+import { MyCarpet } from './MyCarpet.js';
 
 /**
  *  This class contains the contents of out application
@@ -74,6 +75,10 @@ class MyContents  {
         this.coffeeTable = null
         this.coffeeTableEnabled = true
         this.lastCoffeeTableEnabled = null
+
+    this.carpet = null
+    this.carpetEnabled = true
+    this.lastCarpetEnabled = null
 
 
         const floor_texture = new THREE.TextureLoader().load('textures/floor.png');
@@ -188,9 +193,19 @@ class MyContents  {
             const topMat = new THREE.MeshPhongMaterial({ color: 0x8b5a2b });
             this.coffeeTable = new MyCoffeeTable(this, topMat);
             // position coffee table roughly centered in front of the sofa
-            this.coffeeTable.position.set(1.9, 0.3, 1.7);
+            this.coffeeTable.position.set(1.8, 0.3, 1.7);
             this.coffeeTable.rotation.y = Math.PI/2;
             this.app.scene.add(this.coffeeTable);
+        }
+
+        // carpet under sofa and coffee table
+        if (this.carpet === null) {
+            // choose a carpet texture; using uv_grid.jpg as a placeholder
+            this.carpet = new MyCarpet(this, { width: 3.5, depth: 2, texturePath: 'textures/uv_grid.jpg', repeatX: 2, repeatY: 2 });
+            // position carpet roughly under sofa main seating area
+            this.carpet.position.set(0, 0, 2);
+            this.carpet.rotation.y = Math.PI/2;
+            this.app.scene.add(this.carpet);
         }
 
         // light bars
