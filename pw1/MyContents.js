@@ -11,6 +11,7 @@ import { MySofa } from './MySofa.js';
 import { MyPiano } from './MyPiano.js';
 import { MyCoffeeTable } from './MyCoffeeTable.js';
 import { MyCarpet } from './MyCarpet.js';
+import { MyKeyboard } from './MyKeyboard.js';
 
 /**
  *  This class contains the contents of out application
@@ -77,10 +78,9 @@ class MyContents  {
         this.coffeeTableEnabled = true
         this.lastCoffeeTableEnabled = null
 
-    this.carpet = null
-    this.carpetEnabled = true
-    this.lastCarpetEnabled = null
-
+        this.carpet = null
+        this.carpetEnabled = true
+        this.lastCarpetEnabled = null
 
         const floor_texture = new THREE.TextureLoader().load('textures/floor.png');
         floor_texture.wrapS = THREE.RepeatWrapping;
@@ -94,6 +94,7 @@ class MyContents  {
         this.guitar = null
         this.guitarStand = null
         this.piano = null
+        this.keyboard = null
     }
 
     /**
@@ -124,7 +125,7 @@ class MyContents  {
         if (this.axis === null) {
             // create and attach the axis to the scene
             this.axis = new MyAxis(this)
-            //this.app.scene.add(this.axis)
+            this.app.scene.add(this.axis)
         }
 
         if (this.table === null) { 
@@ -187,6 +188,14 @@ class MyContents  {
             this.piano.rotation.z = Math.PI / 12 * 5
             this.piano.position.set(4.75, 0.8, -3.6)
             this.app.scene.add(this.piano)
+        }
+
+        if (this.keyboard === null) {
+            this.keyboard = new MyKeyboard(this)
+            this.keyboard.rotateY(Math.PI)
+            this.keyboard.scale.set(0.3, 0.3, 0.3)
+            this.keyboard.position.set(-0.5, 1.05, -3.6)
+            this.app.scene.add(this.keyboard)
         }
             
         // sofa
