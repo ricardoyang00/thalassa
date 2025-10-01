@@ -16,6 +16,7 @@ import { MyTVTable } from './MyTVTable.js';
 import { MyAcousticFoam } from './MyAcousticFoam.js';
 import { MyTV } from './MyTV.js';
 import { MyMouse } from './MyMouse.js';
+import { MyLamp } from './MyLamp.js';
 
 /**
  *  This class contains the contents of out application
@@ -115,6 +116,7 @@ class MyContents  {
         this.piano = null
         this.keyboard = null
         this.mouse = null
+        this.lamp = null
     }
 
     /**
@@ -243,6 +245,13 @@ class MyContents  {
             this.mouse.scale.set(0.12, 0.12, 0.12)
             this.mouse.position.set(0.7, 1.05, -3.3)
             this.app.scene.add(this.mouse)
+        }
+
+        if (this.lamp === null) {
+            this.lamp = new MyLamp(this)
+            this.lamp.scale.set(0.8, 0.8, 0.8)
+            this.lamp.position.set(1.4, 1.05, -4)
+            this.app.scene.add(this.lamp)
         }
             
         // sofa
