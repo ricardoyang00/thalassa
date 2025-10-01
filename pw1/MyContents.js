@@ -12,7 +12,7 @@ import { MyPiano } from './MyPiano.js';
 import { MyCoffeeTable } from './MyCoffeeTable.js';
 import { MyCarpet } from './MyCarpet.js';
 import { MyKeyboard } from './MyKeyboard.js';
-import { MyTVTable } from './MyTvTable.js';
+import { MyTVTable } from './MyTVTable.js';
 import { MyAcousticFoam } from './MyAcousticFoam.js';
 import { MyTV } from './MyTV.js';
 
