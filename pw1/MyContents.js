@@ -15,6 +15,7 @@ import { MyKeyboard } from './MyKeyboard.js';
 import { MyTVTable } from './MyTVTable.js';
 import { MyAcousticFoam } from './MyAcousticFoam.js';
 import { MyTV } from './MyTV.js';
+import { MyMouse } from './MyMouse.js';
 
 /**
  *  This class contains the contents of out application
@@ -113,6 +114,7 @@ class MyContents  {
         this.guitarStand = null
         this.piano = null
         this.keyboard = null
+        this.mouse = null
     }
 
     /**
@@ -232,8 +234,15 @@ class MyContents  {
             this.keyboard = new MyKeyboard(this)
             this.keyboard.rotateY(Math.PI)
             this.keyboard.scale.set(0.3, 0.3, 0.3)
-            this.keyboard.position.set(0, 1.05, -3.3)
+            this.keyboard.position.set(-0.2, 1.05, -3.3)
             this.app.scene.add(this.keyboard)
+        }
+
+        if (this.mouse === null) {
+            this.mouse = new MyMouse(this)
+            this.mouse.scale.set(0.12, 0.12, 0.12)
+            this.mouse.position.set(0.7, 1.05, -3.3)
+            this.app.scene.add(this.mouse)
         }
             
         // sofa
