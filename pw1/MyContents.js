@@ -13,6 +13,8 @@ import { MyCoffeeTable } from './MyCoffeeTable.js';
 import { MyCarpet } from './MyCarpet.js';
 import { MyKeyboard } from './MyKeyboard.js';
 import { MyTVTable } from './MyTvTable.js';
+import { MyAcousticFoam } from './MyAcousticFoam.js';
+import { MyTV } from './MyTV.js';
 
 /**
  *  This class contains the contents of out application
@@ -80,6 +82,8 @@ class MyContents  {
         this.lastCoffeeTableEnabled = null
 
         this.tvTable = null
+        this.tv = null
+        this.acousticFoam = null
 
         this.carpet = null
         this.carpetEnabled = true
@@ -228,6 +232,48 @@ class MyContents  {
             this.app.scene.add(this.tvTable);
         }
 
+        if (this.acousticFoam === null) {
+            this.acousticFoam = new MyAcousticFoam(this, {
+                wallWidth: 3,
+                wallHeight: 3,
+                triangleSize: 0.2,
+                triangleHeight: 0.1,
+                color: 0x444444,
+                rows: 10,
+                cols: 10
+            });
+            // Position it on one of your walls (e.g., back wall)
+            this.acousticFoam.position.set(0, 2.5, 2);
+            this.acousticFoam.rotation.y = Math.PI; // facing into the room
+            this.app.scene.add(this.acousticFoam);
+        }
+
+        if (this.tv === null) {
+            this.tv = new MyTV(this, {
+                screenWidth: 3.5,
+                screenHeight: 1.97,
+                depth: 0.08,
+                frameWidth: 0.04,
+                standWidth: 0.75,
+                standHeight: 0.05,
+                standDepth: 0.3,
+                screenColor: 0x111111,
+                frameColor: 0x2c2c2c,
+                standColor: 0x1a1a1a
+            });
+            
+            // Position TV on top of the TV table
+            // TV table is at position (-4.3, 0.4, 2) with rotation Math.PI/2
+            this.tv.position.set(-4.3, 0.85, 2); // On top of the table
+            this.tv.rotation.y = Math.PI/2; // Match table rotation
+            
+            // Set TV to "on" state with dark blue screen
+            this.tv.setScreenColor(0x001122); // Dark blue screen
+            this.tv.setGlowingWhite();
+            
+            this.app.scene.add(this.tv);
+        }
+
         // carpet under sofa and coffee table
         if (this.carpet === null) {
             // choose a carpet texture; using uv_grid.jpg as a placeholder
@@ -285,31 +331,31 @@ class MyContents  {
         this.app.scene.add( ambientLight );
         
         // add a directional light
-        // const directionalLight = new THREE.DirectionalLight( 0xffffff, 15 );
-        // directionalLight.position.set(5, 10, 2);
-        // directionalLight.target.position.set(1, 0, 1);
-        // this.app.scene.add( directionalLight );
-        // this.app.scene.add( directionalLight.target );
+        const directionalLight = new THREE.DirectionalLight( 0xffffff, 5 );
+        directionalLight.position.set(5, 10, 2);
+        directionalLight.target.position.set(1, 0, 1);
+        this.app.scene.add( directionalLight );
+        this.app.scene.add( directionalLight.target );
 
         // const directionalLightHelper = new THREE.DirectionalLightHelper( directionalLight, sphereSize );
         // this.app.scene.add( directionalLightHelper );
 
         // add a spot light
-        this.spotLight = new THREE.SpotLight( 
-            this.spotLightColor, 
-            this.spotLightIntensity, 
-            this.spotLightDistance,
-            THREE.MathUtils.degToRad(this.spotLightAngle),
-            this.spotLightPenumbra,
-            this.spotLightDecay
-        );
-        this.spotLight.position.set(5, this.spotLightPositionY, 2);
-        this.spotLight.target.position.set(1, this.spotLightTargetY, 1);
-        this.app.scene.add( this.spotLight );
-        this.app.scene.add( this.spotLight.target );
+        // this.spotLight = new THREE.SpotLight( 
+        //     this.spotLightColor, 
+        //     this.spotLightIntensity, 
+        //     this.spotLightDistance,
+        //     THREE.MathUtils.degToRad(this.spotLightAngle),
+        //     this.spotLightPenumbra,
+        //     this.spotLightDecay
+        // );
+        // this.spotLight.position.set(5, this.spotLightPositionY, 2);
+        // this.spotLight.target.position.set(1, this.spotLightTargetY, 1);
+        // this.app.scene.add( this.spotLight );
+        // this.app.scene.add( this.spotLight.target );
         
-        this.spotLightHelper = new THREE.SpotLightHelper( this.spotLight, sphereSize );
-        this.app.scene.add( this.spotLightHelper );
+        // this.spotLightHelper = new THREE.SpotLightHelper( this.spotLight, sphereSize );
+        // this.app.scene.add( this.spotLightHelper );
 
         this.buildBox()
         
