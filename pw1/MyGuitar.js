@@ -7,20 +7,64 @@ class MyGuitar extends THREE.Object3D {
         this.app = app;
         this.type = 'Group';
 
-        const woodMaterial = new THREE.MeshBasicMaterial({color: 0x8B4513});
-        const stringMaterial = new THREE.MeshBasicMaterial({color: 0xFFD700});
-        const blackMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
+        // Load textures
+        const lightWoodTexture = new THREE.TextureLoader().load('textures/wood_light.jpg');
+        lightWoodTexture.wrapS = THREE.RepeatWrapping;
+        lightWoodTexture.wrapT = THREE.RepeatWrapping;
+        lightWoodTexture.repeat.set(1, 1);
 
-        // lower bout
+        const darkWoodTexture = new THREE.TextureLoader().load('textures/wood_black.jpg');
+        darkWoodTexture.wrapS = THREE.RepeatWrapping;
+        darkWoodTexture.wrapT = THREE.RepeatWrapping;
+        darkWoodTexture.repeat.set(1, 1);
+
+        const goldTexture = new THREE.TextureLoader().load('textures/gold.jpg');
+        goldTexture.wrapS = THREE.RepeatWrapping;
+        goldTexture.wrapT = THREE.RepeatWrapping;
+        goldTexture.repeat.set(2, 2);
+
+        // Create materials
+        const lightWoodMaterial = new THREE.MeshPhongMaterial({
+            color: "#d4a574",        // Light wood tone
+            specular: "#8b7355",     // Warm brown specular
+            emissive: "#000000",
+            shininess: 30,           // Medium shine for polished wood
+            map: lightWoodTexture
+        });
+
+        const darkWoodMaterial = new THREE.MeshPhongMaterial({
+            color: "#2a1f14",        // Dark wood tone
+            specular: "#1a1a1a",     // Dark specular
+            emissive: "#000000",
+            shininess: 40,           // Slightly higher shine for ebony
+            map: darkWoodTexture
+        });
+
+        const goldMaterial = new THREE.MeshPhongMaterial({
+            color: "#ffd700",        // Gold color
+            specular: "#ffff99",     // Bright yellow specular
+            emissive: "#000000",
+            shininess: 80,           // High shine for metal
+            map: goldTexture
+        });
+
+        const blackMaterial = new THREE.MeshPhongMaterial({
+            color: "#0a0a0a",        // Very dark for sound hole
+            specular: "#1a1a1a",
+            emissive: "#000000",
+            shininess: 5             // Very low shine
+        });
+
+        // lower bout (light wood body)
         const lowerGeometry = new THREE.CylinderGeometry(1.2, 1.2, 0.2, 32);
-        const lowerMesh = new THREE.Mesh(lowerGeometry, woodMaterial);
+        const lowerMesh = new THREE.Mesh(lowerGeometry, lightWoodMaterial);
         lowerMesh.position.set(0, -0.5, 0);
         lowerMesh.rotation.x = Math.PI / 2;
         this.add(lowerMesh);
 
-        // upper bout
+        // upper bout (light wood body)
         const upperGeometry = new THREE.CylinderGeometry(0.9, 0.9, 0.2, 32);
-        const upperMesh = new THREE.Mesh(upperGeometry, woodMaterial);
+        const upperMesh = new THREE.Mesh(upperGeometry, lightWoodMaterial);
         upperMesh.position.set(0, 0.8, 0);
         upperMesh.rotation.x = Math.PI / 2;
         this.add(upperMesh);
@@ -32,43 +76,43 @@ class MyGuitar extends THREE.Object3D {
         holeMesh.rotation.x = Math.PI / 2;
         this.add(holeMesh);
 
-        // neck
+        // neck (light wood)
         const neckGeometry = new THREE.BoxGeometry(0.15, 2.5, 0.1);
-        const neckMesh = new THREE.Mesh(neckGeometry, woodMaterial);
+        const neckMesh = new THREE.Mesh(neckGeometry, lightWoodMaterial);
         neckMesh.position.set(0, 2.0, 0.05);
         this.add(neckMesh);
 
-        // headstock
+        // headstock (light wood)
         const headGeometry = new THREE.BoxGeometry(0.22, 0.4, 0.08);
-        const headMesh = new THREE.Mesh(headGeometry, woodMaterial);
+        const headMesh = new THREE.Mesh(headGeometry, lightWoodMaterial);
         headMesh.position.set(0, 3.4, 0.05);
         this.add(headMesh);
 
-        // fretboard
+        // fretboard (dark wood - ebony)
         const fretboardGeometry = new THREE.BoxGeometry(0.16, 2.0, 0.02);
-        const fretboardMesh = new THREE.Mesh(fretboardGeometry, blackMaterial);
+        const fretboardMesh = new THREE.Mesh(fretboardGeometry, darkWoodMaterial);
         fretboardMesh.position.set(0, 1.8, 0.11);
         this.add(fretboardMesh);
 
-        // frets
+        // frets (gold/brass)
         for (let i = 0; i < 12; i++) {
             const fretGeometry = new THREE.CylinderGeometry(0.003, 0.003, 0.16, 8);
-            const fretMesh = new THREE.Mesh(fretGeometry, stringMaterial);
+            const fretMesh = new THREE.Mesh(fretGeometry, goldMaterial);
             fretMesh.position.set(0, 0.9 + (i * 0.15), 0.12);
             fretMesh.rotation.z = Math.PI / 2;
             this.add(fretMesh);
         }
 
-        // bridge
+        // bridge (dark wood)
         const bridgeGeometry = new THREE.BoxGeometry(0.5, 0.1, 0.05);
-        const bridgeMesh = new THREE.Mesh(bridgeGeometry, blackMaterial);
+        const bridgeMesh = new THREE.Mesh(bridgeGeometry, darkWoodMaterial);
         bridgeMesh.position.set(0, -0.3, 0.125);
         this.add(bridgeMesh);
 
-        // strings
+        // strings (gold/brass - representing bronze strings)
         for (let i = 0; i < 6; i++) {
             const stringGeometry = new THREE.CylinderGeometry(0.002, 0.002, 3.8, 8);
-            const stringMesh = new THREE.Mesh(stringGeometry, stringMaterial);
+            const stringMesh = new THREE.Mesh(stringGeometry, goldMaterial);
             stringMesh.position.set(-0.05 + (i * 0.02), 1.66, 0.12);
             this.add(stringMesh);
         }

@@ -14,22 +14,35 @@ class MyAcousticFoam extends THREE.Object3D {
         this.app = app;
         this.type = 'Group';
 
-        // Create two different materials for alternating colors
+        // Load sponge texture
+        const spongeTexture = new THREE.TextureLoader().load('textures/sponge.jpg');
+        spongeTexture.wrapS = THREE.RepeatWrapping;
+        spongeTexture.wrapT = THREE.RepeatWrapping;
+        spongeTexture.repeat.set(1, 1); // Adjust repeat as needed
+
+        // Create two different materials for alternating colors with sponge texture
         const greyMaterial = new THREE.MeshPhongMaterial({ 
-            color: 0x666666,
+            color: 0x666666,          // Keep original grey color
             shininess: 10,
-            roughness: 0.8
+            roughness: 0.8,
+            map: spongeTexture,       // Add sponge texture
+            // Use multiply blend to preserve the base color while adding texture detail
         });
 
         const whiteMaterial = new THREE.MeshPhongMaterial({ 
-            color: 0xcccccc,
+            color: 0xcccccc,          // Keep original white color
             shininess: 10,
-            roughness: 0.8
+            roughness: 0.8,
+            map: spongeTexture,       // Add sponge texture
+            // Use multiply blend to preserve the base color while adding texture detail
         });
 
-        // Create the base wall
+        // Create the base wall with sponge texture
         const baseGeometry = new THREE.BoxGeometry(wallWidth, wallHeight, 0.02);
-        const baseMaterial = new THREE.MeshPhongMaterial({ color: 0x1a1a1a });
+        const baseMaterial = new THREE.MeshPhongMaterial({ 
+            color: 0x1a1a1a,          // Keep dark base color
+            map: spongeTexture        // Add texture to base as well
+        });
         const baseMesh = new THREE.Mesh(baseGeometry, baseMaterial);
         this.add(baseMesh);
 
@@ -68,21 +81,19 @@ class MyAcousticFoam extends THREE.Object3D {
                 pyramid.position.set(x, y, z);
                 
                 // Rotate pyramids to point outward from wall
-                //pyramid.rotation.x = Math.PI; // point toward viewer
                 pyramid.rotation.y = Math.PI / 4; // rotate to make square base face viewer
                 pyramid.rotation.x = Math.PI / 2; // point toward viewer
-                // Keep pyramids aligned for symmetry - no random rotation
-                //pyramid.rotation.z = Math.PI / 4; // 45 degrees for diamond orientation
                 
                 this.add(pyramid);
             }
         }
     }
 
-    // Method to change foam color
+    // Method to change foam color (now with texture consideration)
     setFoamColor(color) {
         this.children.forEach((child, index) => {
             if (index > 0) { // skip the base wall (first child)
+                // Only change the base color, keep the texture
                 child.material.color.set(color);
             }
         });

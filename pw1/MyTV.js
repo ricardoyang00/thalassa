@@ -47,7 +47,7 @@ class MyTV extends THREE.Object3D {
         // Screen (main display area)
         const screenGeometry = new THREE.BoxGeometry(screenWidth, screenHeight, 0.02);
         const screen = new THREE.Mesh(screenGeometry, screenMaterial);
-        screen.position.set(0, screenHeight/2 + standHeight + 0.03, depth/2 + 0.01);
+        screen.position.set(0, screenHeight/2 + standHeight + 0.04, depth/2 + 0.01);
         this.add(screen);
 
         // Frame around screen
@@ -70,20 +70,11 @@ class MyTV extends THREE.Object3D {
         this.screen = screen;
         this.frame = frame;
         this.stand = stand;
-    }
-
-    // Method to change screen color (simulate different content)
-    setScreenColor(color) {
-        this.screen.material.color.setHex(color);
-        this.screen.material.emissive.setHex(color);
-        this.screen.material.emissiveIntensity = 0.3;
-    }
-
-    // Method to set glowing white screen
-    setGlowingWhite() {
+        
+        // screen white
         this.screen.material.color.setHex(0xffffff);
         this.screen.material.emissive.setHex(0xffffff);
-        this.screen.material.emissiveIntensity = 0.4;
+        this.screen.material.emissiveIntensity = 0.5;
     }
 }
 

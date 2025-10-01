@@ -47,9 +47,12 @@ class MyContents  {
         this.lastWallsEnabled = null
 
         // compound obj related attributes
-        this.obj = null
+        this.obj = null             // monitor 0 zero
         this.objEnabled = true
         this.lastObjEnabled = null
+
+        this.monitor1 = null
+        this.monitor2 = null
 
         // spotlight related attributes
         this.spotLight = null
@@ -84,6 +87,7 @@ class MyContents  {
         this.tvTable = null
         this.tv = null
         this.acousticFoam = null
+        this.acousticFoam2 = null
 
         this.carpet = null
         this.carpetEnabled = true
@@ -143,17 +147,37 @@ class MyContents  {
         }
 
         if (this.table === null) { 
-            //const tableMaterial = new THREE.MeshBasicMaterial( {color: 0x563232} );
+            // Load textures for table (same as shelf)
+            const blackWoodTexture = new THREE.TextureLoader().load('textures/wood_black.jpg');
+            blackWoodTexture.wrapS = THREE.RepeatWrapping;
+            blackWoodTexture.wrapT = THREE.RepeatWrapping;
+            blackWoodTexture.repeat.set(2, 1); // Horizontal grain for table top
 
-            const uvTexture = new THREE.TextureLoader().load('textures/uv_grid.jpg');
-            uvTexture.wrapS = THREE.MirroredRepeatWrapping;
-            uvTexture.wrapT = THREE.MirroredRepeatWrapping;
-            uvTexture.repeat.set(3, 4);
-            const uvMaterial = new THREE.MeshBasicMaterial({ color: "#00ff00", 
-                specular: "#00ff00", emissive: "#000000", shininess: this.planeShininess, map: uvTexture })
+            const inoxTexture = new THREE.TextureLoader().load('textures/inox_black.jpg');
+            inoxTexture.wrapS = THREE.RepeatWrapping;
+            inoxTexture.wrapT = THREE.RepeatWrapping;
+            inoxTexture.repeat.set(1, 3); // Vertical pattern for legs
 
-            this.table = new MyTable(this, uvMaterial)
-            this.table.position.set(0, 0, -4)
+            // Create materials (same as shelf)
+            const blackWoodMaterial = new THREE.MeshPhongMaterial({
+                color: "#2a2a2a",        // Dark gray tint for black wood
+                specular: "#404040",     // Medium gray specular
+                emissive: "#000000",
+                shininess: 30,           // Medium shine for finished wood
+                map: blackWoodTexture
+            });
+
+            const inoxMaterial = new THREE.MeshPhongMaterial({
+                color: "#1a1a1a",        // Very dark gray for black steel
+                specular: "#666666",     // Bright specular for metallic shine
+                emissive: "#000000",
+                shininess: 90,           // High shininess for polished metal
+                map: inoxTexture
+            });
+
+            // Create table with both materials (assuming MyTable accepts materials)
+            this.table = new MyTable(this, blackWoodMaterial, inoxMaterial)
+            this.table.position.set(0, 0, -3.6)
             this.app.scene.add(this.table)
         }
 
@@ -165,9 +189,9 @@ class MyContents  {
         if (this.obj === null) {
             this.obj = new MyCompoundObj(this)
             
-            this.obj.position.set(-0.5, 1.03, -4)
+            this.obj.position.set(0, 1.05, -4)
             this.obj.scale.set(0.2, 0.2, 0.2)
-            this.obj.rotation.y = Math.PI / 4
+            //this.obj.rotation.y = Math.PI / 4
             
             this.app.scene.add(this.obj)
         }
@@ -175,7 +199,7 @@ class MyContents  {
         if (this.shelf === null) {
             this.shelf = new MyShelf(this)
             this.shelf.rotation.y = Math.PI / 2
-            this.shelf.position.set(-4.6, 0, -4.1)
+            this.shelf.position.set(-4, 0, -3.6)
             this.app.scene.add(this.shelf)
         }
 
@@ -184,14 +208,14 @@ class MyContents  {
             this.guitar.rotation.y = - Math.PI / 4
             this.guitar.rotateX(- Math.PI / 8)
             this.guitar.scale.set(0.3, 0.3, 0.3)
-            this.guitar.position.set(3.5, 0.83, -4)
+            this.guitar.position.set(3.5, 0.78, -3.7)
             this.app.scene.add(this.guitar)
         }
 
         if (this.guitarStand === null) {
             this.guitarStand = new MyGuitarStand(this)
             this.guitarStand.scale.set(1.5, 1.5, 1.5)
-            this.guitarStand.position.set(3.5, 0, -4)
+            this.guitarStand.position.set(3.5, -0.05, -3.7)
             this.guitarStand.rotation.y = -Math.PI / 4
             this.app.scene.add(this.guitarStand)
         }
@@ -200,7 +224,7 @@ class MyContents  {
             this.piano = new MyPiano(this)
             this.piano.scale.set(0.8, 0.8, 0.8)
             this.piano.rotation.z = Math.PI / 12 * 5
-            this.piano.position.set(4.75, 0.8, -3.6)
+            this.piano.position.set(4.2, 0.73, -2.7)
             this.app.scene.add(this.piano)
         }
 
@@ -208,7 +232,7 @@ class MyContents  {
             this.keyboard = new MyKeyboard(this)
             this.keyboard.rotateY(Math.PI)
             this.keyboard.scale.set(0.3, 0.3, 0.3)
-            this.keyboard.position.set(-0.5, 1.05, -3.6)
+            this.keyboard.position.set(0, 1.05, -3.3)
             this.app.scene.add(this.keyboard)
         }
             
@@ -234,15 +258,15 @@ class MyContents  {
         if (this.tvTable === null) {
             const tableMat = new THREE.MeshPhongMaterial({ color: 0x8b5a2b });
             this.tvTable = new MyTVTable(this, tableMat);
-            this.tvTable.position.set(-3.8, 0.4, 2);
+            this.tvTable.position.set(-3.8, 0.4, 1.8);
             this.tvTable.rotation.y = Math.PI/2;
             this.app.scene.add(this.tvTable);
         }
 
         if (this.acousticFoam === null) {
             this.acousticFoam = new MyAcousticFoam(this, {
-                wallWidth: 3,
-                wallHeight: 3,
+                wallWidth: 3.7,
+                wallHeight: 3.5,
                 triangleSize: 0.2,
                 triangleHeight: 0.1,
                 color: 0x444444,
@@ -250,15 +274,32 @@ class MyContents  {
                 cols: 10
             });
             // Position it on one of your walls (e.g., back wall)
-            this.acousticFoam.position.set(0, 2.5, 2);
-            this.acousticFoam.rotation.y = Math.PI; // facing into the room
-            //this.app.scene.add(this.acousticFoam);
+            this.acousticFoam.position.set(4.5, 2, -2.6);
+            this.acousticFoam.rotation.y = -Math.PI / 2; // facing into the room
+            this.app.scene.add(this.acousticFoam);
         }
+
+        if (this.acousticFoam2 === null) {
+            this.acousticFoam2 = new MyAcousticFoam(this, {
+                wallWidth: 1.9,
+                wallHeight: 3.5,
+                triangleSize: 0.2,
+                triangleHeight: 0.1,
+                color: 0x444444,
+                rows: 10,
+                cols: 10
+            });
+            // Position it on one of your walls (e.g., back wall)
+            this.acousticFoam2.position.set(3.5, 2, -4.5);
+            this.app.scene.add(this.acousticFoam2);
+        }
+
+
 
         if (this.tv === null) {
             this.tv = new MyTV(this, {
-                screenWidth: 3.5,
-                screenHeight: 1.97,
+                screenWidth: 5,
+                screenHeight: 2.8,
                 depth: 0.08,
                 frameWidth: 0.04,
                 standWidth: 0.75,
@@ -271,12 +312,10 @@ class MyContents  {
             
             // Position TV on top of the TV table
             // TV table is at position (-4.3, 0.4, 2) with rotation Math.PI/2
-            this.tv.position.set(-4, 0.48, 2); // On top of the table
+            this.tv.position.set(-4, 0.48, 1.8); // On top of the table
             this.tv.rotation.y = Math.PI/2; // Match table rotation
             
             // Set TV to "on" state with dark blue screen
-            this.tv.setScreenColor(0x001122); // Dark blue screen
-            this.tv.setGlowingWhite();
             
             this.app.scene.add(this.tv);
         }
@@ -284,7 +323,7 @@ class MyContents  {
         // carpet under sofa and coffee table
         if (this.carpet === null) {
             // choose a carpet texture; using uv_grid.jpg as a placeholder
-            this.carpet = new MyCarpet(this, { width: 3.5, depth: 2, texturePath: 'textures/uv_grid.jpg', repeatX: 2, repeatY: 2 });
+            this.carpet = new MyCarpet(this);
             // position carpet roughly under sofa main seating area
             this.carpet.position.set(-1, 0, 2);
             this.carpet.rotation.y = Math.PI/2;
@@ -390,7 +429,7 @@ class MyContents  {
 
         // 2. Behind TV - cool backlight effect
         const tvBacklight = new THREE.PointLight(0x00d4ff, 4, 5); // Increased intensity
-        tvBacklight.position.set(-4.2, 0.6, 2);
+        tvBacklight.position.set(-4.2, 0.6, 1.8);
         this.app.scene.add(tvBacklight);
 
         // 3. Behind sofa - warm mood lighting
@@ -398,8 +437,28 @@ class MyContents  {
         sofaBacklight.position.set(4.4, 0.8, 4.4);
         this.app.scene.add(sofaBacklight);
 
+        // shelf
+        const shelfLightPositions = [
+            { x: -4, y: 0.15, z: -3.6 },  // Under bottom shelf
+            { x: -4, y: 0.95, z: -3.6 },  // Under second shelf
+            { x: -4, y: 1.75, z: -3.6 },  // Under third shelf
+            { x: -4, y: 2.55, z: -3.6 },  // Under fourth shelf
+            { x: -4, y: 3.35, z: -3.6 }   // Under top shelf
+        ];
+
+        for (const lightPos of shelfLightPositions) {
+            const shelfLight = new THREE.PointLight(
+                0xff6b35,    // Same warm orange color as coffee table
+                2,           // Slightly less intensity than coffee table
+                3,           // Good range for shelf lighting
+                1            // Natural decay
+            );
+            
+            shelfLight.position.set(lightPos.x, lightPos.y, lightPos.z);
+            this.app.scene.add(shelfLight);
+        }
+
         // === PURPLE ACCENT LIGHTING (Like in reference image) ===
-        // Remove the complex spotlight system and add simple purple accent lights
         for (const lightBar of this.lightBars) {
             // Create purple point lights for accent lighting
             const purpleLight = new THREE.PointLight(
@@ -426,6 +485,7 @@ class MyContents  {
         this.app.scene.add(ceilingLight2);
 
         // === SPOT LIGHT FOR TASK LIGHTING ===
+        // musical area spotlight
         this.spotLight = new THREE.SpotLight(
             0xffffff,    // White light
             12,          // Higher intensity
@@ -436,8 +496,8 @@ class MyContents  {
         );
         this.spotLight.position.set(-2, 3.5, -3);
         this.spotLight.target.position.set(0, 1, -4);
-        this.app.scene.add(this.spotLight);
-        this.app.scene.add(this.spotLight.target);
+        // this.app.scene.add(this.spotLight);
+        // this.app.scene.add(this.spotLight.target);
 
         // === LIGHT HELPERS (Optional - remove for final version) ===
         const coffeeTableHelper = new THREE.PointLightHelper(coffeeTableLight, 0.2);
