@@ -12,6 +12,7 @@ import { MyPiano } from './MyPiano.js';
 import { MyCoffeeTable } from './MyCoffeeTable.js';
 import { MyCarpet } from './MyCarpet.js';
 import { MyKeyboard } from './MyKeyboard.js';
+import { MyTVTable } from './MyTvTable.js';
 
 /**
  *  This class contains the contents of out application
@@ -77,6 +78,8 @@ class MyContents  {
         this.coffeeTable = null
         this.coffeeTableEnabled = true
         this.lastCoffeeTableEnabled = null
+
+        this.tvTable = null
 
         this.carpet = null
         this.carpetEnabled = true
@@ -215,6 +218,14 @@ class MyContents  {
             this.coffeeTable.position.set(1.8, 0.3, 1.7);
             this.coffeeTable.rotation.y = Math.PI/2;
             this.app.scene.add(this.coffeeTable);
+        }
+
+        if (this.tvTable === null) {
+            const tableMat = new THREE.MeshPhongMaterial({ color: 0x8b5a2b });
+            this.tvTable = new MyTVTable(this, tableMat);
+            this.tvTable.position.set(-4.3, 0.4, 2);
+            this.tvTable.rotation.y = Math.PI/2;
+            this.app.scene.add(this.tvTable);
         }
 
         // carpet under sofa and coffee table
