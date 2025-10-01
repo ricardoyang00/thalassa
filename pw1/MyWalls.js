@@ -14,7 +14,7 @@ class MyWalls extends THREE.Object3D {
 
         // Create realistic concrete material with darker appearance
         const concreteMaterial = new THREE.MeshPhongMaterial({ 
-            color: "#bcbcbcff",        // Darker gray to match the concrete.jpg texture
+            color: "#bcbcbc",        // Darker gray to match the concrete.jpg texture
             specular: "#1a1a1a",     // Very dark specular for minimal shine
             emissive: "#000000", 
             shininess: 5,            // Very low shininess for rough concrete finish
@@ -38,30 +38,34 @@ class MyWalls extends THREE.Object3D {
             side: THREE.DoubleSide 
         });
 
-        let wallGeometry = new THREE.PlaneGeometry( 9, 5 );
+        // Wall thickness and position adjustments
+        const wallThickness = 0.1;
+        const halfThickness = -wallThickness / 2;
         
-        // Front wall - concrete
-        this.frontWall = new THREE.Mesh( wallGeometry, concreteMaterial );
-        this.frontWall.position.set(0, 2.25, -4.5);
+        // Front/Back wall geometry (width x height x thickness)
+        const wallGeometry = new THREE.BoxGeometry(9 + wallThickness * 2, 5, wallThickness);
+        
+        // Front wall - concrete (move inward by half thickness)
+        this.frontWall = new THREE.Mesh(wallGeometry, concreteMaterial);
+        this.frontWall.position.set(0, 2.25, -4.5 + halfThickness);
         this.add(this.frontWall);
         
-        // Back wall - concrete
-        this.backWall = new THREE.Mesh( wallGeometry, concreteMaterial );
-        this.backWall.position.set(0, 2.25, 4.5);
-        this.backWall.rotation.y = Math.PI;
+        // Back wall - concrete (move inward by half thickness)
+        this.backWall = new THREE.Mesh(wallGeometry, concreteMaterial);
+        this.backWall.position.set(0, 2.25, 4.5 - halfThickness);
         this.add(this.backWall);
         
-        // Left wall - windows (keep existing)
-        //this.leftWall = new THREE.Mesh( wallGeometry, this.wallMaterial1 );
-        this.leftWall = new THREE.Mesh( wallGeometry, concreteMaterial );
-        this.leftWall.position.set(-4.5, 2.25, 0);
-        this.leftWall.rotation.y = Math.PI / 2;
+        // Left/Right wall geometry (thickness x height x depth)
+        const sideWallGeometry = new THREE.BoxGeometry(wallThickness, 5, 9);
+        
+        // Left wall - concrete (move inward by half thickness)
+        this.leftWall = new THREE.Mesh(sideWallGeometry, concreteMaterial);
+        this.leftWall.position.set(-4.5 + halfThickness, 2.25, 0);
         this.add(this.leftWall);
 
-        // Right wall - concrete
-        this.rightWall = new THREE.Mesh( wallGeometry, concreteMaterial );
-        this.rightWall.position.set(4.5, 2.25, 0);
-        this.rightWall.rotation.y = -Math.PI / 2;
+        // Right wall - concrete (move inward by half thickness)
+        this.rightWall = new THREE.Mesh(sideWallGeometry, concreteMaterial);
+        this.rightWall.position.set(4.5 - halfThickness, 2.25, 0);
         this.add(this.rightWall);
     }
 

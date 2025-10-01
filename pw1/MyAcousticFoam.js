@@ -24,7 +24,6 @@ class MyAcousticFoam extends THREE.Object3D {
         const greyMaterial = new THREE.MeshPhongMaterial({ 
             color: 0x666666,          // Keep original grey color
             shininess: 10,
-            roughness: 0.8,
             map: spongeTexture,       // Add sponge texture
             // Use multiply blend to preserve the base color while adding texture detail
         });
@@ -32,7 +31,6 @@ class MyAcousticFoam extends THREE.Object3D {
         const whiteMaterial = new THREE.MeshPhongMaterial({ 
             color: 0xcccccc,          // Keep original white color
             shininess: 10,
-            roughness: 0.8,
             map: spongeTexture,       // Add sponge texture
             // Use multiply blend to preserve the base color while adding texture detail
         });

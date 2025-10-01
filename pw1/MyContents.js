@@ -104,7 +104,7 @@ class MyContents  {
         this.planeMaterial = new THREE.MeshPhongMaterial({ 
             color: "#8b7355",        // Much darker brown (instead of "#ffffffff")
             specular: "#2a2a2a",     // Dark gray specular for subtle shine
-            emissive: "#000000ff", 
+            emissive: "#000000", 
             shininess: 30,           // Lower shininess for wood-like appearance
             map: floor_texture 
         })
@@ -198,8 +198,8 @@ class MyContents  {
 
         if (this.shelf === null) {
             this.shelf = new MyShelf(this)
-            this.shelf.rotation.y = Math.PI / 2
-            this.shelf.position.set(-4, 0, -3.6)
+            this.shelf.rotation.y = Math.PI
+            this.shelf.position.set(-3.6, 0, -4)
             this.app.scene.add(this.shelf)
         }
 
@@ -439,11 +439,11 @@ class MyContents  {
 
         // shelf
         const shelfLightPositions = [
-            { x: -4, y: 0.15, z: -3.6 },  // Under bottom shelf
-            { x: -4, y: 0.95, z: -3.6 },  // Under second shelf
-            { x: -4, y: 1.75, z: -3.6 },  // Under third shelf
-            { x: -4, y: 2.55, z: -3.6 },  // Under fourth shelf
-            { x: -4, y: 3.35, z: -3.6 }   // Under top shelf
+            { x: -3.6, y: 0.15, z: -4 },  // Under bottom shelf
+            { x: -3.6, y: 0.95, z: -4 },  // Under second shelf
+            { x: -3.6, y: 1.75, z: -4 },  // Under third shelf
+            { x: -3.6, y: 2.55, z: -4 },  // Under fourth shelf
+            { x: -3.6, y: 3.35, z: -4 }   // Under top shelf
         ];
 
         for (const lightPos of shelfLightPositions) {
