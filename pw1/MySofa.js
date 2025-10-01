@@ -14,29 +14,65 @@ class MySofa extends THREE.Object3D {
         this.app = app;
         this.type = 'Group';
 
-        // Use MeshPhongMaterial for all parts so they interact with lights
-        const frameMat = new THREE.MeshPhongMaterial({ color, specular: color, shininess: 80 });
-        const cushionMat = new THREE.MeshPhongMaterial({ color: cushionColor, shininess: 30 });
-        const armMat = frameMat;  // use same material as frame for armrests
-        const legMat = new THREE.MeshPhongMaterial({ color: "#aaaaaa" });
+        // Load leather textures
+        const chesterfieldTexture = new THREE.TextureLoader().load('textures/leather_chesterfield_black.jpg');
+        chesterfieldTexture.wrapS = THREE.RepeatWrapping;
+        chesterfieldTexture.wrapT = THREE.RepeatWrapping;
+        chesterfieldTexture.repeat.set(2, 2);
+
+        const leatherTexture = new THREE.TextureLoader().load('textures/leather_black.jpg');
+        leatherTexture.wrapS = THREE.RepeatWrapping;
+        leatherTexture.wrapT = THREE.RepeatWrapping;
+        leatherTexture.repeat.set(1, 1);
+
+        // Create realistic leather materials
+        const chesterfieldMaterial = new THREE.MeshPhongMaterial({
+            color: "#1a1a1a",        // Darker for black leather
+            specular: "#2a2a2a",     // Much darker specular for black leather
+            emissive: "#000000",
+            shininess: 2,           // Reduced from 40 to 15 for matte black leather
+            map: chesterfieldTexture
+        });
+
+        const smoothLeatherMaterial = new THREE.MeshPhongMaterial({
+            color: "#1a1a1a",        // Darker for black leather
+            specular: "#2a2a2a",     // Much darker specular for black leather
+            emissive: "#000000",
+            shininess: 15,           // Reduced from 60 to 20 for subtle shine
+            map: leatherTexture
+        });
+
+        // Frame and armrests use smooth leather
+        const frameMat = smoothLeatherMaterial;
+        const armMat = smoothLeatherMaterial;
+        
+        // Cushions use chesterfield (button-tufted) texture
+        const cushionMat = chesterfieldMaterial;
+        
+        // Legs - dark wood or metal
+        const legMat = new THREE.MeshPhongMaterial({ 
+            color: "#1a1a1a",
+            specular: "#333333",
+            shininess: 20
+        });
 
         // ===== Helper to make a sofa segment =====
         const makeSegment = (segWidth, segDepth) => {
             const group = new THREE.Group();
 
-            // seat
+            // seat frame
             const seatGeom = new THREE.BoxGeometry(segWidth, 0.25, segDepth);
             const seat = new THREE.Mesh(seatGeom, frameMat);
             seat.position.set(0, 0.25/2, 0);
             group.add(seat);
 
-            // backrest
+            // backrest with smooth leather
             const backGeom = new THREE.BoxGeometry(segWidth, height * 0.7, 0.25);
             const back = new THREE.Mesh(backGeom, frameMat);
             back.position.set(0, 0.25/2 + (height * 0.7)/2 + cushionHeight*0.1, -segDepth/2 + 0.125);
             group.add(back);
 
-            // cushions
+            // cushions with chesterfield texture (button-tufted)
             const cushionWidth = (segWidth - 0.2) / 3;
             for (let i = 0; i < 3; i++) {
                 const cg = new THREE.BoxGeometry(cushionWidth, cushionHeight, segDepth - 0.1);
@@ -46,7 +82,7 @@ class MySofa extends THREE.Object3D {
                 group.add(cm);
             }
 
-            // armrests
+            // armrests with smooth leather
             const armGeom = new THREE.BoxGeometry(0.25, height * 0.6, segDepth - 0.1);
             const leftArm = new THREE.Mesh(armGeom, armMat);
             leftArm.position.set(-segWidth/2 + 0.125, armGeom.parameters.height/2 + 0.25/2, 0);
@@ -56,7 +92,7 @@ class MySofa extends THREE.Object3D {
             rightArm.position.set(segWidth/2 - 0.125, armGeom.parameters.height/2 + 0.25/2, 0);
             group.add(rightArm);
 
-            // legs
+            // legs - dark finish
             const legGeom = new THREE.CylinderGeometry(0.06, 0.06, 0.1, 8);
             const legPositions = [
                 [-segWidth/2 + 0.15, -0.05, -segDepth/2 + 0.15],

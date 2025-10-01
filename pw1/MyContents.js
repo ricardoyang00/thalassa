@@ -89,14 +89,21 @@ class MyContents  {
         this.carpetEnabled = true
         this.lastCarpetEnabled = null
 
-        const floor_texture = new THREE.TextureLoader().load('textures/floor.png');
+        const floor_texture = new THREE.TextureLoader().load('textures/wood_floor2.jpg');
         floor_texture.wrapS = THREE.RepeatWrapping;
         floor_texture.wrapT = THREE.RepeatWrapping;
-        floor_texture.repeat.set(10, 10);
+        floor_texture.repeat.set(4, 4);
 
-        this.planeMaterial = new THREE.MeshPhongMaterial({ color: this.diffusePlaneColor, 
-            specular: this.specularPlaneColor, emissive: "#000000", shininess: this.planeShininess, map: floor_texture })
+        //this.planeMaterial = new THREE.MeshPhongMaterial({ color: this.diffusePlaneColor, 
+        //    specular: this.specularPlaneColor, emissive: "#000000", shininess: this.planeShininess, map: floor_texture })
 
+        this.planeMaterial = new THREE.MeshPhongMaterial({ 
+            color: "#8b7355",        // Much darker brown (instead of "#ffffffff")
+            specular: "#2a2a2a",     // Dark gray specular for subtle shine
+            emissive: "#000000ff", 
+            shininess: 30,           // Lower shininess for wood-like appearance
+            map: floor_texture 
+        })
         this.shelf = null
         this.guitar = null
         this.guitarStand = null
@@ -208,8 +215,8 @@ class MyContents  {
         // sofa
         if (this.sofa === null) {
             this.sofa = new MySofa(this, { width: 4.5, depth: 1.6, height: 1.1, cushionHeight: 0.45, color: 0x0b0b0b, cushionColor: 0x1a1a1a, lShape: true, chaiseLength: 2.0, lSide: 'left' });
-            // position sofa near the table, slightly forward
-            this.sofa.position.set(3.8, 0.05, 2.5);
+
+            this.sofa.position.set(3.5, 0.1, 2.2);
             this.sofa.rotation.y = Math.PI;
             this.app.scene.add(this.sofa);
         }
@@ -219,7 +226,7 @@ class MyContents  {
             const topMat = new THREE.MeshPhongMaterial({ color: 0x8b5a2b });
             this.coffeeTable = new MyCoffeeTable(this, topMat);
             // position coffee table roughly centered in front of the sofa
-            this.coffeeTable.position.set(1.8, 0.3, 1.7);
+            this.coffeeTable.position.set(1.5, 0.3, 1.4);
             this.coffeeTable.rotation.y = Math.PI/2;
             this.app.scene.add(this.coffeeTable);
         }
@@ -227,7 +234,7 @@ class MyContents  {
         if (this.tvTable === null) {
             const tableMat = new THREE.MeshPhongMaterial({ color: 0x8b5a2b });
             this.tvTable = new MyTVTable(this, tableMat);
-            this.tvTable.position.set(-4.3, 0.4, 2);
+            this.tvTable.position.set(-3.8, 0.4, 2);
             this.tvTable.rotation.y = Math.PI/2;
             this.app.scene.add(this.tvTable);
         }
@@ -245,7 +252,7 @@ class MyContents  {
             // Position it on one of your walls (e.g., back wall)
             this.acousticFoam.position.set(0, 2.5, 2);
             this.acousticFoam.rotation.y = Math.PI; // facing into the room
-            this.app.scene.add(this.acousticFoam);
+            //this.app.scene.add(this.acousticFoam);
         }
 
         if (this.tv === null) {
@@ -264,7 +271,7 @@ class MyContents  {
             
             // Position TV on top of the TV table
             // TV table is at position (-4.3, 0.4, 2) with rotation Math.PI/2
-            this.tv.position.set(-4.3, 0.85, 2); // On top of the table
+            this.tv.position.set(-4, 0.48, 2); // On top of the table
             this.tv.rotation.y = Math.PI/2; // Match table rotation
             
             // Set TV to "on" state with dark blue screen
@@ -279,7 +286,7 @@ class MyContents  {
             // choose a carpet texture; using uv_grid.jpg as a placeholder
             this.carpet = new MyCarpet(this, { width: 3.5, depth: 2, texturePath: 'textures/uv_grid.jpg', repeatX: 2, repeatY: 2 });
             // position carpet roughly under sofa main seating area
-            this.carpet.position.set(0, 0, 2);
+            this.carpet.position.set(-1, 0, 2);
             this.carpet.rotation.y = Math.PI/2;
             this.app.scene.add(this.carpet);
         }
@@ -287,20 +294,20 @@ class MyContents  {
         // light bars
         if (this.lightBars.length === 0) {
             const barConfigs = [
-                { x: 0, y: 0.05, z: -5, rotY: 0 },
-                { x: 0, y: 0.05, z: 5,  rotY: 0 },
-                { x: -5, y: 0.05, z: 0, rotY: Math.PI / 2 },
-                { x: 5,  y: 0.05, z: 0, rotY: Math.PI / 2 },
-                { x: 0, y: 4.5, z: -5, rotY: 0 },
-                { x: 0, y: 4.5, z: 5,  rotY: 0 },
-                { x: -5, y: 4.5, z: 0, rotY: Math.PI / 2 },
-                { x: 5,  y: 4.5, z: 0, rotY: Math.PI / 2 },
+                { x: 0, y: 0.05, z: -4.5, rotY: 0 },
+                { x: 0, y: 0.05, z: 4.5,  rotY: 0 },
+                { x: -4.5, y: 0.05, z: 0, rotY: Math.PI / 2 },
+                { x: 4.5,  y: 0.05, z: 0, rotY: Math.PI / 2 },
+                { x: 0, y: 4.5, z: -4.5, rotY: 0 },
+                { x: 0, y: 4.5, z: 4.5,  rotY: 0 },
+                { x: -4.5, y: 4.5, z: 0, rotY: Math.PI / 2 },
+                { x: 4.5,  y: 4.5, z: 0, rotY: Math.PI / 2 },
             ];
 
             for (const cfg of barConfigs) {
                 const bar = new MyLightBar(this, {
-                    length: 10,
-                    color: "#ff00f2",
+                    length: 9,
+                    color: "#ff5c00", //#ff5c00 //#ff00f2
                     intensity: 5,
                     width: 0.1,
                     height: 0.1,
@@ -316,26 +323,27 @@ class MyContents  {
             }
         }
 
+        ////////////////// OLD VERSION OF LIGHTS ////////////////////////
         // add a point light on top of the model
         // const pointLight = new THREE.PointLight( 0xffffff, 500, 0 );
         // pointLight.position.set( 0, -20, 0 );
         // this.app.scene.add( pointLight );
 
         // add a point light helper for the previous point light
-        const sphereSize = 0.5;
+        // const sphereSize = 0.5;
         // const pointLightHelper = new THREE.PointLightHelper( pointLight, sphereSize );
         // this.app.scene.add( pointLightHelper );
 
         // add an ambient light
-        const ambientLight = new THREE.AmbientLight( 0x444444 );
-        this.app.scene.add( ambientLight );
+        // const ambientLight = new THREE.AmbientLight( 0x444444 );
+        // this.app.scene.add( ambientLight );
         
         // add a directional light
-        const directionalLight = new THREE.DirectionalLight( 0xffffff, 5 );
-        directionalLight.position.set(5, 10, 2);
-        directionalLight.target.position.set(1, 0, 1);
-        this.app.scene.add( directionalLight );
-        this.app.scene.add( directionalLight.target );
+        // const directionalLight = new THREE.DirectionalLight( 0xffffff, 5 );
+        // directionalLight.position.set(5, 10, 2);
+        // directionalLight.target.position.set(1, 0, 1);
+        // this.app.scene.add( directionalLight );
+        // this.app.scene.add( directionalLight.target );
 
         // const directionalLightHelper = new THREE.DirectionalLightHelper( directionalLight, sphereSize );
         // this.app.scene.add( directionalLightHelper );
@@ -357,11 +365,117 @@ class MyContents  {
         // this.spotLightHelper = new THREE.SpotLightHelper( this.spotLight, sphereSize );
         // this.app.scene.add( this.spotLightHelper );
 
+        //////////////////////////////////////////////////
+
+        
+        // === AMBIENT LIGHT ===
+        // Increase ambient light significantly for better visibility
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.4); // Increased from 0.6 to 1.2
+        this.app.scene.add(ambientLight);
+
+        // === MAIN DIRECTIONAL LIGHT ===
+        // Add strong directional light for overall scene illumination
+        const mainLight = new THREE.DirectionalLight("#ffffff", 0.8); // Bright white light
+        mainLight.position.set(5, 10, 5);
+        mainLight.target.position.set(0, 0, 0);
+        mainLight.castShadow = true;
+        this.app.scene.add(mainLight);
+        this.app.scene.add(mainLight.target);
+
+        // === POINT LIGHTS ===
+        // 1. Under coffee table - warm accent lighting
+        const coffeeTableLight = new THREE.PointLight(0xff6b35, 3, 4); // Increased intensity
+        coffeeTableLight.position.set(1.5, 0.1, 1.4);
+        this.app.scene.add(coffeeTableLight);
+
+        // 2. Behind TV - cool backlight effect
+        const tvBacklight = new THREE.PointLight(0x00d4ff, 4, 5); // Increased intensity
+        tvBacklight.position.set(-4.2, 0.6, 2);
+        this.app.scene.add(tvBacklight);
+
+        // 3. Behind sofa - warm mood lighting
+        const sofaBacklight = new THREE.PointLight(0xffa500, 3, 4); // Increased intensity
+        sofaBacklight.position.set(4.4, 0.8, 4.4);
+        this.app.scene.add(sofaBacklight);
+
+        // === PURPLE ACCENT LIGHTING (Like in reference image) ===
+        // Remove the complex spotlight system and add simple purple accent lights
+        for (const lightBar of this.lightBars) {
+            // Create purple point lights for accent lighting
+            const purpleLight = new THREE.PointLight(
+                "#ff5c00",    // Purple color
+                8,           // High intensity for visibility
+                6,           // Good range
+                1            // Natural decay
+            );
+            
+            purpleLight.position.copy(lightBar.position);
+            this.app.scene.add(purpleLight);
+            
+            lightBar.userData.accentLight = purpleLight;
+        }
+
+        // === CEILING LIGHTS FOR GENERAL ILLUMINATION ===
+        // Add ceiling lights to ensure everything is well-lit
+        const ceilingLight1 = new THREE.PointLight(0xffffff, 5, 8);
+        ceilingLight1.position.set(-2, 4, -2);
+        this.app.scene.add(ceilingLight1);
+
+        const ceilingLight2 = new THREE.PointLight(0xffffff, 5, 8);
+        ceilingLight2.position.set(2, 4, 2);
+        this.app.scene.add(ceilingLight2);
+
+        // === SPOT LIGHT FOR TASK LIGHTING ===
+        this.spotLight = new THREE.SpotLight(
+            0xffffff,    // White light
+            12,          // Higher intensity
+            8,           // Increased distance
+            THREE.MathUtils.degToRad(30), // Wider cone
+            0.2,         // Sharp edges
+            1            // Natural decay
+        );
+        this.spotLight.position.set(-2, 3.5, -3);
+        this.spotLight.target.position.set(0, 1, -4);
+        this.app.scene.add(this.spotLight);
+        this.app.scene.add(this.spotLight.target);
+
+        // === LIGHT HELPERS (Optional - remove for final version) ===
+        const coffeeTableHelper = new THREE.PointLightHelper(coffeeTableLight, 0.2);
+        this.app.scene.add(coffeeTableHelper);
+
+        const tvBacklightHelper = new THREE.PointLightHelper(tvBacklight, 0.2);
+        this.app.scene.add(tvBacklightHelper);
+
+        const sofaBacklightHelper = new THREE.PointLightHelper(sofaBacklight, 0.2);
+        this.app.scene.add(sofaBacklightHelper);
+
+        const mainLightHelper = new THREE.DirectionalLightHelper(mainLight, 1);
+        this.app.scene.add(mainLightHelper);
+
+        // Purple accent light helpers
+        for (const lightBar of this.lightBars) {
+            if (lightBar.userData.accentLight) {
+                const purpleHelper = new THREE.PointLightHelper(lightBar.userData.accentLight, 0.1);
+                this.app.scene.add(purpleHelper);
+            }
+        }
+
+        // Store helpers for management
+        this.lightHelpers = [
+            coffeeTableHelper,
+            tvBacklightHelper,
+            sofaBacklightHelper,
+            mainLightHelper
+        ];
+
+        this.toggleLightHelpers(false);
+
+
         this.buildBox()
         
         // Create a Plane Mesh with basic material
         
-        let plane = new THREE.PlaneGeometry( 10, 10 );
+        let plane = new THREE.PlaneGeometry( 9, 9 );
         this.planeMesh = new THREE.Mesh( plane, this.planeMaterial );
         this.planeMesh.rotation.x = -Math.PI / 2;
         this.planeMesh.position.y = -0;
@@ -577,6 +691,20 @@ class MyContents  {
         this.boxMesh.position.y = this.boxDisplacement.y
         this.boxMesh.position.z = this.boxDisplacement.z
         
+    }
+
+
+    toggleLightHelpers(visible) {
+        if (this.lightHelpers && this.lightHelpers.length > 0) {
+            this.lightHelpers.forEach(helper => {
+                helper.visible = visible;
+            });
+        }
+        
+        // Also toggle the spotlight helper if it exists
+        if (this.spotLightHelper) {
+            this.spotLightHelper.visible = visible;
+        }
     }
 
 }

@@ -17,6 +17,21 @@ class MyTV extends THREE.Object3D {
         this.app = app;
         this.type = 'Group';
 
+        // Load black stainless steel texture
+        const inoxBlackTexture = new THREE.TextureLoader().load('textures/inox_black.jpg');
+        inoxBlackTexture.wrapS = THREE.RepeatWrapping;
+        inoxBlackTexture.wrapT = THREE.RepeatWrapping;
+        inoxBlackTexture.repeat.set(2, 2);
+
+        // Create black stainless steel material
+        const inoxBlackMaterial = new THREE.MeshPhongMaterial({
+            color: "#1a1a1a",        // Very dark gray for black steel
+            specular: "#666666",     // Bright specular for metallic shine
+            emissive: "#000000",
+            shininess: 90,           // High shininess for polished metal
+            map: inoxBlackTexture
+        });
+
         // Materials
         const screenMaterial = new THREE.MeshPhongMaterial({ 
             color: 0xffffff,
@@ -24,14 +39,10 @@ class MyTV extends THREE.Object3D {
             emissiveIntensity: 0.3,
             shininess: 100
         });
-        const frameMaterial = new THREE.MeshPhongMaterial({ 
-            color: frameColor,
-            shininess: 30
-        });
-        const standMaterial = new THREE.MeshPhongMaterial({ 
-            color: standColor,
-            shininess: 20
-        });
+        
+        // Use inox material for frame and stand
+        const frameMaterial = inoxBlackMaterial;
+        const standMaterial = inoxBlackMaterial;
 
         // Screen (main display area)
         const screenGeometry = new THREE.BoxGeometry(screenWidth, screenHeight, 0.02);
@@ -55,7 +66,6 @@ class MyTV extends THREE.Object3D {
         stand.position.set(0, standHeight/2, 0);
         this.add(stand);
 
-
         // Store references
         this.screen = screen;
         this.frame = frame;
@@ -75,8 +85,6 @@ class MyTV extends THREE.Object3D {
         this.screen.material.emissive.setHex(0xffffff);
         this.screen.material.emissiveIntensity = 0.4;
     }
-
-
 }
 
 MyTV.prototype.isGroup = true;
