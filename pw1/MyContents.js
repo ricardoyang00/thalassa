@@ -17,6 +17,7 @@ import { MyAcousticFoam } from './MyAcousticFoam.js';
 import { MyTV } from './MyTV.js';
 import { MyMouse } from './MyMouse.js';
 import { MyLamp } from './MyLamp.js';
+import { MyFloorLamp } from './MyFloorLamp.js';
 
 /**
  *  This class contains the contents of out application
@@ -117,6 +118,8 @@ class MyContents  {
         this.keyboard = null
         this.mouse = null
         this.lamp = null
+        this.floorLamp = null
+        this.floorLamp2 = null
     }
 
     /**
@@ -249,11 +252,23 @@ class MyContents  {
 
         if (this.lamp === null) {
             this.lamp = new MyLamp(this)
-            this.lamp.scale.set(0.8, 0.8, 0.8)
+            this.lamp.scale.set(0.7, 0.7, 0.7)
             this.lamp.position.set(1.4, 1.05, -4)
             this.app.scene.add(this.lamp)
         }
-            
+
+        if (this.floorLamp === null) {
+            this.floorLamp = new MyFloorLamp(this);
+            this.floorLamp.position.set(4.1, 0, -0.5);
+            this.app.scene.add(this.floorLamp);
+        }
+
+        if (this.floorLamp2 === null) {
+            this.floorLamp2 = new MyFloorLamp(this);
+            this.floorLamp2.position.set(0.8, 0, 4.1);
+            this.app.scene.add(this.floorLamp2);
+        }
+
         // sofa
         if (this.sofa === null) {
             this.sofa = new MySofa(this, { width: 4.5, depth: 1.6, height: 1.1, cushionHeight: 0.45, color: 0x0b0b0b, cushionColor: 0x1a1a1a, lShape: true, chaiseLength: 2.0, lSide: 'left' });
