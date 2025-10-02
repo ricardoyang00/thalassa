@@ -20,8 +20,8 @@ class MyLamp extends THREE.Object3D {
         });
 
         const lightMaterial = new THREE.MeshPhongMaterial({
-            color: 0xffffaa,
-            emissive: 0xffffaa,
+            color: "#ffffaa",
+            emissive: "#ffffaa",
             emissiveIntensity: 0.8,
             shininess: 100
         });
