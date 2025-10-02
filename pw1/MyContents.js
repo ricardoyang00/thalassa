@@ -18,6 +18,7 @@ import { MyTV } from './MyTV.js';
 import { MyMouse } from './MyMouse.js';
 import { MyLamp } from './MyLamp.js';
 import { MyFloorLamp } from './MyFloorLamp.js';
+import { MyBook } from './MyBook.js';
 
 /**
  *  This class contains the contents of out application
@@ -120,6 +121,11 @@ class MyContents  {
         this.lamp = null
         this.floorLamp = null
         this.floorLamp2 = null
+        this.book = null
+        this.book2 = null
+        this.book3 = null
+        this.book4 = null
+        this.book5 = null
     }
 
     /**
@@ -267,6 +273,48 @@ class MyContents  {
             this.floorLamp2 = new MyFloorLamp(this);
             this.floorLamp2.position.set(0.8, 0, 4.1);
             this.app.scene.add(this.floorLamp2);
+        }
+
+        if (this.book === null) {
+            this.book = new MyBook(this);
+            this.book.scale.set(0.5, 0.5, 0.5);
+            this.book.rotation.y = Math.PI/2;
+            this.book.position.set(-4, 1.83, -4);
+            this.app.scene.add(this.book);
+        }
+
+        if (this.book2 === null) {
+            this.book2 = new MyBook(this, 0x5C4033);
+            this.book2.scale.set(0.5, 0.5, 0.5);
+            this.book2.rotation.y = Math.PI/2;
+            this.book2.position.set(-3.918, 1.83, -4);
+            this.app.scene.add(this.book2);
+        }
+
+        if (this.book3 === null) {
+            this.book3 = new MyBook(this, 0x8B5A2B);
+            this.book3.scale.set(0.5, 0.5, 0.5);
+            this.book3.rotation.y = Math.PI/2;
+            this.book3.position.set(-4.082, 1.83, -4);
+            this.app.scene.add(this.book3);
+        }
+
+        if (this.book4 === null) {
+            this.book4 = new MyBook(this, 0xA0522D);
+            this.book4.scale.set(0.5, 0.5, 0.5);
+            this.book4.rotation.y = Math.PI/2;
+            this.book4.rotateX(-Math.PI/9);
+            this.book4.position.set(-3.63, 1.83, -4);
+            this.app.scene.add(this.book4);
+        }
+
+        if (this.book5 === null) {
+            this.book5 = new MyBook(this, 0xC19A6B);
+            this.book5.scale.set(0.5, 0.5, 0.5);
+            this.book5.rotation.x = Math.PI/2;
+            this.book5.rotateZ(Math.PI/4);
+            this.book5.position.set(-3.2, 1.06, -4.3);
+            this.app.scene.add(this.book5);
         }
 
         // sofa
