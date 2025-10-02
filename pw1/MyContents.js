@@ -19,6 +19,7 @@ import { MyMouse } from './MyMouse.js';
 import { MyLamp } from './MyLamp.js';
 import { MyFloorLamp } from './MyFloorLamp.js';
 import { MyGamingChair } from './MyGamingChair.js';
+import { MyWindow } from './MyWindow.js';
 
 /**
  *  This class contains the contents of out application
@@ -121,6 +122,8 @@ class MyContents  {
         this.lamp = null
         this.floorLamp = null
         this.floorLamp2 = null
+        this.window1 = null
+        this.window2 = null
     }
 
     /**
@@ -151,7 +154,7 @@ class MyContents  {
         if (this.axis === null) {
             // create and attach the axis to the scene
             this.axis = new MyAxis(this)
-            this.app.scene.add(this.axis)
+            //this.app.scene.add(this.axis)
         }
 
         if (this.table === null) { 
@@ -260,7 +263,7 @@ class MyContents  {
 
         if (this.floorLamp === null) {
             this.floorLamp = new MyFloorLamp(this);
-            this.floorLamp.position.set(4.1, 0, -0.5);
+            this.floorLamp.position.set(4.1, 0, -0.7);
             this.app.scene.add(this.floorLamp);
         }
 
@@ -289,7 +292,7 @@ class MyContents  {
         if (this.sofa === null) {
             this.sofa = new MySofa(this, { width: 4.5, depth: 1.6, height: 1.1, cushionHeight: 0.45, color: 0x0b0b0b, cushionColor: 0x1a1a1a, lShape: true, chaiseLength: 2.0, lSide: 'left' });
 
-            this.sofa.position.set(3.5, 0.1, 2.2);
+            this.sofa.position.set(3.5, 0.1, 2);
             this.sofa.rotation.y = Math.PI;
             this.app.scene.add(this.sofa);
         }
@@ -343,6 +346,21 @@ class MyContents  {
             this.app.scene.add(this.acousticFoam2);
         }
 
+        if (this.window1 === null) {
+            this.window1 = new MyWindow(this, "textures/landscape3.jpg", 50, 0.03);
+            this.window1.position.set(-4.49, 1.75, -2);
+
+            this.window1.rotation.y = Math.PI / 2; // facing into the room
+            this.app.scene.add(this.window1);
+        }
+
+        if (this.window2 === null) {
+            this.window2 = new MyWindow(this, "textures/landscape2.jpg", 15, 0.01);
+            this.window2.position.set(3, 1.75, 4.49);
+
+            this.window2.rotation.y = Math.PI;
+            this.app.scene.add(this.window2);
+        }
 
 
         if (this.tv === null) {
@@ -467,8 +485,8 @@ class MyContents  {
         mainLight.position.set(5, 10, 5);
         mainLight.target.position.set(0, 0, 0);
         mainLight.castShadow = true;
-        this.app.scene.add(mainLight);
-        this.app.scene.add(mainLight.target);
+        // this.app.scene.add(mainLight);
+        // this.app.scene.add(mainLight.target);
 
         // === POINT LIGHTS ===
         // 1. Under coffee table - warm accent lighting
