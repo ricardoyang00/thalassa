@@ -22,6 +22,7 @@ import { MyBook } from './MyBook.js';
 import { MyGamingChair } from './MyGamingChair.js';
 import { MyWindow } from './MyWindow.js';
 import { MyLightWall } from './MyLightWall.js';
+import { MyRubikCube } from './MyRubikCube.js';
 
 /**
  *  This class contains the contents of out application
@@ -133,6 +134,7 @@ class MyContents  {
         this.window1 = null
         this.window2 = null
         this.lightWall = null
+        this.cube = null
     }
 
     /**
@@ -340,6 +342,14 @@ class MyContents  {
             this.lightWall = new MyLightWall(this);
             this.lightWall.position.set(0.7, 2.4, -4.5);
             this.app.scene.add(this.lightWall);
+        }
+
+        if (this.cube === null) {
+            this.cube = new MyRubikCube(this);
+            this.cube.scale.set(0.2, 0.2, 0.2);
+            this.cube.position.set(-3.2, 1.92, -4);
+            this.cube.rotateY(- Math.PI/6);
+            this.app.scene.add(this.cube);
         }
 
         // sofa
