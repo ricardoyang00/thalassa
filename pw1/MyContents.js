@@ -19,6 +19,7 @@ import { MyMouse } from './MyMouse.js';
 import { MyLamp } from './MyLamp.js';
 import { MyFloorLamp } from './MyFloorLamp.js';
 import { MyBook } from './MyBook.js';
+import { MyGamingChair } from './MyGamingChair.js';
 
 /**
  *  This class contains the contents of out application
@@ -126,6 +127,7 @@ class MyContents  {
         this.book3 = null
         this.book4 = null
         this.book5 = null
+        this.gamingChair = null;
     }
 
     /**
@@ -315,6 +317,18 @@ class MyContents  {
             this.book5.rotateZ(Math.PI/4);
             this.book5.position.set(-3.2, 1.06, -4.3);
             this.app.scene.add(this.book5);
+        }
+
+        if (this.gamingChair === null) {
+            this.gamingChair = new MyGamingChair(this, {
+                accentColor: 0xff0066,  // Pink gaming accent
+                seatWidth: 0.6,
+                seatDepth: 0.5
+            });
+            this.gamingChair.position.set(-0.3, 0, -2.2); // Position at desk
+            this.gamingChair.rotation.y = Math.PI - Math.PI / 4;
+            this.gamingChair.scale.set(1.2, 1.2, 1.2);
+            this.app.scene.add(this.gamingChair);
         }
 
         // sofa
