@@ -130,6 +130,9 @@ class MyContents  {
         this.book3 = null
         this.book4 = null
         this.book5 = null
+        this.book6 = null
+        this.book7 = null
+        this.book8 = null
         this.gamingChair = null
         this.window1 = null
         this.window2 = null
@@ -318,12 +321,39 @@ class MyContents  {
         }
 
         if (this.book5 === null) {
-            this.book5 = new MyBook(this, 0xC19A6B);
+            this.book5 = new MyBook(this, 0xC9641B);
             this.book5.scale.set(0.5, 0.5, 0.5);
             this.book5.rotation.x = Math.PI/2;
             this.book5.rotateZ(Math.PI/4);
             this.book5.position.set(-3.2, 1.06, -4.3);
             this.app.scene.add(this.book5);
+        }
+
+        if (this.book6 === null) {
+            this.book6 = new MyBook(this, 0xC19A6B);
+            this.book6.scale.set(0.5, 0.5, 0.5);
+            this.book6.rotation.x = Math.PI/2;
+            this.book6.rotateZ(Math.PI/9);
+            this.book6.position.set(-3.2, 1.145, -4.3);
+            this.app.scene.add(this.book6);
+        }
+
+        if (this.book7 === null) {
+            this.book7 = new MyBook(this, 0xFF8C00);
+            this.book7.scale.set(0.5, 0.5, 0.5);
+            this.book7.rotation.x = Math.PI/2;
+            this.book7.rotateZ(-Math.PI/4);
+            this.book7.position.set(-4, 2.66, -4.3);
+            this.app.scene.add(this.book7);
+        }
+
+        if (this.book8 === null) {
+            this.book8 = new MyBook(this, 0x8B5A2B);
+            this.book8.scale.set(0.5, 0.5, 0.5);
+            this.book8.rotation.x = Math.PI/2;
+            this.book8.rotateZ(-Math.PI/9);
+            this.book8.position.set(-3.8, 2.745, -4.3);
+            this.app.scene.add(this.book8);
         }
 
         if (this.gamingChair === null) {
