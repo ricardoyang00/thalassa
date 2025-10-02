@@ -21,6 +21,7 @@ import { MyFloorLamp } from './MyFloorLamp.js';
 import { MyBook } from './MyBook.js';
 import { MyGamingChair } from './MyGamingChair.js';
 import { MyWindow } from './MyWindow.js';
+import { MyLightWall } from './MyLightWall.js';
 
 /**
  *  This class contains the contents of out application
@@ -128,9 +129,10 @@ class MyContents  {
         this.book3 = null
         this.book4 = null
         this.book5 = null
-        this.gamingChair = null;
+        this.gamingChair = null
         this.window1 = null
         this.window2 = null
+        this.lightWall = null
     }
 
     /**
@@ -332,6 +334,12 @@ class MyContents  {
             this.gamingChair.rotation.y = Math.PI - Math.PI / 4;
             this.gamingChair.scale.set(1.2, 1.2, 1.2);
             this.app.scene.add(this.gamingChair);
+        }
+
+        if (this.lightWall === null) {
+            this.lightWall = new MyLightWall(this);
+            this.lightWall.position.set(0.7, 2.4, -4.5);
+            this.app.scene.add(this.lightWall);
         }
 
         // sofa
