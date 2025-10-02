@@ -18,6 +18,7 @@ import { MyTV } from './MyTV.js';
 import { MyMouse } from './MyMouse.js';
 import { MyLamp } from './MyLamp.js';
 import { MyFloorLamp } from './MyFloorLamp.js';
+import { MyGamingChair } from './MyGamingChair.js';
 
 /**
  *  This class contains the contents of out application
@@ -267,6 +268,21 @@ class MyContents  {
             this.floorLamp2 = new MyFloorLamp(this);
             this.floorLamp2.position.set(0.8, 0, 4.1);
             this.app.scene.add(this.floorLamp2);
+        }
+
+        this.gamingChair = null;
+
+        // In MyContents.js init() method
+        if (this.gamingChair === null) {
+            this.gamingChair = new MyGamingChair(this, {
+                accentColor: 0xff0066,  // Pink gaming accent
+                seatWidth: 0.6,
+                seatDepth: 0.5
+            });
+            this.gamingChair.position.set(-0.3, 0, -2.2); // Position at desk
+            this.gamingChair.rotation.y = Math.PI - Math.PI / 4;
+            this.gamingChair.scale.set(1.1, 1.1, 1.1); // Slightly larger scale
+            this.app.scene.add(this.gamingChair);
         }
 
         // sofa
