@@ -10,27 +10,27 @@ class MyLightWall extends THREE.Object3D {
         const spacingY = hexRadius * 1.78;
 
         const customColors = [
-            0x012A4A,
+            "#a62c00",
 
-            0x013A63,
+            "#d33800",
 
-            0x01497C,
-            0x01497C,
+            "#FF4500",
+            "#e23c00",
 
-            0x014F86,
-            0x014F86,
+            "rgba(224, 93, 32, 1)",
+            "#FF6600",
 
-            0x2A6F97,
+            "#FF7F00",
 
-            0x2C7DA0,
-            0x2C7DA0,
-            0x61A5C2,
+            "#FF8C00",
+            "#FFA500",
+            "#FFB347",
 
-            0x468FAF,
-            0x61A5C2,
-            0x89C2D9,
+            "#FFCC5C",
+            "#FFD580",
+            "#FFE5B4",
 
-            0xA9D6E5
+            "#FFF5E6"
         ];
 
         const positions = [
