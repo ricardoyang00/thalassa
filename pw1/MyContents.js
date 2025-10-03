@@ -389,21 +389,22 @@ class MyContents  {
 
         if (this.controller === null) {
             this.controller = new MyController(this);
-            this.controller.scale.set(0.2, 0.2, 0.2);
+            this.controller.scale.set(0.16, 0.16, 0.16);
             this.controller.rotateY(Math.PI/2);
             this.controller.rotateX(-Math.PI/2);
             this.controller.rotateZ(-Math.PI/4);
-            this.controller.position.set(-3.5, 0.515, 3);
+            //this.controller.position.set(-3.5, 0.515, 3);
+            this.controller.position.set(1.65, 0.39, 1.8);
             this.app.scene.add(this.controller);
         }
 
         if (this.controller2 === null) {
             this.controller2 = new MyController(this);
-            this.controller2.scale.set(0.2, 0.2, 0.2);
+            this.controller2.scale.set(0.16, 0.16, 0.16);
             this.controller2.rotateY(Math.PI/2);
             this.controller2.rotateX(-Math.PI/2);
             this.controller2.rotateZ(Math.PI/9);
-            this.controller2.position.set(-3.5, 0.515, 2.5);
+            this.controller2.position.set(1.5, 0.39, 1);
             this.app.scene.add(this.controller2);
         }
 

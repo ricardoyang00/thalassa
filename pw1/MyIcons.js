@@ -109,8 +109,8 @@ class MyIcons extends THREE.Object3D {
 
         const baseGeometry = new THREE.BoxGeometry(2, 0.02, 0.5);
         const baseMaterial = new THREE.MeshPhongMaterial({ 
-            color: 0xffffff,
-            shininess: 50,
+            color: "#858585",
+            shininess: 100,
             map: woodTexture
         });
         const base = new THREE.Mesh(baseGeometry, baseMaterial);
