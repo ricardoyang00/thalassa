@@ -23,6 +23,7 @@ import { MyGamingChair } from './MyGamingChair.js';
 import { MyWindow } from './MyWindow.js';
 import { MyLightWall } from './MyLightWall.js';
 import { MyRubikCube } from './MyRubikCube.js';
+import { MyController } from './MyController.js';
 
 /**
  *  This class contains the contents of out application
@@ -138,6 +139,8 @@ class MyContents  {
         this.window2 = null
         this.lightWall = null
         this.cube = null
+        this.controller = null
+        this.controller2 = null
     }
 
     /**
@@ -378,8 +381,28 @@ class MyContents  {
             this.cube = new MyRubikCube(this);
             this.cube.scale.set(0.2, 0.2, 0.2);
             this.cube.position.set(-3.2, 1.92, -4);
-            this.cube.rotateY(- Math.PI/6);
+            this.cube.rotateY(-Math.PI/6);
             this.app.scene.add(this.cube);
+        }
+
+        if (this.controller === null) {
+            this.controller = new MyController(this);
+            this.controller.scale.set(0.2, 0.2, 0.2);
+            this.controller.rotateY(Math.PI/2);
+            this.controller.rotateX(-Math.PI/2);
+            this.controller.rotateZ(-Math.PI/4);
+            this.controller.position.set(-3.5, 0.515, 3);
+            this.app.scene.add(this.controller);
+        }
+
+        if (this.controller2 === null) {
+            this.controller2 = new MyController(this);
+            this.controller2.scale.set(0.2, 0.2, 0.2);
+            this.controller2.rotateY(Math.PI/2);
+            this.controller2.rotateX(-Math.PI/2);
+            this.controller2.rotateZ(Math.PI/9);
+            this.controller2.position.set(-3.5, 0.515, 2.5);
+            this.app.scene.add(this.controller2);
         }
 
         // sofa
