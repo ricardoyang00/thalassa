@@ -24,6 +24,7 @@ import { MyWindow } from './MyWindow.js';
 import { MyLightWall } from './MyLightWall.js';
 import { MyRubikCube } from './MyRubikCube.js';
 import { MyController } from './MyController.js';
+import { MyIcons } from './MyIcons.js';
 
 /**
  *  This class contains the contents of out application
@@ -141,6 +142,7 @@ class MyContents  {
         this.cube = null
         this.controller = null
         this.controller2 = null
+        this.icons = null
     }
 
     /**
@@ -403,6 +405,15 @@ class MyContents  {
             this.controller2.rotateZ(Math.PI/9);
             this.controller2.position.set(-3.5, 0.515, 2.5);
             this.app.scene.add(this.controller2);
+        }
+
+        if (this.icons === null) {
+            this.icons = new MyIcons(this);
+            this.icons.scale.set(0.5, 0.5, 0.5);
+            this.icons.rotateY(Math.PI/2);
+            this.icons.rotateY(-Math.PI/12)
+            this.icons.position.set(-3.6, 0.6, 0.65);
+            this.app.scene.add(this.icons);
         }
 
         // sofa
