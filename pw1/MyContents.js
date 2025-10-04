@@ -109,7 +109,7 @@ class MyContents  {
         // TEXTURE LOADER
         this.loader = new THREE.TextureLoader();
         this.textures = new Map();
-        this.loadTextures();
+        //this.loadTextures();
     
 
         //this.planeMaterial = new THREE.MeshPhongMaterial({ color: this.diffusePlaneColor, 
@@ -182,17 +182,30 @@ class MyContents  {
             { name: 'sponge', path: 'textures/sponge.jpg', repeat: [1, 1] }
         ];
         
-        textureConfigs.forEach(config => {
-            const texture = this.loader.load(config.path);
-            if (config.repeat) {
-                texture.wrapS = THREE.RepeatWrapping;
-                texture.wrapT = THREE.RepeatWrapping;
-                texture.repeat.set(...config.repeat);
-            }
-            this.textures.set(config.name, texture);
+        const loadPromises = textureConfigs.map(config => {
+            return new Promise((resolve) => {
+                const texture = this.loader.load(
+                    config.path,
+                    (loadedTexture) => {
+                        // Texture loaded successfully
+                        if (config.repeat) {
+                            loadedTexture.wrapS = THREE.RepeatWrapping;
+                            loadedTexture.wrapT = THREE.RepeatWrapping;
+                            loadedTexture.repeat.set(...config.repeat);
+                        }
+                        this.textures.set(config.name, loadedTexture);
+                        resolve();
+                    },
+                    undefined, // onProgress
+                    (error) => {
+                        console.error(`Failed to load texture: ${config.path}`, error);
+                        resolve(); // Still resolve to not block other textures
+                    }
+                );
+            });
         });
-
-        console.log('Textures loaded successfully');
+        
+        return Promise.all(loadPromises);
     }
 
     /**
