@@ -2,10 +2,9 @@ import * as THREE from 'three';
 
 // landscape should be a texture path
 class MyWindow extends THREE.Object3D {
-    constructor(app, landscape, lightIntensity = 0.5, emissiveIntensity = 0.3) {
+    constructor(app, landscapeTexture, metalTexture, lightIntensity = 0.5, emissiveIntensity = 0.3) {
         super();
         this.app = app;
-        this.landscape = landscape;
         this.lightIntensity = lightIntensity;
         this.type = 'Group';
 
@@ -14,28 +13,25 @@ class MyWindow extends THREE.Object3D {
         const frameThickness = 0.04;
         const frameDepth = 0.08;
         
-        // Create the window glass (landscape view)
+        // window glass
         const windowGeometry = new THREE.PlaneGeometry(x - frameThickness * 2, y - frameThickness * 2);
-        const landscapeTexture = new THREE.TextureLoader().load(landscape);
         
-        // Make it semi-transparent to allow light through
         const windowMaterial = new THREE.MeshPhongMaterial({
             map: landscapeTexture,
             transparent: true,
             opacity: 1,
             shininess: 100,
-            emissive: 0xb3c6ff, // Blue glow color
-            emissiveIntensity: emissiveIntensity // Glow intensity (0-1)
+            emissive: 0xb3c6ff,
+            emissiveIntensity: emissiveIntensity
         });
         
         const windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
         windowMesh.position.set(0, y/2, 0);
         this.add(windowMesh);
 
-        // Create the metal frame materials
-        const frameTexture = new THREE.TextureLoader().load('textures/inox_black.jpg');
+        // metal frame materials
         const frameMaterial = new THREE.MeshPhongMaterial({
-            map: frameTexture,
+            map: metalTexture,
             color: "#2a2a2a"
         });
 
@@ -113,10 +109,11 @@ class MyWindow extends THREE.Object3D {
         bottomRightCorner.position.set(x/2 - frameThickness/2, frameThickness/2, frameDepth/2 - 0.02);
         this.add(bottomRightCorner);
 
-        // // Create moonlight spotlight coming through the window
+
+        // moonlight spotlight coming through the window
         this.moonlight = new THREE.SpotLight(0xb3c6ff, this.lightIntensity, 10, Math.PI / 10, 0.3, 1);
-        this.moonlight.position.set(0, y, -2); // Position in front of the window
-        this.moonlight.target.position.set(0, -0.9, 2); // Target point inside the room
+        this.moonlight.position.set(0, y, -2);
+        this.moonlight.target.position.set(0, -0.9, 2);
         
         // Add subtle blue tint for moonlight
         this.moonlight.color.setHSL(0.6, 0.3, 0.8);
@@ -128,17 +125,6 @@ class MyWindow extends THREE.Object3D {
         //this.spotLightHelper = new THREE.SpotLightHelper(this.moonlight);
         //this.add(this.spotLightHelper);
 
-    }
-
-    // Method to update light intensity
-    setLightIntensity(intensity) {
-        this.lightIntensity = Math.max(0, Math.min(1, intensity)); // Clamp between 0 and 1
-        this.moonlight.intensity = this.lightIntensity;
-    }
-
-    // Method to get current light intensity
-    getLightIntensity() {
-        return this.lightIntensity;
     }
 }
 

@@ -2,57 +2,40 @@ import * as THREE from 'three';
 
 class MyGuitar extends THREE.Object3D {
 
-    constructor(app) {
+    constructor(app, lightWoodTexture, darkWoodTexture, goldTexture) {
         super();
         this.app = app;
         this.type = 'Group';
 
-        // Load textures
-        const lightWoodTexture = new THREE.TextureLoader().load('textures/wood_light.jpg');
-        lightWoodTexture.wrapS = THREE.RepeatWrapping;
-        lightWoodTexture.wrapT = THREE.RepeatWrapping;
-        lightWoodTexture.repeat.set(1, 1);
-
-        const darkWoodTexture = new THREE.TextureLoader().load('textures/wood_black.jpg');
-        darkWoodTexture.wrapS = THREE.RepeatWrapping;
-        darkWoodTexture.wrapT = THREE.RepeatWrapping;
-        darkWoodTexture.repeat.set(1, 1);
-
-        const goldTexture = new THREE.TextureLoader().load('textures/gold.jpg');
-        goldTexture.wrapS = THREE.RepeatWrapping;
-        goldTexture.wrapT = THREE.RepeatWrapping;
-        goldTexture.repeat.set(2, 2);
-
-        // Create materials
         const lightWoodMaterial = new THREE.MeshPhongMaterial({
-            color: "#d4a574",        // Light wood tone
-            specular: "#8b7355",     // Warm brown specular
+            color: "#d4a574",
+            specular: "#8b7355",
             emissive: "#000000",
-            shininess: 30,           // Medium shine for polished wood
+            shininess: 30,
             map: lightWoodTexture
         });
 
         const darkWoodMaterial = new THREE.MeshPhongMaterial({
-            color: "#2a1f14",        // Dark wood tone
-            specular: "#1a1a1a",     // Dark specular
+            color: "#2a1f14",
+            specular: "#1a1a1a",
             emissive: "#000000",
-            shininess: 40,           // Slightly higher shine for ebony
+            shininess: 40,
             map: darkWoodTexture
         });
 
         const goldMaterial = new THREE.MeshPhongMaterial({
-            color: "#ffd700",        // Gold color
-            specular: "#ffff99",     // Bright yellow specular
+            color: "#ffd700",
+            specular: "#ffff99",
             emissive: "#000000",
-            shininess: 80,           // High shine for metal
+            shininess: 80,
             map: goldTexture
         });
 
         const blackMaterial = new THREE.MeshPhongMaterial({
-            color: "#0a0a0a",        // Very dark for sound hole
+            color: "#0a0a0a",
             specular: "#1a1a1a",
             emissive: "#000000",
-            shininess: 5             // Very low shine
+            shininess: 5
         });
 
         // lower bout (light wood body)

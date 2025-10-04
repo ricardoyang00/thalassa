@@ -2,64 +2,59 @@ import * as THREE from 'three';
 
 class MyCompoundObj extends THREE.Object3D {
 
-    constructor(app, {
-        screenWidth = 9.3,
-        screenHeight = 4,
-        depth = 0.1,
-        frameWidth = 0.15,
-        standHeight = 1,
-        baseRadius = 0.8,
-        screenColor = 0x000000,
-        frameColor = 0x2c2c2c,
-        standColor = 0x666666,
-        baseColor = 0x444444
-    } = {}) {
+    constructor(app, inoxBlackTexture_) {
         super();
         this.app = app;
         this.type = 'Group';
 
-        // Load black stainless steel texture
-        const inoxBlackTexture = new THREE.TextureLoader().load('textures/inox_black.jpg');
-        inoxBlackTexture.wrapS = THREE.RepeatWrapping;
-        inoxBlackTexture.wrapT = THREE.RepeatWrapping;
-        inoxBlackTexture.repeat.set(1, 1);
+        const screenWidth = 9.3
+        const screenHeight = 4
+        const depth = 0.1
+        const frameWidth = 0.15
+        const standHeight = 1
+        const baseRadius = 0.8
+        const screenColor = 0x000000
+        const frameColor = 0x2c2c2c
+        const standColor = 0x666666
+        const baseColor = 0x444444
 
-        // Create materials using MeshPhongMaterial
+        const inoxBlackTexture = inoxBlackTexture_.clone()
+        inoxBlackTexture.repeat.set(1,1)
+
         const screenMaterial = new THREE.MeshPhongMaterial({ 
             color: screenColor,
-            emissive: 0x000000,
-            emissiveIntensity: 0,
-            specular: 0x111111,
-            shininess: 100,
-            side: THREE.DoubleSide
+            emissive: "#ffffff",
+            emissiveIntensity: 0.8,
+            specular: "#111111",
+            shininess: 100
         });
 
         const frameMaterial = new THREE.MeshPhongMaterial({ 
             color: frameColor,
-            specular: 0x666666,
+            specular: "#666666",
             shininess: 80,
             map: inoxBlackTexture
         });
 
         const standMaterial = new THREE.MeshPhongMaterial({ 
             color: standColor,
-            specular: 0x888888,
+            specular: "#888888",
             shininess: 90,
             map: inoxBlackTexture
         });
 
         const baseMaterial = new THREE.MeshPhongMaterial({ 
             color: baseColor,
-            specular: 0x777777,
+            specular: "#777777",
             shininess: 85,
             map: inoxBlackTexture
         });
 
         const powerButtonMaterial = new THREE.MeshPhongMaterial({ 
-            color: 0xff0000,
-            emissive: 0x330000,
-            emissiveIntensity: 0.3,
-            specular: 0xff6666,
+            color: "#ff0000",
+            emissive: "#330000",
+            emissiveIntensity: 1,
+            specular: "#ff6666",
             shininess: 100
         });
 
@@ -107,13 +102,6 @@ class MyCompoundObj extends THREE.Object3D {
         powerButton.rotation.x = Math.PI / 2;
         powerButton.position.set(screenWidth/2 - 0.2, standHeight/2 + 0.47, 0);
         this.add(powerButton);
-
-        // Store reference to screen for methods
-        this.screenMaterial = screenMaterial;
-
-        this.screenMaterial.color.setHex(0xffffff);
-        this.screenMaterial.emissive.setHex(0xffffff);
-        this.screenMaterial.emissiveIntensity = 0.5;
     }
 
 }

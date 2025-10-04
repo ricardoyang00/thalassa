@@ -1,15 +1,10 @@
 import * as THREE from 'three';
 
 class MyLamp extends THREE.Object3D {
-    constructor(app) {
+    constructor(app, blackWoodTexture) {
         super();
         this.app = app;
         this.type = 'Group';
-
-        const blackWoodTexture = new THREE.TextureLoader().load('textures/wood_black.jpg');
-        blackWoodTexture.wrapS = THREE.RepeatWrapping;
-        blackWoodTexture.wrapT = THREE.RepeatWrapping;
-        blackWoodTexture.repeat.set(2, 2);
 
         const blackWoodMaterial = new THREE.MeshPhongMaterial({
             color: "#2a2a2a",

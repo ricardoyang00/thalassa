@@ -2,11 +2,11 @@ import * as THREE from 'three';
 
 class MyLightBar extends THREE.Object3D {
     constructor(app, {
-        length = 4, // Length of the light bar in units
-        color = 0x8000ff, // Default purple color
-        intensity = 1, // Light intensity
-        width = 0.2, // Width of the bar
-        height = 0.2, // Height of the bar
+        length = 4,             // Length of the light bar in units
+        color = "#8000ff",      // Default purple color
+        intensity = 1,          // Light intensity
+        width = 0.2,            // Width of the bar
+        height = 0.2,           // Height of the bar
     } = {}) {
         super();
         this.app = app;
@@ -36,19 +36,6 @@ class MyLightBar extends THREE.Object3D {
         //this.light.shadow.mapSize.height = 512;
         //this.light.shadow.camera.near = 0.1;
         //this.light.shadow.camera.far = 20;
-    }
-
-    // Method to update the color of the light bar and light
-    setColor(color) {
-        this.barMesh.material.color.set(color);
-        this.barMesh.material.emissive.set(color);
-        this.light.color.set(color);
-    }
-
-    // Method to update the light intensity
-    setIntensity(intensity) {
-        this.barMesh.material.emissiveIntensity = 0.5 * intensity;
-        this.light.intensity = intensity;
     }
 }
 

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 class MyBook extends THREE.Object3D {
-    constructor(app, coverColor = 0x8B4513) {
+    constructor(app, paperTexture_, coverColor = "#8B4513") {
         super();
         this.app = app;
         this.type = 'Group';

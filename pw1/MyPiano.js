@@ -2,67 +2,58 @@ import * as THREE from 'three';
 
 class MyPiano extends THREE.Object3D {
 
-    constructor(app) {
+    constructor(app, blackWoodTexture_, inoxBlackTexture) {
         super();
         this.app = app;
         this.type = 'Group';
 
-        // Load textures
-        const blackWoodTexture = new THREE.TextureLoader().load('textures/wood_black.jpg');
-        blackWoodTexture.wrapS = THREE.RepeatWrapping;
-        blackWoodTexture.wrapT = THREE.RepeatWrapping;
-        blackWoodTexture.repeat.set(3, 1); // Horizontal grain for piano body
+        const blackWoodTexture = blackWoodTexture_.clone();
+        blackWoodTexture.repeat.set(3, 1); 
 
-        const inoxBlackTexture = new THREE.TextureLoader().load('textures/inox_black.jpg');
-        inoxBlackTexture.wrapS = THREE.RepeatWrapping;
-        inoxBlackTexture.wrapT = THREE.RepeatWrapping;
-        inoxBlackTexture.repeat.set(1, 1);
-
-        // Create realistic materials
         const blackWoodMaterial = new THREE.MeshPhongMaterial({
-            color: "#2a2a2a",        // Dark gray tint for black wood
-            specular: "#404040",     // Medium gray specular for subtle shine
+            color: "#2a2a2a",
+            specular: "#404040",
             emissive: "#000000",
-            shininess: 60,           // Semi-glossy finish typical of finished wood
+            shininess: 60,
             map: blackWoodTexture
         });
 
         const whiteKeyMaterial = new THREE.MeshPhongMaterial({
-            color: "#f8f8f8",        // Slightly off-white for realism
-            specular: "#ffffff",     // White specular for plastic/ivory shine
+            color: "#f8f8f8",
+            specular: "#ffffff",
             emissive: "#000000",
-            shininess: 80,           // High shine for smooth key surface
+            shininess: 80,
         });
 
         const blackKeyMaterial = new THREE.MeshPhongMaterial({
-            color: "#0a0a0a",        // Very dark for black keys
-            specular: "#2a2a2a",     // Dark specular
+            color: "#0a0a0a",
+            specular: "#2a2a2a",
             emissive: "#000000",
-            shininess: 90,           // High shine for polished black keys
+            shininess: 90,
         });
 
         const metalMaterial = new THREE.MeshPhongMaterial({
-            color: "#1a1a1a",        // Very dark gray for black metal
-            specular: "#666666",     // Bright specular for metallic shine
+            color: "#1a1a1a",
+            specular: "#666666",
             emissive: "#000000",
-            shininess: 90,           // High shininess for polished metal
+            shininess: 90,
             map: inoxBlackTexture
         });
 
         const buttonMaterial = new THREE.MeshPhongMaterial({
-            color: "#cc0000",        // Deep red for power button
-            specular: "#ff6666",     // Bright red specular
-            emissive: "#330000",     // Slight red glow
+            color: "#cc0000",
+            specular: "#ff6666",
+            emissive: "#330000",
             emissiveIntensity: 0.3,
-            shininess: 100,          // Very shiny for plastic button
+            shininess: 100,
         });
 
         const screenMaterial = new THREE.MeshPhongMaterial({
-            color: "#002200",        // Dark green for LCD screen
-            specular: "#004400",     // Green specular
-            emissive: "#001100",     // Green glow for active screen
+            color: "#002200",
+            specular: "#004400",
+            emissive: "#001100",
             emissiveIntensity: 0.5,
-            shininess: 50,           // Medium shine for screen surface
+            shininess: 50,
         });
 
         // Piano body (black wood)
@@ -105,7 +96,7 @@ class MyPiano extends THREE.Object3D {
         screen.position.set(-0.6, 0.16, -0.25);
         this.add(screen);
 
-        // Add some metal control knobs/sliders
+        // Metal control knobs/sliders
         const knobGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.015, 12);
         
         // Volume knob
@@ -118,7 +109,7 @@ class MyPiano extends THREE.Object3D {
         tempoKnob.position.set(0.3, 0.165, -0.25);
         this.add(tempoKnob);
 
-        // Add small metal feet for the piano
+        // Small metal feet for the piano
         const footGeometry = new THREE.CylinderGeometry(0.015, 0.015, 0.01, 8);
         const footPositions = [
             [-0.9, 0, -0.35],
@@ -132,23 +123,6 @@ class MyPiano extends THREE.Object3D {
             foot.position.set(x, y, z);
             this.add(foot);
         });
-
-        // Store references for potential future use
-        this.screen = screen;
-        this.powerButton = powerButton;
-        this.volumeKnob = volumeKnob;
-        this.tempoKnob = tempoKnob;
-    }
-
-    // Method to change screen color (for different modes)
-    setScreenColor(color) {
-        this.screen.material.color.setHex(color);
-        this.screen.material.emissive.setHex(color & 0x333333); // Darker emissive
-    }
-
-    // Method to toggle power button glow
-    setPowerButtonGlow(intensity) {
-        this.powerButton.material.emissiveIntensity = intensity;
     }
 }
 

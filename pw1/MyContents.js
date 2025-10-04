@@ -103,21 +103,17 @@ class MyContents  {
         this.carpetEnabled = true
         this.lastCarpetEnabled = null
 
-        const floor_texture = new THREE.TextureLoader().load('textures/wood_floor2.jpg');
-        floor_texture.wrapS = THREE.RepeatWrapping;
-        floor_texture.wrapT = THREE.RepeatWrapping;
-        floor_texture.repeat.set(4, 4);
+
+
+        // TEXTURE LOADER
+        this.loader = new THREE.TextureLoader();
+        this.textures = new Map();
+        this.loadTextures();
+    
 
         //this.planeMaterial = new THREE.MeshPhongMaterial({ color: this.diffusePlaneColor, 
         //    specular: this.specularPlaneColor, emissive: "#000000", shininess: this.planeShininess, map: floor_texture })
 
-        this.planeMaterial = new THREE.MeshPhongMaterial({ 
-            color: "#8b7355",        // Much darker brown (instead of "#ffffffff")
-            specular: "#2a2a2a",     // Dark gray specular for subtle shine
-            emissive: "#000000", 
-            shininess: 30,           // Lower shininess for wood-like appearance
-            map: floor_texture 
-        })
         this.shelf = null
         this.guitar = null
         this.guitarStand = null
@@ -164,6 +160,36 @@ class MyContents  {
         
     }
 
+    loadTextures() {
+        const textureConfigs = [
+            { name: 'inox_black', path: 'textures/inox_black.jpg', repeat: [2, 2] },
+            { name: 'red_carpet', path: 'textures/carpet.jpg', repeat: [2, 2] },
+            { name: 'wood_black', path: 'textures/wood_black.jpg', repeat: [2, 2] },
+            { name: 'landscape2', path: 'textures/landscape2.jpg' },
+            { name: 'landscape3', path: 'textures/landscape3.jpg' },
+            { name: 'chesterfield', path: 'textures/leather_chesterfield_black.jpg', repeat: [2, 2] },
+            { name: 'leather_black', path: 'textures/leather_black.jpg', repeat: [1, 1] },
+            { name: 'floor', path: 'textures/wood_floor2.jpg', repeat: [4, 2] },
+            { name: 'paper', path: 'textures/paper.jpg', repeat: [1, 1] },
+            { name: 'wood_light', path: 'textures/wood_light.jpg', repeat: [1, 2] },
+            { name: 'gold', path: 'textures/gold.jpg', repeat: [2, 2] },
+            { name: 'felt', path: 'textures/felt.jpg', repeat: [1, 1] },
+            { name: 'concrete', path: 'textures/concrete_light.jpg', repeat: [3, 2] },
+        ];
+        
+        textureConfigs.forEach(config => {
+            const texture = this.loader.load(config.path);
+            if (config.repeat) {
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set(...config.repeat);
+            }
+            this.textures.set(config.name, texture);
+        });
+
+        console.log('Textures loaded successfully');
+    }
+
     /**
      * initializes the contents
      */
@@ -177,64 +203,32 @@ class MyContents  {
         }
 
         if (this.table === null) { 
-            // Load textures for table (same as shelf)
-            const blackWoodTexture = new THREE.TextureLoader().load('textures/wood_black.jpg');
-            blackWoodTexture.wrapS = THREE.RepeatWrapping;
-            blackWoodTexture.wrapT = THREE.RepeatWrapping;
-            blackWoodTexture.repeat.set(2, 1); // Horizontal grain for table top
-
-            const inoxTexture = new THREE.TextureLoader().load('textures/inox_black.jpg');
-            inoxTexture.wrapS = THREE.RepeatWrapping;
-            inoxTexture.wrapT = THREE.RepeatWrapping;
-            inoxTexture.repeat.set(1, 3); // Vertical pattern for legs
-
-            // Create materials (same as shelf)
-            const blackWoodMaterial = new THREE.MeshPhongMaterial({
-                color: "#2a2a2a",        // Dark gray tint for black wood
-                specular: "#404040",     // Medium gray specular
-                emissive: "#000000",
-                shininess: 30,           // Medium shine for finished wood
-                map: blackWoodTexture
-            });
-
-            const inoxMaterial = new THREE.MeshPhongMaterial({
-                color: "#1a1a1a",        // Very dark gray for black steel
-                specular: "#666666",     // Bright specular for metallic shine
-                emissive: "#000000",
-                shininess: 90,           // High shininess for polished metal
-                map: inoxTexture
-            });
-
-            // Create table with both materials (assuming MyTable accepts materials)
-            this.table = new MyTable(this, blackWoodMaterial, inoxMaterial)
+            this.table = new MyTable(this, this.textures.get('wood_black'), this.textures.get('inox_black'))
             this.table.position.set(0, 0, -3.6)
             this.app.scene.add(this.table)
         }
 
         if (this.walls === null) {
-            this.walls = new MyWalls(this)
+            this.walls = new MyWalls(this, this.textures.get('concrete'))
             this.app.scene.add(this.walls)
         }
 
         if (this.obj === null) {
-            this.obj = new MyCompoundObj(this)
-            
+            this.obj = new MyCompoundObj(this, this.textures.get('inox_black'))
             this.obj.position.set(0, 1.05, -4)
             this.obj.scale.set(0.2, 0.2, 0.2)
-            //this.obj.rotation.y = Math.PI / 4
-            
             this.app.scene.add(this.obj)
         }
 
         if (this.shelf === null) {
-            this.shelf = new MyShelf(this)
+            this.shelf = new MyShelf(this, this.textures.get('wood_black'), this.textures.get('inox_black'))
             this.shelf.rotation.y = Math.PI
             this.shelf.position.set(-3.6, 0, -4)
             this.app.scene.add(this.shelf)
         }
 
         if (this.guitar === null) {
-            this.guitar = new MyGuitar(this)
+            this.guitar = new MyGuitar(this, this.textures.get('wood_light'), this.textures.get('wood_black'), this.textures.get('gold'))
             this.guitar.rotation.y = - Math.PI / 4
             this.guitar.rotateX(- Math.PI / 8)
             this.guitar.scale.set(0.3, 0.3, 0.3)
@@ -243,7 +237,7 @@ class MyContents  {
         }
 
         if (this.guitarStand === null) {
-            this.guitarStand = new MyGuitarStand(this)
+            this.guitarStand = new MyGuitarStand(this, this.textures.get('wood_black'), this.textures.get('inox_black'))
             this.guitarStand.scale.set(1.5, 1.5, 1.5)
             this.guitarStand.position.set(3.5, -0.05, -3.7)
             this.guitarStand.rotation.y = -Math.PI / 4
@@ -251,7 +245,7 @@ class MyContents  {
         }
 
         if (this.piano === null) {
-            this.piano = new MyPiano(this)
+            this.piano = new MyPiano(this, this.textures.get('wood_black'), this.textures.get('inox_black'))
             this.piano.scale.set(0.8, 0.8, 0.8)
             this.piano.rotation.z = Math.PI / 12 * 5
             this.piano.position.set(4.2, 0.73, -2.7)
@@ -259,7 +253,7 @@ class MyContents  {
         }
 
         if (this.keyboard === null) {
-            this.keyboard = new MyKeyboard(this)
+            this.keyboard = new MyKeyboard(this, this.textures.get('inox_black'))
             this.keyboard.rotateY(Math.PI)
             this.keyboard.scale.set(0.3, 0.3, 0.3)
             this.keyboard.position.set(-0.2, 1.05, -3.3)
@@ -267,33 +261,33 @@ class MyContents  {
         }
 
         if (this.mouse === null) {
-            this.mouse = new MyMouse(this)
+            this.mouse = new MyMouse(this, this.textures.get('felt'))
             this.mouse.scale.set(0.12, 0.12, 0.12)
             this.mouse.position.set(0.7, 1.05, -3.3)
             this.app.scene.add(this.mouse)
         }
 
         if (this.lamp === null) {
-            this.lamp = new MyLamp(this)
+            this.lamp = new MyLamp(this, this.textures.get('wood_black'))
             this.lamp.scale.set(0.7, 0.7, 0.7)
             this.lamp.position.set(1.4, 1.05, -4)
             this.app.scene.add(this.lamp)
         }
 
         if (this.floorLamp === null) {
-            this.floorLamp = new MyFloorLamp(this);
+            this.floorLamp = new MyFloorLamp(this, this.textures.get('wood_black'));
             this.floorLamp.position.set(4.1, 0, -0.7);
             this.app.scene.add(this.floorLamp);
         }
 
         if (this.floorLamp2 === null) {
-            this.floorLamp2 = new MyFloorLamp(this);
+            this.floorLamp2 = new MyFloorLamp(this, this.textures.get('wood_black'));
             this.floorLamp2.position.set(0.8, 0, 4.1);
             this.app.scene.add(this.floorLamp2);
         }
 
         if (this.book === null) {
-            this.book = new MyBook(this);
+            this.book = new MyBook(this, this.textures.get('paper'), "#8B4513");
             this.book.scale.set(0.5, 0.5, 0.5);
             this.book.rotation.y = Math.PI/2;
             this.book.position.set(-4, 1.83, -4);
@@ -301,7 +295,7 @@ class MyContents  {
         }
 
         if (this.book2 === null) {
-            this.book2 = new MyBook(this, 0x5C4033);
+            this.book2 = new MyBook(this, this.textures.get('paper'),0x5C4033);
             this.book2.scale.set(0.5, 0.5, 0.5);
             this.book2.rotation.y = Math.PI/2;
             this.book2.position.set(-3.918, 1.83, -4);
@@ -309,7 +303,7 @@ class MyContents  {
         }
 
         if (this.book3 === null) {
-            this.book3 = new MyBook(this, 0x8B5A2B);
+            this.book3 = new MyBook(this, this.textures.get('paper'),0x8B5A2B);
             this.book3.scale.set(0.5, 0.5, 0.5);
             this.book3.rotation.y = Math.PI/2;
             this.book3.position.set(-4.082, 1.83, -4);
@@ -317,7 +311,7 @@ class MyContents  {
         }
 
         if (this.book4 === null) {
-            this.book4 = new MyBook(this, 0xA0522D);
+            this.book4 = new MyBook(this, this.textures.get('paper'), 0xA0522D);
             this.book4.scale.set(0.5, 0.5, 0.5);
             this.book4.rotation.y = Math.PI/2;
             this.book4.rotateX(-Math.PI/9);
@@ -326,7 +320,7 @@ class MyContents  {
         }
 
         if (this.book5 === null) {
-            this.book5 = new MyBook(this, 0xC9641B);
+            this.book5 = new MyBook(this, this.textures.get('paper'), 0xC9641B);
             this.book5.scale.set(0.5, 0.5, 0.5);
             this.book5.rotation.x = Math.PI/2;
             this.book5.rotateZ(Math.PI/4);
@@ -335,7 +329,7 @@ class MyContents  {
         }
 
         if (this.book6 === null) {
-            this.book6 = new MyBook(this, 0xC19A6B);
+            this.book6 = new MyBook(this, this.textures.get('paper'), 0xC19A6B);
             this.book6.scale.set(0.5, 0.5, 0.5);
             this.book6.rotation.x = Math.PI/2;
             this.book6.rotateZ(Math.PI/9);
@@ -344,7 +338,7 @@ class MyContents  {
         }
 
         if (this.book7 === null) {
-            this.book7 = new MyBook(this, 0xFF8C00);
+            this.book7 = new MyBook(this, this.textures.get('paper'), 0xFF8C00);
             this.book7.scale.set(0.5, 0.5, 0.5);
             this.book7.rotation.x = Math.PI/2;
             this.book7.rotateZ(-Math.PI/4);
@@ -353,7 +347,7 @@ class MyContents  {
         }
 
         if (this.book8 === null) {
-            this.book8 = new MyBook(this, 0x8B5A2B);
+            this.book8 = new MyBook(this, this.textures.get('paper'), 0x8B5A2B);
             this.book8.scale.set(0.5, 0.5, 0.5);
             this.book8.rotation.x = Math.PI/2;
             this.book8.rotateZ(-Math.PI/9);
@@ -362,12 +356,9 @@ class MyContents  {
         }
 
         if (this.gamingChair === null) {
-            this.gamingChair = new MyGamingChair(this, {
-                accentColor: 0xff0066,  // Pink gaming accent
-                seatWidth: 0.6,
-                seatDepth: 0.5
-            });
-            this.gamingChair.position.set(-0.3, 0, -2.2); // Position at desk
+            this.gamingChair = new MyGamingChair(this, this.textures.get('leather_black'), this.textures.get('inox_black'));
+            
+            this.gamingChair.position.set(-0.3, 0, -2.2);
             this.gamingChair.rotation.y = Math.PI - Math.PI / 4;
             this.gamingChair.scale.set(1.2, 1.2, 1.2);
             this.app.scene.add(this.gamingChair);
@@ -409,7 +400,7 @@ class MyContents  {
         }
 
         if (this.icons === null) {
-            this.icons = new MyIcons(this);
+            this.icons = new MyIcons(this.textures.get('wood_light'));
             this.icons.scale.set(0.5, 0.5, 0.5);
             this.icons.rotateY(Math.PI/2);
             this.icons.rotateY(-Math.PI/12)
@@ -419,26 +410,24 @@ class MyContents  {
 
         // sofa
         if (this.sofa === null) {
-            this.sofa = new MySofa(this, { width: 4.5, depth: 1.6, height: 1.1, cushionHeight: 0.45, color: 0x0b0b0b, cushionColor: 0x1a1a1a, lShape: true, chaiseLength: 2.0, lSide: 'left' });
+            this.sofa = new MySofa(this, this.textures.get('chesterfield'), this.textures.get('leather_black'), this.textures.get('inox_black'));
 
-            this.sofa.position.set(3.5, 0.1, 2);
+            this.sofa.position.set(3.5, 0.09, 2);
             this.sofa.rotation.y = Math.PI;
             this.app.scene.add(this.sofa);
         }
 
         // coffee table in front of sofa
         if (this.coffeeTable === null) {
-            const topMat = new THREE.MeshPhongMaterial({ color: 0x8b5a2b });
-            this.coffeeTable = new MyCoffeeTable(this, topMat);
-            // position coffee table roughly centered in front of the sofa
+            this.coffeeTable = new MyCoffeeTable(this, this.textures.get('wood_black'), this.textures.get('inox_black'));
+
             this.coffeeTable.position.set(1.5, 0.3, 1.4);
             this.coffeeTable.rotation.y = Math.PI/2;
             this.app.scene.add(this.coffeeTable);
         }
 
         if (this.tvTable === null) {
-            const tableMat = new THREE.MeshPhongMaterial({ color: 0x8b5a2b });
-            this.tvTable = new MyTVTable(this, tableMat);
+            this.tvTable = new MyTVTable(this, this.textures.get('wood_black'));
             this.tvTable.position.set(-3.8, 0.4, 1.8);
             this.tvTable.rotation.y = Math.PI/2;
             this.app.scene.add(this.tvTable);
@@ -476,15 +465,14 @@ class MyContents  {
         }
 
         if (this.window1 === null) {
-            this.window1 = new MyWindow(this, "textures/landscape3.jpg", 50, 0.03);
+            this.window1 = new MyWindow(this, this.textures.get('landscape3'), this.textures.get('inox_black'), 50, 0.03);
             this.window1.position.set(-4.49, 1.75, -2);
-
-            this.window1.rotation.y = Math.PI / 2; // facing into the room
+            this.window1.rotation.y = Math.PI / 2;
             this.app.scene.add(this.window1);
         }
 
         if (this.window2 === null) {
-            this.window2 = new MyWindow(this, "textures/landscape2.jpg", 15, 0.01);
+            this.window2 = new MyWindow(this, this.textures.get('landscape2'), this.textures.get('inox_black'), 15, 0.01);
             this.window2.position.set(3, 1.75, 4.49);
 
             this.window2.rotation.y = Math.PI;
@@ -493,34 +481,15 @@ class MyContents  {
 
 
         if (this.tv === null) {
-            this.tv = new MyTV(this, {
-                screenWidth: 5,
-                screenHeight: 2.8,
-                depth: 0.08,
-                frameWidth: 0.04,
-                standWidth: 0.75,
-                standHeight: 0.05,
-                standDepth: 0.3,
-                screenColor: 0x111111,
-                frameColor: 0x2c2c2c,
-                standColor: 0x1a1a1a
-            });
-            
-            // Position TV on top of the TV table
-            // TV table is at position (-4.3, 0.4, 2) with rotation Math.PI/2
-            this.tv.position.set(-4, 0.48, 1.8); // On top of the table
-            this.tv.rotation.y = Math.PI/2; // Match table rotation
-            
-            // Set TV to "on" state with dark blue screen
-            
+            this.tv = new MyTV(this, this.textures.get('inox_black'));
+
+            this.tv.position.set(-4, 0.48, 1.8);
+            this.tv.rotation.y = Math.PI/2;
             this.app.scene.add(this.tv);
         }
 
-        // carpet under sofa and coffee table
         if (this.carpet === null) {
-            // choose a carpet texture; using uv_grid.jpg as a placeholder
-            this.carpet = new MyCarpet(this);
-            // position carpet roughly under sofa main seating area
+            this.carpet = new MyCarpet(this, this.textures.get('red_carpet'));
             this.carpet.position.set(-1, 0, 2);
             this.carpet.rotation.y = Math.PI/2;
             this.app.scene.add(this.carpet);
@@ -550,7 +519,6 @@ class MyContents  {
 
                 bar.position.set(cfg.x, cfg.y, cfg.z);
 
-                // apply rotation
                 bar.rotation.set(0, cfg.rotY, 0);
 
                 this.app.scene.add(bar);
@@ -729,12 +697,19 @@ class MyContents  {
 
         this.buildBox()
         
-        // Create a Plane Mesh with basic material
         
         let plane = new THREE.PlaneGeometry( 9, 9 );
-        this.planeMesh = new THREE.Mesh( plane, this.planeMaterial );
+        this.planeMesh = new THREE.Mesh( plane, 
+            new THREE.MeshPhongMaterial({ 
+            color: "#8b7355",
+            specular: "#2a2a2a",
+            emissive: "#000000", 
+            shininess: 30,
+            map: this.textures.get('floor') 
+        })
+         );
         this.planeMesh.rotation.x = -Math.PI / 2;
-        this.planeMesh.position.y = -0;
+        this.planeMesh.rotateZ(Math.PI / 2);
         this.app.scene.add( this.planeMesh );
     }
     

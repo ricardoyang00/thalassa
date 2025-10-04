@@ -1,42 +1,32 @@
 import * as THREE from 'three';
 
 class MyTV extends THREE.Object3D {
-    constructor(app, {
-        screenWidth = 2.8,
-        screenHeight = 1.6,
-        depth = 0.1,
-        frameWidth = 0.05,
-        standWidth = 0.5,
-        standHeight = 0.06,
-        standDepth = 0.2,
-        screenColor = 0x000000,
-        frameColor = 0x2c2c2c,
-        standColor = 0x1a1a1a
-    } = {}) {
+    constructor(app, inoxBlackTexture) {
         super();
         this.app = app;
         this.type = 'Group';
-
-        // Load black stainless steel texture
-        const inoxBlackTexture = new THREE.TextureLoader().load('textures/inox_black.jpg');
-        inoxBlackTexture.wrapS = THREE.RepeatWrapping;
-        inoxBlackTexture.wrapT = THREE.RepeatWrapping;
-        inoxBlackTexture.repeat.set(2, 2);
+        this.screenWidth = 5,
+        this.screenHeight = 2.8,
+        this.depth = 0.08,
+        this.frameWidth = 0.04,
+        this.standWidth = 0.75,
+        this.standHeight = 0.05,
+        this.standDepth = 0.3
 
         // Create black stainless steel material
         const inoxBlackMaterial = new THREE.MeshPhongMaterial({
-            color: "#1a1a1a",        // Very dark gray for black steel
-            specular: "#666666",     // Bright specular for metallic shine
+            color: "#1a1a1a",
+            specular: "#666666",
             emissive: "#000000",
-            shininess: 90,           // High shininess for polished metal
+            shininess: 90,
             map: inoxBlackTexture
         });
 
         // Materials
         const screenMaterial = new THREE.MeshPhongMaterial({ 
-            color: 0xffffff,
-            emissive: 0xffffff,
-            emissiveIntensity: 0.3,
+            color: "#ffffff",
+            emissive: "#ffffff",
+            emissiveIntensity: 0.8,
             shininess: 100
         });
         
@@ -45,36 +35,26 @@ class MyTV extends THREE.Object3D {
         const standMaterial = inoxBlackMaterial;
 
         // Screen (main display area)
-        const screenGeometry = new THREE.BoxGeometry(screenWidth, screenHeight, 0.02);
+        const screenGeometry = new THREE.BoxGeometry(this.screenWidth, this.screenHeight, 0.02);
         const screen = new THREE.Mesh(screenGeometry, screenMaterial);
-        screen.position.set(0, screenHeight/2 + standHeight + 0.04, depth/2 + 0.01);
+        screen.position.set(0, this.screenHeight/2 + this.standHeight + 0.04, this.depth/2 + 0.01);
         this.add(screen);
 
         // Frame around screen
-        const frameThickness = frameWidth;
-        const frameHeight = screenHeight + frameThickness * 2;
-        const frameWidthTotal = screenWidth + frameThickness * 2;
-        
-        const frameGeometry = new THREE.BoxGeometry(frameWidthTotal, frameHeight, depth);
+        const frameThickness = this.frameWidth;
+        const frameHeight = this.screenHeight + frameThickness * 2;
+        const frameWidthTotal = this.screenWidth + frameThickness * 2;
+
+        const frameGeometry = new THREE.BoxGeometry(frameWidthTotal, frameHeight, this.depth);
         const frame = new THREE.Mesh(frameGeometry, frameMaterial);
-        frame.position.set(0, frameHeight/2 + standHeight, 0);
+        frame.position.set(0, frameHeight/2 + this.standHeight, 0);
         this.add(frame);
 
         // TV Stand/Base
-        const standGeometry = new THREE.BoxGeometry(standWidth, standHeight, standDepth);
+        const standGeometry = new THREE.BoxGeometry(this.standWidth, this.standHeight, this.standDepth);
         const stand = new THREE.Mesh(standGeometry, standMaterial);
-        stand.position.set(0, standHeight/2, 0);
+        stand.position.set(0, this.standHeight/2, 0);
         this.add(stand);
-
-        // Store references
-        this.screen = screen;
-        this.frame = frame;
-        this.stand = stand;
-        
-        // screen white
-        this.screen.material.color.setHex(0xffffff);
-        this.screen.material.emissive.setHex(0xffffff);
-        this.screen.material.emissiveIntensity = 0.5;
     }
 }
 

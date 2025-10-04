@@ -2,89 +2,74 @@ import * as THREE from 'three';
 
 class MyKeyboard extends THREE.Object3D {
 
-    constructor(app) {
+    constructor(app, inoxBlackTexture) {
         super();
         this.app = app;
         this.type = 'Group';
 
-        // Load textures
-        const inoxBlackTexture = new THREE.TextureLoader().load('textures/inox_black.jpg');
-        inoxBlackTexture.wrapS = THREE.RepeatWrapping;
-        inoxBlackTexture.wrapT = THREE.RepeatWrapping;
-        inoxBlackTexture.repeat.set(2, 1);
-
-        // Create materials with proper lighting response
         const baseMaterial = new THREE.MeshPhongMaterial({
-            color: 0x404040,        // Medium gray instead of black
-            specular: 0x666666,
-            emissive: 0x000000,
+            color: "#404040",
+            specular: "#666666",
+            emissive: "#000000",
             shininess: 60,
             map: inoxBlackTexture
         });
 
         const whiteKeyMaterial = new THREE.MeshPhongMaterial({
-            color: 0xf0f0f0,        // Off-white for realism
-            specular: 0x333333,     // Much darker specular for matte finish
-            emissive: 0x000000,
-            shininess: 5            // Very low shininess for matte plastic
+            color: "#f0f0f0",
+            specular: "#333333",
+            emissive: "#000000",
+            shininess: 5
         });
 
         const darkKeyMaterial = new THREE.MeshPhongMaterial({
-            color: 0x2a2a2a,        // Dark grey
-            specular: 0x222222,     // Darker specular for matte finish
-            emissive: 0x000000,
-            shininess: 5            // Matte finish
+            color: "#2a2a2a",
+            specular: "#222222",
+            emissive: "#000000",
+            shininess: 5
         });
 
         const specialKeyMaterial = new THREE.MeshPhongMaterial({
-            color: 0x505050,        // Lighter medium grey
-            specular: 0x333333,     // Dark specular for matte
-            emissive: 0x000000,
-            shininess: 8            // Slightly matte
+            color: "#505050",
+            specular: "#333333",
+            emissive: "#000000",
+            shininess: 8
         });
 
         // Gaming accent keys - colorful for gaming setup but matte
         const wasdMaterial = new THREE.MeshPhongMaterial({
-            color: 0xff3366,        // Pink/red for WASD gaming keys
-            specular: 0x442233,     // Much darker specular for matte
-            emissive: 0x330011,
+            color: "#ff3366",
+            specular: "#442233",
+            emissive: "#330011",
             emissiveIntensity: 0.2,
-            shininess: 10           // Low shininess for matte colored keys
-        });
-
-        const arrowKeyMaterial = new THREE.MeshPhongMaterial({
-            color: 0x33ff66,        // Green for arrow keys
-            specular: 0x224433,     // Dark specular for matte
-            emissive: 0x113300,
-            emissiveIntensity: 0.2,
-            shininess: 10           // Matte finish
+            shininess: 10
         });
 
         const escapeKeyMaterial = new THREE.MeshPhongMaterial({
-            color: 0xff6600,        // Orange for escape key
-            specular: 0x443322,     // Dark specular for matte
-            emissive: 0x331100,
+            color: "#ff6600",
+            specular: "#443322",
+            emissive: "#331100",
             emissiveIntensity: 0.3,
-            shininess: 10           // Matte finish
+            shininess: 10
         });
 
         const enterKeyMaterial = new THREE.MeshPhongMaterial({
-            color: 0x0066ff,        // Blue for enter key
-            specular: 0x223344,     // Dark specular for matte
-            emissive: 0x001133,
+            color: "#0066ff",
+            specular: "#223344",
+            emissive: "#001133",
             emissiveIntensity: 0.2,
-            shininess: 10           // Matte finish
+            shininess: 10
         });
 
         const knobMaterial = new THREE.MeshPhongMaterial({
-            color: 0x808080,        // Lighter gray for knob
-            specular: 0xaaaaaa,     // Keep some shine for metal knob
-            emissive: 0x000000,
-            shininess: 80,          // Metal parts keep some shine
+            color: "#808080",
+            specular: "#aaaaaa",
+            emissive: "#000000",
+            shininess: 80,
             map: inoxBlackTexture
         });
 
-        // Keyboard base with metallic texture - different color
+        // Keyboard base with metallic texture
         const baseGeometry = new THREE.BoxGeometry(3.2, 0.25, 1.4);
         const baseMesh = new THREE.Mesh(baseGeometry, baseMaterial);
         baseMesh.position.set(0, 0.125, 0);

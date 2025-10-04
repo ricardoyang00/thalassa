@@ -1,44 +1,31 @@
 import * as THREE from 'three';
 
 class MySofa extends THREE.Object3D {
-    constructor(app, {
-        width = 4,
-        depth = 0.8,
-        height = 1.0,
-        cushionHeight = 0.45,
-        color = "#59ff00",        // frame color
-        cushionColor = "#bd0000",  // cushions
-        cornerLength = 3
-    } = {}) {
+    constructor(app, chesterfieldTexture, leatherTexture, inoxBlackTexture) {
         super();
         this.app = app;
         this.type = 'Group';
 
-        // Load leather textures
-        const chesterfieldTexture = new THREE.TextureLoader().load('textures/leather_chesterfield_black.jpg');
-        chesterfieldTexture.wrapS = THREE.RepeatWrapping;
-        chesterfieldTexture.wrapT = THREE.RepeatWrapping;
-        chesterfieldTexture.repeat.set(2, 2);
-
-        const leatherTexture = new THREE.TextureLoader().load('textures/leather_black.jpg');
-        leatherTexture.wrapS = THREE.RepeatWrapping;
-        leatherTexture.wrapT = THREE.RepeatWrapping;
-        leatherTexture.repeat.set(1, 1);
+        const width = 4.5
+        const depth = 1.6
+        const height = 1.1
+        const cushionHeight = 0.45
+        const cornerLength = 3
 
         // Create realistic leather materials
         const chesterfieldMaterial = new THREE.MeshPhongMaterial({
-            color: "#1a1a1a",        // Darker for black leather
-            specular: "#2a2a2a",     // Much darker specular for black leather
+            color: "#1a1a1a",
+            specular: "#2a2a2a",
             emissive: "#000000",
-            shininess: 2,           // Reduced from 40 to 15 for matte black leather
+            shininess: 2,
             map: chesterfieldTexture
         });
 
         const smoothLeatherMaterial = new THREE.MeshPhongMaterial({
-            color: "#1a1a1a",        // Darker for black leather
-            specular: "#2a2a2a",     // Much darker specular for black leather
+            color: "#1a1a1a",
+            specular: "#2a2a2a",
             emissive: "#000000",
-            shininess: 15,           // Reduced from 60 to 20 for subtle shine
+            shininess: 15,
             map: leatherTexture
         });
 
@@ -49,11 +36,13 @@ class MySofa extends THREE.Object3D {
         // Cushions use chesterfield (button-tufted) texture
         const cushionMat = chesterfieldMaterial;
         
-        // Legs - dark wood or metal
-        const legMat = new THREE.MeshPhongMaterial({ 
+        // Legs
+        const inoxBlackMaterial = new THREE.MeshPhongMaterial({
             color: "#1a1a1a",
-            specular: "#333333",
-            shininess: 20
+            specular: "#666666",
+            emissive: "#000000",
+            shininess: 90,
+            map: inoxBlackTexture
         });
 
         // ===== Helper to make a sofa segment =====
@@ -101,7 +90,7 @@ class MySofa extends THREE.Object3D {
                 [ segWidth/2 - 0.15, -0.05,  segDepth/2 - 0.15],
             ];
             for (const p of legPositions) {
-                const leg = new THREE.Mesh(legGeom, legMat);
+                const leg = new THREE.Mesh(legGeom, inoxBlackMaterial);
                 leg.position.set(...p);
                 group.add(leg);
             }
@@ -119,8 +108,6 @@ class MySofa extends THREE.Object3D {
         const sideSofa = makeSegment(cornerLength, depth);
         sideSofa.position.set(depth/2 - 0.1, 0, -cornerLength/2 + 0.05);
         this.add(sideSofa);
-
-        this.position.y = 0;
     }
 }
 
