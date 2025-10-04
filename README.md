@@ -10,12 +10,11 @@
 
 ## Projects
 
-### [PW1 - ThreeJS Basics](pw1)
+### [PW1 - Gaming Studio Room](pw1)
 
-- (items briefly describing main strong points)
-- Scene
-  - (Brief description of the created scene)
-  - (relative link to the scene)
+![](pw1/screenshots/project-related/all-on.png)
+
+Detailed description click [here](pw1/README.md).
 
 -----
 
