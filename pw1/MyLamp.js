@@ -66,6 +66,9 @@ class MyLamp extends THREE.Object3D {
         lampMesh.position.set(0, 0.95, 0.5);
         this.add(lampMesh);
 
+        // Store reference to lamp mesh for toggling emissive
+        this.lampMesh = lampMesh;
+
         this.spotLight = new THREE.SpotLight(0xffffaa, 10, 1, Math.PI / 4, 0.2, 0.5);
         this.spotLight.position.set(0, 0.9, 0.5);
         this.spotLight.target.position.set(0, 0, 0.5);
@@ -74,6 +77,17 @@ class MyLamp extends THREE.Object3D {
 
         //const lightHelper = new THREE.SpotLightHelper(this.spotLight);
         //this.add(lightHelper);
+
+        this.toggleLamp = (enabled) => {
+            this.spotLight.visible = enabled;
+            if (enabled) {
+                this.lampMesh.material.emissive.setHex(0xffffaa);
+                this.lampMesh.material.emissiveIntensity = 0.8;
+            } else {
+                this.lampMesh.material.emissive.setHex(0x000000);
+                this.lampMesh.material.emissiveIntensity = 0;
+            }
+        };
     }
 }
 

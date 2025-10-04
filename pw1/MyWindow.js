@@ -16,7 +16,7 @@ class MyWindow extends THREE.Object3D {
         // window glass
         const windowGeometry = new THREE.PlaneGeometry(x - frameThickness * 2, y - frameThickness * 2);
         
-        const windowMaterial = new THREE.MeshPhongMaterial({
+        const windowMaterial = new THREE.MeshBasicMaterial({
             map: landscapeTexture,
             transparent: true,
             opacity: 1,

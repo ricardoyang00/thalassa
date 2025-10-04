@@ -102,6 +102,16 @@ class MyCompoundObj extends THREE.Object3D {
         powerButton.rotation.x = Math.PI / 2;
         powerButton.position.set(screenWidth/2 - 0.2, standHeight/2 + 0.47, 0);
         this.add(powerButton);
+
+        this.toggleScreen = (enabled) => {
+            if (enabled) {
+                this.screen.material.emissive.setHex(0xffffff);
+                this.screen.material.emissiveIntensity = 0.8;
+            } else {
+                this.screen.material.emissive.setHex(0x000000);
+                this.screen.material.emissiveIntensity = 0;
+            }
+        };
     }
 
 }

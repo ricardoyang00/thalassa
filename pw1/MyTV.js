@@ -40,6 +40,9 @@ class MyTV extends THREE.Object3D {
         screen.position.set(0, this.screenHeight/2 + this.standHeight + 0.04, this.depth/2 + 0.01);
         this.add(screen);
 
+        // Store reference to screen for toggling
+        this.screenMesh = screen;
+
         // Frame around screen
         const frameThickness = this.frameWidth;
         const frameHeight = this.screenHeight + frameThickness * 2;
@@ -55,6 +58,16 @@ class MyTV extends THREE.Object3D {
         const stand = new THREE.Mesh(standGeometry, standMaterial);
         stand.position.set(0, this.standHeight/2, 0);
         this.add(stand);
+
+        this.toggleTV = (enabled) => {
+            if (enabled) {
+                this.screenMesh.material.emissive.setHex(0xffffff);
+                this.screenMesh.material.emissiveIntensity = 0.8;
+            } else {
+                this.screenMesh.material.emissive.setHex(0x000000);
+                this.screenMesh.material.emissiveIntensity = 0;
+            }
+        };
     }
 }
 

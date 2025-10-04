@@ -106,7 +106,39 @@ class MyContents  {
         this.carpetEnabled = true
         this.lastCarpetEnabled = null
 
+        // Light control properties
+        this.lightsEnabled = {
+            all: true,
+            coffeeTable: true,
+            tvBacklight: true,
+            sofaBacklight: true,
+            shelf: true,
+            ceiling1: true,
+            ceiling2: true,
+            lightBars: true,
+            tableLamp: true,
+            floorLamp1: true,
+            floorLamp2: true,
+            lightWall: true,
+            tvScreen: true,
+            monitorScreen: true,
+            icons: true
+        };
 
+        // Store light references
+        this.lights = {
+            coffeeTable: null,
+            tvBacklight: null,
+            sofaBacklight: null,
+            shelf: [],
+            ceiling1: null,
+            ceiling2: null,
+            lightBars: [],
+            tableLamp: null,
+            floorLamp1: null,
+            floorLamp2: null,
+            lightWall: null
+        };
 
         // TEXTURE LOADER
         this.loader = new THREE.TextureLoader();
@@ -632,16 +664,19 @@ class MyContents  {
         // 1. Under coffee table - warm accent lighting
         const coffeeTableLight = new THREE.PointLight(0xff6b35, 3, 4); // Increased intensity
         coffeeTableLight.position.set(1.5, 0.1, 1.4);
+        this.lights.coffeeTable = coffeeTableLight;
         this.app.scene.add(coffeeTableLight);
 
         // 2. Behind TV - cool backlight effect
         const tvBacklight = new THREE.PointLight(0x00d4ff, 4, 5); // Increased intensity
         tvBacklight.position.set(-4.2, 0.6, 1.8);
+        this.lights.tvBacklight = tvBacklight;
         this.app.scene.add(tvBacklight);
 
         // 3. Behind sofa - warm mood lighting
         const sofaBacklight = new THREE.PointLight(0xffa500, 3, 4); // Increased intensity
         sofaBacklight.position.set(4.4, 0.8, 4.4);
+        this.lights.sofaBacklight = sofaBacklight;
         this.app.scene.add(sofaBacklight);
 
         // shelf
@@ -662,10 +697,11 @@ class MyContents  {
             );
             
             shelfLight.position.set(lightPos.x, lightPos.y, lightPos.z);
+            this.lights.shelf.push(shelfLight);
             this.app.scene.add(shelfLight);
         }
 
-        // === LIGHTING ===
+        // === LIGHTING FOR LIGHT BARS ===
         for (const lightBar of this.lightBars) {
             const orangeLight = new THREE.PointLight(
                 "#ff5c00",
@@ -675,21 +711,34 @@ class MyContents  {
             );
             
             orangeLight.position.copy(lightBar.position);
+            this.lights.lightBars.push(orangeLight);
             this.app.scene.add(orangeLight);
-            
             lightBar.userData.accentLight = orangeLight;
         }
 
         // === CEILING LIGHTS FOR GENERAL ILLUMINATION ===
         const ceilingLight1 = new THREE.PointLight(0xffffff, 5, 8);
         ceilingLight1.position.set(-2, 4, -2);
+        this.lights.ceiling1 = ceilingLight1;
         this.app.scene.add(ceilingLight1);
 
         const ceilingLight2 = new THREE.PointLight(0xffffff, 5, 8);
         ceilingLight2.position.set(2, 4, 2);
+        this.lights.ceiling2 = ceilingLight2;
         this.app.scene.add(ceilingLight2);
 
-        // === SPOT LIGHT FOR TASK LIGHTING ===
+        // === LAMPS ===
+        if (this.lamp && this.lamp.spotLight) {
+            this.lights.tableLamp = this.lamp.spotLight;
+        }
+        if (this.floorLamp && this.floorLamp.spotLight) {
+            this.lights.floorLamp1 = this.floorLamp.spotLight;
+        }
+        if (this.floorLamp2 && this.floorLamp2.spotLight) {
+            this.lights.floorLamp2 = this.floorLamp2.spotLight;
+        }
+
+        // === SPOT LIGHT===
         // musical area spotlight
         this.spotLight = new THREE.SpotLight(
             0xffffff,    // White light
@@ -963,7 +1012,6 @@ class MyContents  {
         
     }
 
-
     toggleLightHelpers(visible) {
         if (this.lightHelpers && this.lightHelpers.length > 0) {
             this.lightHelpers.forEach(helper => {
@@ -977,6 +1025,75 @@ class MyContents  {
         }
     }
 
+    toggleAllLights(enabled) {
+        this.lightsEnabled.all = enabled;
+        Object.keys(this.lightsEnabled).forEach(key => {
+            if (key !== 'all') {
+                this.lightsEnabled[key] = enabled;
+                this.toggleLightGroup(key, enabled);
+            }
+        });
+    }
+
+    toggleLightGroup(groupName, enabled) {
+        this.lightsEnabled[groupName] = enabled;
+        
+        switch(groupName) {
+            case 'coffeeTable':
+                if (this.lights.coffeeTable) this.lights.coffeeTable.visible = enabled;
+                break;
+            case 'tvBacklight':
+                if (this.lights.tvBacklight) this.lights.tvBacklight.visible = enabled;
+                break;
+            case 'sofaBacklight':
+                if (this.lights.sofaBacklight) this.lights.sofaBacklight.visible = enabled;
+                break;
+            case 'shelf':
+                this.lights.shelf.forEach(light => light.visible = enabled);
+                break;
+            case 'ceiling1':
+                if (this.lights.ceiling1) this.lights.ceiling1.visible = enabled;
+                break;
+            case 'ceiling2':
+                if (this.lights.ceiling2) this.lights.ceiling2.visible = enabled;
+                break;
+            case 'lightBars':
+                this.lights.lightBars.forEach(light => light.visible = enabled);
+                this.lightBars.forEach(lightBar => {
+                    if (lightBar.toggleLightBar) lightBar.toggleLightBar(enabled);
+                });
+                break;
+            case 'tableLamp':
+                if (this.lamp && this.lamp.toggleLamp) this.lamp.toggleLamp(enabled);
+                break;
+            case 'floorLamp1':
+                if (this.floorLamp && this.floorLamp.toggleLamp) this.floorLamp.toggleLamp(enabled);
+                break;
+            case 'floorLamp2':
+                if (this.floorLamp2 && this.floorLamp2.toggleLamp) this.floorLamp2.toggleLamp(enabled);
+                break;
+            case 'lightWall':
+                if (this.lightWall && this.lightWall.toggleLightWall) {
+                    this.lightWall.toggleLightWall(enabled);
+                }
+                break;
+            case 'tvScreen':
+                if (this.tv && this.tv.toggleTV) {
+                    this.tv.toggleTV(enabled);
+                }
+                break;
+            case 'monitorScreen':
+                if (this.obj && this.obj.toggleScreen) {
+                    this.obj.toggleScreen(enabled);
+                }
+                break;
+            case 'icons':
+                if (this.icons && this.icons.toggleIcons) {
+                    this.icons.toggleIcons(enabled);
+                }
+                break;
+        }
+    }
 }
 
 

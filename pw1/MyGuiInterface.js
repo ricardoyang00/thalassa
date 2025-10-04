@@ -101,6 +101,69 @@ class MyGuiInterface  {
         // });
         // wrapFolder.open();
         
+        const lightsFolder = this.datgui.addFolder('Lights Control');
+        
+        // Master toggle for all lights
+        lightsFolder.add(this.contents.lightsEnabled, 'all')
+            .name('All Lights')
+            .onChange((value) => { this.contents.toggleAllLights(value) });
+
+        // Individual light controls
+        lightsFolder.add(this.contents.lightsEnabled, 'ceiling1')
+            .name('Ceiling Light 1')
+            .onChange((value) => { this.contents.toggleLightGroup('ceiling1', value) });
+
+        lightsFolder.add(this.contents.lightsEnabled, 'ceiling2')
+            .name('Ceiling Light 2')
+            .onChange((value) => { this.contents.toggleLightGroup('ceiling2', value) });
+
+        lightsFolder.add(this.contents.lightsEnabled, 'coffeeTable')
+            .name('Coffee Table Light')
+            .onChange((value) => { this.contents.toggleLightGroup('coffeeTable', value) });
+
+        lightsFolder.add(this.contents.lightsEnabled, 'floorLamp1')
+            .name('Floor Lamp 1')
+            .onChange((value) => { this.contents.toggleLightGroup('floorLamp1', value) });
+
+        lightsFolder.add(this.contents.lightsEnabled, 'floorLamp2')
+            .name('Floor Lamp 2')
+            .onChange((value) => { this.contents.toggleLightGroup('floorLamp2', value) });
+
+        lightsFolder.add(this.contents.lightsEnabled, 'lightBars')
+            .name('Light Bars')
+            .onChange((value) => { this.contents.toggleLightGroup('lightBars', value) });
+        
+        lightsFolder.add(this.contents.lightsEnabled, 'lightWall')
+            .name('Light Wall')
+            .onChange((value) => { this.contents.toggleLightGroup('lightWall', value) });
+
+        lightsFolder.add(this.contents.lightsEnabled, 'monitorScreen')
+            .name('Monitor Screen')
+            .onChange((value) => { this.contents.toggleLightGroup('monitorScreen', value) });
+
+        lightsFolder.add(this.contents.lightsEnabled, 'icons')
+            .name('PS Icons')
+            .onChange((value) => { this.contents.toggleLightGroup('icons', value) });
+
+        lightsFolder.add(this.contents.lightsEnabled, 'shelf')
+            .name('Shelf Lights')
+            .onChange((value) => { this.contents.toggleLightGroup('shelf', value) });
+
+        lightsFolder.add(this.contents.lightsEnabled, 'sofaBacklight')
+            .name('Sofa Backlight')
+            .onChange((value) => { this.contents.toggleLightGroup('sofaBacklight', value) });
+
+        lightsFolder.add(this.contents.lightsEnabled, 'tableLamp')
+            .name('Table Lamp')
+            .onChange((value) => { this.contents.toggleLightGroup('tableLamp', value) });
+
+        lightsFolder.add(this.contents.lightsEnabled, 'tvBacklight')
+            .name('TV Backlight')
+            .onChange((value) => { this.contents.toggleLightGroup('tvBacklight', value) });
+
+        lightsFolder.add(this.contents.lightsEnabled, 'tvScreen')
+            .name('TV Screen')
+            .onChange((value) => { this.contents.toggleLightGroup('tvScreen', value) });
     }
 }
 

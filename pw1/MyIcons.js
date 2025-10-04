@@ -111,6 +111,60 @@ class MyIcons extends THREE.Object3D {
         const base = new THREE.Mesh(baseGeometry, baseMaterial);
         base.position.y = -0.23;
         this.add(base);
+
+        // Store references to icon groups and their original colors for toggling
+        this.triangleGroup = triangleGroup;
+        this.circleIcon = circle;
+        this.xGroup = xGroup;
+        this.squareGroup = squareGroup;
+
+        // Store original colors
+        this.originalColors = {
+            triangle: 0x00BFFF,
+            circle: 0x00FFCC,
+            x: 0xFFD700,
+            square: 0xFF4500
+        };
+
+        this.toggleIcons = (enabled) => {
+            if (enabled) {
+                this.triangleGroup.children.forEach(child => {
+                    child.material.emissive.setHex(this.originalColors.triangle);
+                    child.material.emissiveIntensity = 0.8;
+                });
+                
+                this.circleIcon.material.emissive.setHex(this.originalColors.circle);
+                this.circleIcon.material.emissiveIntensity = 0.8;
+                
+                this.xGroup.children.forEach(child => {
+                    child.material.emissive.setHex(this.originalColors.x);
+                    child.material.emissiveIntensity = 0.8;
+                });
+                
+                this.squareGroup.children.forEach(child => {
+                    child.material.emissive.setHex(this.originalColors.square);
+                    child.material.emissiveIntensity = 0.8;
+                });
+            } else {
+                this.triangleGroup.children.forEach(child => {
+                    child.material.emissive.setHex(0x000000);
+                    child.material.emissiveIntensity = 0;
+                });
+                
+                this.circleIcon.material.emissive.setHex(0x000000);
+                this.circleIcon.material.emissiveIntensity = 0;
+                
+                this.xGroup.children.forEach(child => {
+                    child.material.emissive.setHex(0x000000);
+                    child.material.emissiveIntensity = 0;
+                });
+                
+                this.squareGroup.children.forEach(child => {
+                    child.material.emissive.setHex(0x000000);
+                    child.material.emissiveIntensity = 0;
+                });
+            }
+        };
     }
 }
 

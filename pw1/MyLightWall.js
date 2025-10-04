@@ -75,11 +75,24 @@ class MyLightWall extends THREE.Object3D {
             const hexMesh = new THREE.Mesh(hexGeometry, material);
             hexMesh.position.set(...pos);
 
-            //const light = new THREE.PointLight(color, 0.8, 2);
-            //light.position.set(pos[0], pos[1], pos[2] + 0.2);
-            //this.add(hexMesh, light);
+            // Store original color and intensity for toggling
+            hexMesh.userData.originalColor = color;
+            hexMesh.userData.originalIntensity = 1;
+
             this.add(hexMesh);
         });
+
+        this.toggleLightWall = (enabled) => {
+            this.children.forEach(hexMesh => {
+                if (enabled) {
+                    hexMesh.material.emissive.set(hexMesh.userData.originalColor);
+                    hexMesh.material.emissiveIntensity = hexMesh.userData.originalIntensity;
+                } else {
+                    hexMesh.material.emissive.setHex(0x000000);
+                    hexMesh.material.emissiveIntensity = 0;
+                }
+            });
+        };
     }
 }
 

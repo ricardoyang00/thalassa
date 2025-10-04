@@ -23,6 +23,20 @@ class MyLightBar extends THREE.Object3D {
         this.barMesh = new THREE.Mesh(geometry, material);
         this.add(this.barMesh);
 
+        // Store reference to bar mesh for toggling emissive
+        this.originalColor = color;
+        this.originalIntensity = 0.5 * intensity;
+
+        this.toggleLightBar = (enabled) => {
+            if (enabled) {
+                this.barMesh.material.emissive.set(this.originalColor);
+                this.barMesh.material.emissiveIntensity = this.originalIntensity;
+            } else {
+                this.barMesh.material.emissive.setHex(0x000000);
+                this.barMesh.material.emissiveIntensity = 0;
+            }
+        };
+
         // Add a PointLight to simulate light emission
         //this.light = new THREE.PointLight(color, intensity, 10, 2);
         //this.light.position.set(0, 0, height); // Position light slightly above the bar
