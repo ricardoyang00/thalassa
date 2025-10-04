@@ -774,7 +774,7 @@ class MyContents  {
         this.app.scene.add(ceiling1Helper);
 
 
-        const ceilingLight2 = new THREE.PointLight(0xffffff, 0.3, 8);
+        const ceilingLight2 = new THREE.PointLight(0xffffff, 0.7, 8);
         ceilingLight2.position.set(3, 3, 4);
         this.lights.ceiling2 = ceilingLight2;
         this.app.scene.add(ceilingLight2);
