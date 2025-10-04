@@ -26,6 +26,7 @@ import { MyRubikCube } from './MyRubikCube.js';
 import { MyController } from './MyController.js';
 import { MyIcons } from './MyIcons.js';
 import { MyPc } from './MyPc.js';
+import { MyDoor } from './MyDoor.js';
 
 /**
  *  This class contains the contents of out application
@@ -141,6 +142,7 @@ class MyContents  {
         this.controller2 = null
         this.icons = null
         this.pc = null
+        this.door = null
     }
 
     /**
@@ -507,9 +509,18 @@ class MyContents  {
 
         if (this.carpet === null) {
             this.carpet = new MyCarpet(this, this.textures.get('red_carpet'));
-            this.carpet.position.set(-1, 0, 2);
+            this.carpet.position.set(-1.2, 0, 2);
             this.carpet.rotation.y = Math.PI/2;
             this.app.scene.add(this.carpet);
+        }
+
+        if (this.door === null) {
+            this.door = new MyDoor(this, this.textures.get('inox_black'));
+            this.door.position.set(-1.2, 0, 4.53);
+            this.door.rotation.y = -Math.PI;
+            const scale_door = 1.8;
+            this.door.scale.set(scale_door, scale_door, scale_door); 
+            this.app.scene.add(this.door);
         }
 
         // light bars
