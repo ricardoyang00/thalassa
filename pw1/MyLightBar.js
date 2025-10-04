@@ -2,26 +2,24 @@ import * as THREE from 'three';
 
 class MyLightBar extends THREE.Object3D {
     constructor(app, {
-        length = 4,             // Length of the light bar in units
-        color = "#8000ff",      // Default purple color
-        intensity = 1,          // Light intensity
-        width = 0.2,            // Width of the bar
-        height = 0.2,           // Height of the bar
+        length = 4,
+        color = "#8000ff",
+        intensity = 1,
+        width = 0.2, 
+        height = 0.2,
     } = {}) {
         super();
         this.app = app;
         this.type = 'Group';
 
-        // Create the light bar geometry and material
         const geometry = new THREE.BoxGeometry(length, height, width);
         const material = new THREE.MeshPhongMaterial({
             color: color,
-            emissive: color, // Emissive to simulate glow
+            emissive: color,
             emissiveIntensity: 0.5 * intensity,
-            shininess: 100, // High shininess for a smooth, glowing look
+            shininess: 100,
         });
 
-        // Create the mesh for the light bar
         this.barMesh = new THREE.Mesh(geometry, material);
         this.add(this.barMesh);
 

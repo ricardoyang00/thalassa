@@ -7,7 +7,6 @@ class MyShelf extends THREE.Object3D {
         this.app = app;
         this.type = 'Group';
 
-        // materials
         const blackWoodMaterial = new THREE.MeshPhongMaterial({
             color: "#2a2a2a",
             specular: "#404040",
@@ -24,7 +23,6 @@ class MyShelf extends THREE.Object3D {
             map: inoxTexture
         });
 
-        // Legs
         const legGeometry = new THREE.CylinderGeometry(0.02, 0.02, 3.5, 32);
         
         const leg1Mesh = new THREE.Mesh(legGeometry, inoxMaterial);
@@ -43,7 +41,7 @@ class MyShelf extends THREE.Object3D {
         leg4Mesh.position.set(-0.7, 1.75, 0.25);
         this.add(leg4Mesh);
 
-        // Shelves (black wood material)
+        // Shelves
         const baseGeometry = new THREE.BoxGeometry(1.5, 0.05, 0.6);
         
         const base1Mesh = new THREE.Mesh(baseGeometry, blackWoodMaterial);

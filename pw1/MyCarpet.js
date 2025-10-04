@@ -11,7 +11,6 @@ class MyCarpet extends THREE.Object3D {
         this.thickness = 0.02
         this.color = "#ff6b35"
 
-        // Create carpet material
         const carpetMaterial = new THREE.MeshPhongMaterial({ 
             color: this.color,
             specular: "#2a1a0a",

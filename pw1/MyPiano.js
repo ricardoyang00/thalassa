@@ -62,9 +62,7 @@ class MyPiano extends THREE.Object3D {
         baseMesh.position.set(0, 0.075, 0);
         this.add(baseMesh);
 
-        // White keys with realistic material
         const whiteKeyGeometry = new THREE.BoxGeometry(0.12, 0.05, 0.6);
-        
         const whiteKeyPositions = [-0.84, -0.72, -0.6, -0.48, -0.36, -0.24, -0.12, 0, 0.12, 0.24, 0.36, 0.48, 0.6, 0.72, 0.84];
         
         whiteKeyPositions.forEach((xPos) => {
@@ -73,9 +71,7 @@ class MyPiano extends THREE.Object3D {
             this.add(whiteKey);
         });
 
-        // Black keys with realistic material
         const blackKeyGeometry = new THREE.BoxGeometry(0.08, 0.05, 0.36);
-        
         const blackKeyPositions = [-0.78, -0.66, -0.42, -0.3, -0.18, 0.06, 0.18, 0.3, 0.54, 0.66, 0.78];
         
         blackKeyPositions.forEach((xPos) => {
@@ -84,32 +80,25 @@ class MyPiano extends THREE.Object3D {
             this.add(blackKey);
         });
 
-        // Power button with glowing effect
         const buttonGeometry = new THREE.CylinderGeometry(0.03, 0.03, 0.02, 16);
         const powerButton = new THREE.Mesh(buttonGeometry, buttonMaterial);
         powerButton.position.set(0.8, 0.16, -0.25);
         this.add(powerButton);
 
-        // Small display screen with green glow
         const screenGeometry = new THREE.BoxGeometry(0.3, 0.02, 0.15);
         const screen = new THREE.Mesh(screenGeometry, screenMaterial);
         screen.position.set(-0.6, 0.16, -0.25);
         this.add(screen);
 
-        // Metal control knobs/sliders
         const knobGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.015, 12);
-        
-        // Volume knob
         const volumeKnob = new THREE.Mesh(knobGeometry, metalMaterial);
         volumeKnob.position.set(0.5, 0.165, -0.25);
         this.add(volumeKnob);
 
-        // Tempo knob
         const tempoKnob = new THREE.Mesh(knobGeometry, metalMaterial);
         tempoKnob.position.set(0.3, 0.165, -0.25);
         this.add(tempoKnob);
 
-        // Small metal feet for the piano
         const footGeometry = new THREE.CylinderGeometry(0.015, 0.015, 0.01, 8);
         const footPositions = [
             [-0.9, 0, -0.35],

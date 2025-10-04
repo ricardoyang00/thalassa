@@ -409,7 +409,6 @@ class MyContents  {
             this.controller.rotateY(Math.PI/2);
             this.controller.rotateX(-Math.PI/2);
             this.controller.rotateZ(-Math.PI/4);
-            //this.controller.position.set(-3.5, 0.515, 3);
             this.controller.position.set(1.65, 0.39, 1.8);
             this.app.scene.add(this.controller);
         }
@@ -454,7 +453,6 @@ class MyContents  {
             this.app.scene.add(this.pictureR);
         }
 
-        // sofa
         if (this.sofa === null) {
             this.sofa = new MySofa(this, this.textures.get('chesterfield'), this.textures.get('leather_black'), this.textures.get('inox_black'));
 
@@ -463,7 +461,6 @@ class MyContents  {
             this.app.scene.add(this.sofa);
         }
 
-        // coffee table in front of sofa
         if (this.coffeeTable === null) {
             this.coffeeTable = new MyCoffeeTable(this, this.textures.get('wood_black'), this.textures.get('inox_black'));
 
@@ -542,7 +539,6 @@ class MyContents  {
             this.app.scene.add(this.door);
         }
 
-        // light bars
         if (this.lightBars.length === 0) {
             const barConfigs = [
                 { x: 0, y: 0.05, z: -4.5, rotY: 0 },
@@ -558,7 +554,7 @@ class MyContents  {
             for (const cfg of barConfigs) {
                 const bar = new MyLightBar(this, {
                     length: 9,
-                    color: "#ff5c00", //#ff5c00 //#ff00f2
+                    color: "#ff5c00", //#ff00f2
                     intensity: 5,
                     width: 0.1,
                     height: 0.1,
@@ -669,24 +665,22 @@ class MyContents  {
             this.app.scene.add(shelfLight);
         }
 
-        // === PURPLE ACCENT LIGHTING (Like in reference image) ===
+        // === LIGHTING ===
         for (const lightBar of this.lightBars) {
-            // Create purple point lights for accent lighting
-            const purpleLight = new THREE.PointLight(
-                "#ff5c00",    // Purple color
+            const orangeLight = new THREE.PointLight(
+                "#ff5c00",
                 8,           // High intensity for visibility
                 6,           // Good range
                 1            // Natural decay
             );
             
-            purpleLight.position.copy(lightBar.position);
-            this.app.scene.add(purpleLight);
+            orangeLight.position.copy(lightBar.position);
+            this.app.scene.add(orangeLight);
             
-            lightBar.userData.accentLight = purpleLight;
+            lightBar.userData.accentLight = orangeLight;
         }
 
         // === CEILING LIGHTS FOR GENERAL ILLUMINATION ===
-        // Add ceiling lights to ensure everything is well-lit
         const ceilingLight1 = new THREE.PointLight(0xffffff, 5, 8);
         ceilingLight1.position.set(-2, 4, -2);
         this.app.scene.add(ceilingLight1);
@@ -711,33 +705,31 @@ class MyContents  {
         // this.app.scene.add(this.spotLight.target);
 
         // === LIGHT HELPERS (Optional - remove for final version) ===
-        const coffeeTableHelper = new THREE.PointLightHelper(coffeeTableLight, 0.2);
-        this.app.scene.add(coffeeTableHelper);
+        // const coffeeTableHelper = new THREE.PointLightHelper(coffeeTableLight, 0.2);
+        // this.app.scene.add(coffeeTableHelper);
 
-        const tvBacklightHelper = new THREE.PointLightHelper(tvBacklight, 0.2);
-        this.app.scene.add(tvBacklightHelper);
+        // const tvBacklightHelper = new THREE.PointLightHelper(tvBacklight, 0.2);
+        // this.app.scene.add(tvBacklightHelper);
 
-        const sofaBacklightHelper = new THREE.PointLightHelper(sofaBacklight, 0.2);
-        this.app.scene.add(sofaBacklightHelper);
+        // const sofaBacklightHelper = new THREE.PointLightHelper(sofaBacklight, 0.2);
+        // this.app.scene.add(sofaBacklightHelper);
 
-        const mainLightHelper = new THREE.DirectionalLightHelper(mainLight, 1);
-        this.app.scene.add(mainLightHelper);
+        // const mainLightHelper = new THREE.DirectionalLightHelper(mainLight, 1);
+        // this.app.scene.add(mainLightHelper);
 
-        // Purple accent light helpers
-        for (const lightBar of this.lightBars) {
-            if (lightBar.userData.accentLight) {
-                const purpleHelper = new THREE.PointLightHelper(lightBar.userData.accentLight, 0.1);
-                this.app.scene.add(purpleHelper);
-            }
-        }
+        // for (const lightBar of this.lightBars) {
+        //     if (lightBar.userData.accentLight) {
+        //         const orangeHelper = new THREE.PointLightHelper(lightBar.userData.accentLight, 0.1);
+        //         this.app.scene.add(orangeHelper);
+        //     }
+        // }
 
-        // Store helpers for management
-        this.lightHelpers = [
-            coffeeTableHelper,
-            tvBacklightHelper,
-            sofaBacklightHelper,
-            mainLightHelper
-        ];
+        // this.lightHelpers = [
+        //     coffeeTableHelper,
+        //     tvBacklightHelper,
+        //     sofaBacklightHelper,
+        //     mainLightHelper
+        // ];
 
         this.toggleLightHelpers(false);
 
