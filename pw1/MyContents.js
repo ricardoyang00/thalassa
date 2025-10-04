@@ -27,6 +27,7 @@ import { MyController } from './MyController.js';
 import { MyIcons } from './MyIcons.js';
 import { MyPc } from './MyPc.js';
 import { MyDoor } from './MyDoor.js';
+import { MyPicture } from './MyPicture.js';
 
 /**
  *  This class contains the contents of out application
@@ -143,6 +144,8 @@ class MyContents  {
         this.icons = null
         this.pc = null
         this.door = null
+        this.pictureB = null
+        this.pictureR = null
     }
 
     /**
@@ -181,7 +184,9 @@ class MyContents  {
             { name: 'concrete', path: 'textures/concrete_light.jpg', repeat: [3, 2] },
             { name: 'plastic_black', path: 'textures/plastic.jpg', repeat: [1, 1] },
             { name: 'plastic_grey', path: 'textures/plastic_grey.jpg', repeat: [1, 1] },
-            { name: 'sponge', path: 'textures/sponge.jpg', repeat: [1, 1] }
+            { name: 'sponge', path: 'textures/sponge.jpg', repeat: [1, 1] },
+            { name: 'picture_b', path: 'pictures/b.jpg', repeat: [1, 1] },
+            { name: 'picture_r', path: 'pictures/r.png', repeat: [1, 1] },
         ];
         
         const loadPromises = textureConfigs.map(config => {
@@ -433,6 +438,20 @@ class MyContents  {
             this.pc.rotateY(-Math.PI/2);
             this.pc.position.set(-1.5, 1.05, -3.6);
             this.app.scene.add(this.pc);
+        }
+
+        if (this.pictureB === null) {
+            this.pictureB = new MyPicture(this, this.textures.get('picture_b'), this.textures.get('wood_black'));
+            this.pictureB.rotateY(-Math.PI/2);
+            this.pictureB.position.set(4.5, 2.6, 1);
+            this.app.scene.add(this.pictureB);
+        }
+
+        if (this.pictureR === null) {
+            this.pictureR = new MyPicture(this, this.textures.get('picture_r'), this.textures.get('wood_black'));
+            this.pictureR.rotateY(-Math.PI/2);
+            this.pictureR.position.set(4.5, 2.6, 3.2);
+            this.app.scene.add(this.pictureR);
         }
 
         // sofa
