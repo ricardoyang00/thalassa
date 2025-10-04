@@ -29,27 +29,27 @@ class MyGuiInterface  {
      * Initialize the gui interface
      */
     init() {
-        // add a folder to the gui interface for the box
-        const boxFolder = this.datgui.addFolder( 'Box' );
-        // note that we are using a property from the contents object 
-        boxFolder.add(this.contents, 'boxMeshSize', 0, 10).name("size").onChange( () => { this.contents.rebuildBox() } );
-        boxFolder.add(this.contents, 'boxEnabled', true).name("enabled");
-        boxFolder.add(this.contents.boxDisplacement, 'x', -5, 5)
-        boxFolder.add(this.contents.boxDisplacement, 'y', -5, 5)
-        boxFolder.add(this.contents.boxDisplacement, 'z', -5, 5)
-        boxFolder.open()
+        // // add a folder to the gui interface for the box
+        // const boxFolder = this.datgui.addFolder( 'Box' );
+        // // note that we are using a property from the contents object 
+        // boxFolder.add(this.contents, 'boxMeshSize', 0, 10).name("size").onChange( () => { this.contents.rebuildBox() } );
+        // boxFolder.add(this.contents, 'boxEnabled', true).name("enabled");
+        // boxFolder.add(this.contents.boxDisplacement, 'x', -5, 5)
+        // boxFolder.add(this.contents.boxDisplacement, 'y', -5, 5)
+        // boxFolder.add(this.contents.boxDisplacement, 'z', -5, 5)
+        // boxFolder.open()
 
-        const tableFolder = this.datgui.addFolder( 'Table' );
-        tableFolder.add(this.contents, 'tableEnabled', true).name("enabled");
-        tableFolder.open()
+        // const tableFolder = this.datgui.addFolder( 'Table' );
+        // tableFolder.add(this.contents, 'tableEnabled', true).name("enabled");
+        // tableFolder.open()
 
         const wallsFolder = this.datgui.addFolder( 'Walls' );
         wallsFolder.add(this.contents, 'wallsEnabled', true).name("enabled");
         wallsFolder.open()
         
-        const objFolder = this.datgui.addFolder( 'Objects' );
-        objFolder.add(this.contents, 'objEnabled', true).name("enabled");
-        objFolder.open()
+        // const objFolder = this.datgui.addFolder( 'Objects' );
+        // objFolder.add(this.contents, 'objEnabled', true).name("enabled");
+        // objFolder.open()
 
         const data = {  
             'diffuse color': this.contents.diffusePlaneColor,
@@ -61,7 +61,7 @@ class MyGuiInterface  {
         planeFolder.addColor( data, 'diffuse color' ).onChange( (value) => { this.contents.updateDiffusePlaneColor(value) } );
         planeFolder.addColor( data, 'specular color' ).onChange( (value) => { this.contents.updateSpecularPlaneColor(value) } );
         planeFolder.add(this.contents, 'planeShininess', 0, 1000).name("shininess").onChange( (value) => { this.contents.updatePlaneShininess(value) } );
-        planeFolder.open();
+        planeFolder.close();
 
         // adds a folder to the gui interface for the camera
         const cameraFolder = this.datgui.addFolder('Camera')
@@ -70,37 +70,36 @@ class MyGuiInterface  {
         cameraFolder.add(this.app.activeCamera.position, 'x', 0, 10).name("x coord")
         cameraFolder.open()
 
-        // adds a folder to the gui interface for the spot light
-        const spotLightFolder = this.datgui.addFolder('Spotlight');
-        const spotLightData = {
-            'color': this.contents.spotLightColor
-        };
+        // // adds a folder to the gui interface for the spot light
+        // const spotLightFolder = this.datgui.addFolder('Spotlight');
+        // const spotLightData = {
+        //     'color': this.contents.spotLightColor
+        // };
 
-        spotLightFolder.addColor(spotLightData, 'color').onChange((value) => { this.contents.updateSpotLightColor(value)});
-        spotLightFolder.add(this.contents, 'spotLightIntensity', 0, 100).name("intensity").onChange((value) => {this.contents.updateSpotLightIntensity(value)});
-        spotLightFolder.add(this.contents, 'spotLightDistance', 0, 100).name("distance").onChange((value) => {this.contents.updateSpotLightDistance(value)});
-        spotLightFolder.add(this.contents, 'spotLightAngle', 0, 90).name("angle (degrees)").onChange((value) => {this.contents.updateSpotLightAngle(value)});        
-        spotLightFolder.add(this.contents, 'spotLightPenumbra', 0, 1).name("penumbra").onChange((value) => {this.contents.updateSpotLightPenumbra(value)});
-        spotLightFolder.add(this.contents, 'spotLightDecay', 0, 2).name("decay").onChange((value) => {this.contents.updateSpotLightDecay(value)});
-        spotLightFolder.add(this.contents, 'spotLightPositionY', 0, 20).name("position Y").onChange((value) => {this.contents.updateSpotLightPositionY(value)});
-        spotLightFolder.add(this.contents, 'spotLightTargetY', -10, 7.5).name("target Y").onChange((value) => {this.contents.updateSpotLightTargetY(value)});
-        spotLightFolder.add(this.contents, 'spotLightVisible').name("visible").onChange((value) => {this.contents.updateSpotLightVisible(value)});
+        // spotLightFolder.addColor(spotLightData, 'color').onChange((value) => { this.contents.updateSpotLightColor(value)});
+        // spotLightFolder.add(this.contents, 'spotLightIntensity', 0, 100).name("intensity").onChange((value) => {this.contents.updateSpotLightIntensity(value)});
+        // spotLightFolder.add(this.contents, 'spotLightDistance', 0, 100).name("distance").onChange((value) => {this.contents.updateSpotLightDistance(value)});
+        // spotLightFolder.add(this.contents, 'spotLightAngle', 0, 90).name("angle (degrees)").onChange((value) => {this.contents.updateSpotLightAngle(value)});        
+        // spotLightFolder.add(this.contents, 'spotLightPenumbra', 0, 1).name("penumbra").onChange((value) => {this.contents.updateSpotLightPenumbra(value)});
+        // spotLightFolder.add(this.contents, 'spotLightDecay', 0, 2).name("decay").onChange((value) => {this.contents.updateSpotLightDecay(value)});
+        // spotLightFolder.add(this.contents, 'spotLightPositionY', 0, 20).name("position Y").onChange((value) => {this.contents.updateSpotLightPositionY(value)});
+        // spotLightFolder.add(this.contents, 'spotLightTargetY', -10, 7.5).name("target Y").onChange((value) => {this.contents.updateSpotLightTargetY(value)});
+        // spotLightFolder.add(this.contents, 'spotLightVisible').name("visible").onChange((value) => {this.contents.updateSpotLightVisible(value)});
+        // spotLightFolder.open();
 
-        spotLightFolder.open();
 
-
-        // adds a folder to the gui interface for the wrap mode
-        const wrapFolder = this.datgui.addFolder('Wrap mode');
-        wrapFolder.add(
-            { mode: 'ClampToEdge' },
-            'mode',
-            { 'Clamp to Edge': 'ClampToEdge', 'Repeat': 'Repeat' }
-        ).name('Wall Wrap Mode').onChange((value) => {
-            if (this.contents && this.contents.walls && this.contents.walls.setWrapMode) {
-                this.contents.walls.setWrapMode(value);
-            }
-        });
-        wrapFolder.open();
+        // // adds a folder to the gui interface for the wrap mode
+        // const wrapFolder = this.datgui.addFolder('Wrap mode');
+        // wrapFolder.add(
+        //     { mode: 'ClampToEdge' },
+        //     'mode',
+        //     { 'Clamp to Edge': 'ClampToEdge', 'Repeat': 'Repeat' }
+        // ).name('Wall Wrap Mode').onChange((value) => {
+        //     if (this.contents && this.contents.walls && this.contents.walls.setWrapMode) {
+        //         this.contents.walls.setWrapMode(value);
+        //     }
+        // });
+        // wrapFolder.open();
         
     }
 }
