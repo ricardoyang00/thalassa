@@ -156,7 +156,7 @@ class MyContents  {
             monitorScreen: true,
             icons: true,
             sceneLight: true,
-            pictures: true,
+            pictureSpots: true
         };
 
         // LIGHTS
@@ -173,6 +173,8 @@ class MyContents  {
             floorLamp2: null,
             lightWall: null,
             mainLight: null,
+            pictureSpot1: null,
+            pictureSpot2: null
         };
 
         this.sceneLightIntensity = 0.3
@@ -240,7 +242,7 @@ class MyContents  {
             { name: 'plastic_black', path: 'textures/plastic.jpg', repeat: [1, 1] },
             { name: 'plastic_grey', path: 'textures/plastic_grey.jpg', repeat: [1, 1] },
             { name: 'sponge', path: 'textures/sponge.jpg', repeat: [1, 1] },
-            { name: 'picture_b', path: 'pictures/b.jpg' },
+            { name: 'picture_b', path: 'pictures/b2.jpg' },
             { name: 'picture_r', path: 'pictures/r2.jpg' },
         ];
         
@@ -727,6 +729,11 @@ class MyContents  {
         this.lightHelpers.point.push(sofaBacklightHelper);
         this.app.scene.add(sofaBacklightHelper);
 
+        // const sofaBacklight2 = new THREE.PointLight(0xffa500, 3, 4);
+        // sofaBacklight2.position.set(4.4, 0.8, 0);
+        // //this.lights.sofaBacklight2 = sofaBacklight2;
+        // this.app.scene.add(sofaBacklight2);
+
         // shelf
         const shelfLightPositions = [
             { x: -3.6, y: 0.15, z: -4 },  // Under bottom shelf
@@ -794,6 +801,39 @@ class MyContents  {
         if (this.floorLamp2 && this.floorLamp2.spotLight) {
             this.lights.floorLamp2 = this.floorLamp2.spotLight;
         }
+
+
+        // SPOT LIGHTS FOR THE PICTURES
+        const pictureSpot1 = new THREE.SpotLight("#ffffd0", 5, 10, Math.PI / 15, 1, 1);
+        
+        pictureSpot1.position.set(2, 7, 1);
+        pictureSpot1.target.position.set(4.5, 2.6, 1);
+        pictureSpot1.castShadow = true;
+        this.lights.pictureSpot1 = pictureSpot1;
+        this.app.scene.add(pictureSpot1);
+        this.app.scene.add(pictureSpot1.target);
+
+
+        // Spotlight for picture R
+        const pictureSpot2 = new THREE.SpotLight("#ffffd0", 5, 10, Math.PI / 15, 1, 1);
+        
+        pictureSpot2.position.set(2, 7, 3);
+        pictureSpot2.target.position.set(4.5, 2.6, 3);
+        pictureSpot2.castShadow = true;
+        this.lights.pictureSpot2 = pictureSpot2;
+        this.app.scene.add(pictureSpot2);
+        this.app.scene.add(pictureSpot2.target);
+
+        // === PICTURE SPOTLIGHT HELPERS ===
+        const pictureSpot1Helper = new THREE.SpotLightHelper(pictureSpot1);
+        pictureSpot1Helper.visible = this.helpersVisible.spot;
+        this.lightHelpers.spot.push(pictureSpot1Helper);
+        this.app.scene.add(pictureSpot1Helper);
+
+        const pictureSpot2Helper = new THREE.SpotLightHelper(pictureSpot2);
+        pictureSpot2Helper.visible = this.helpersVisible.spot;
+        this.lightHelpers.spot.push(pictureSpot2Helper);
+        this.app.scene.add(pictureSpot2Helper);
 
 
         // === LIGHT HELPERS (Optional - remove for final version) ===
@@ -1195,6 +1235,10 @@ class MyContents  {
                 break;
             case 'sceneLight':
                 this.updateSceneLightEnabled(enabled);
+                break;
+            case 'pictureSpots':
+                if (this.lights.pictureSpot1) this.lights.pictureSpot1.visible = enabled;
+                if (this.lights.pictureSpot2) this.lights.pictureSpot2.visible = enabled;
                 break;
         }
     }

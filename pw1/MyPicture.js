@@ -13,8 +13,12 @@ class MyPicture extends THREE.Object3D {
             map: frameTexture,
         });
 
-        const pictureMaterial = new THREE.MeshBasicMaterial({ 
+        const pictureMaterial = new THREE.MeshPhongMaterial({ 
             map: photoTexture,
+            emissive: "#121212",
+            emissiveIntensity: 1,
+            color: "#ffffff",
+            shininess: 50
         });
 
         const frameGeometry = new THREE.BoxGeometry(1.2, 1.5, 0.05);
@@ -23,7 +27,7 @@ class MyPicture extends THREE.Object3D {
 
         const pictureGeometry = new THREE.BoxGeometry(1.05, 1.35, 0.01);
         const pictureMesh = new THREE.Mesh(pictureGeometry, pictureMaterial);
-        pictureMesh.position.set(0, 0, 0.03);
+        pictureMesh.position.set(0, 0, 0.022);
         this.add(pictureMesh);
     }
 }

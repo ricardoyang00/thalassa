@@ -174,6 +174,10 @@ class MyGuiInterface  {
             .name('Table Lamp')
             .onChange((value) => { this.contents.toggleLightGroup('tableLamp', value) });
 
+        this.lightControllers.pictureSpots = lightsFolder.add(this.contents.lightsEnabled, 'pictureSpots')
+            .name('Picture Spots')
+            .onChange((value) => { this.contents.toggleLightGroup('pictureSpots', value) });
+
         this.lightControllers.tvBacklight = lightsFolder.add(this.contents.lightsEnabled, 'tvBacklight')
             .name('TV Backlight')
             .onChange((value) => { this.contents.toggleLightGroup('tvBacklight', value) });
