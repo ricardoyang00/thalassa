@@ -106,76 +106,6 @@ class MyContents  {
         this.carpetEnabled = true
         this.lastCarpetEnabled = null
 
-        // Light control properties
-        this.lightsEnabled = {
-            all: true,
-            coffeeTable: true,
-            tvBacklight: true,
-            sofaBacklight: true,
-            shelf: true,
-            ceiling1: true,
-            ceiling2: true,
-            lightBars: true,
-            tableLamp: true,
-            floorLamp1: true,
-            floorLamp2: true,
-            lightWall: true,
-            tvScreen: true,
-            monitorScreen: true,
-            icons: true,
-            sceneLight: true,
-            pictures: true,
-        };
-
-        // Store light references
-        this.lights = {
-            coffeeTable: null,
-            tvBacklight: null,
-            sofaBacklight: null,
-            shelf: [],
-            ceiling1: null,
-            ceiling2: null,
-            lightBars: [],
-            tableLamp: null,
-            floorLamp1: null,
-            floorLamp2: null,
-            lightWall: null,
-            mainLight: null,
-        };
-
-        this.sceneLightIntensity = 0.2
-
-        // Add helper visibility properties
-        this.helpersVisible = {
-            directional: false,
-            point: false,
-            spot: false
-        };
-        
-        // Store helper references
-        this.lightHelpers = {
-            directional: [],
-            point: [],
-            spot: []
-        };
-        
-        // Store references to objects with helpers
-        this.objectsWithHelpers = {
-            windows: [],
-            lamps: [],
-            floorLamps: []
-        };
-
-
-
-        // TEXTURE LOADER
-        this.loader = new THREE.TextureLoader();
-        this.textures = new Map();
-    
-
-        //this.planeMaterial = new THREE.MeshPhongMaterial({ color: this.diffusePlaneColor, 
-        //    specular: this.specularPlaneColor, emissive: "#000000", shininess: this.planeShininess, map: floor_texture })
-
         this.shelf = null
         this.guitar = null
         this.guitarStand = null
@@ -205,6 +135,72 @@ class MyContents  {
         this.door = null
         this.pictureB = null
         this.pictureR = null
+
+
+
+        // LIGHT CONTROL PROPERTIES
+        this.lightsEnabled = {
+            all: true,
+            coffeeTable: true,
+            tvBacklight: true,
+            sofaBacklight: true,
+            shelf: true,
+            // ceiling1: true,
+            // ceiling2: true,
+            lightBars: true,
+            tableLamp: true,
+            floorLamp1: true,
+            floorLamp2: true,
+            lightWall: true,
+            tvScreen: true,
+            monitorScreen: true,
+            icons: true,
+            sceneLight: true,
+            pictures: true,
+        };
+
+        // LIGHTS
+        this.lights = {
+            coffeeTable: null,
+            tvBacklight: null,
+            sofaBacklight: null,
+            shelf: [],
+            // ceiling1: null,
+            // ceiling2: null,
+            lightBars: [],
+            tableLamp: null,
+            floorLamp1: null,
+            floorLamp2: null,
+            lightWall: null,
+            mainLight: null,
+        };
+
+        this.sceneLightIntensity = 0.2
+
+        // LIGHT HELPERS
+        this.helpersVisible = {
+            directional: false,
+            point: false,
+            spot: false
+        };
+        
+        this.lightHelpers = {
+            directional: [],
+            point: [],
+            spot: []
+        };
+        
+        this.objectsWithHelpers = {
+            windows: [],
+            lamps: [],
+            floorLamps: []
+        };
+
+
+
+        // TEXTURE LOADER
+        this.loader = new THREE.TextureLoader();
+        this.textures = new Map();
     }
 
     /**
@@ -511,7 +507,7 @@ class MyContents  {
         if (this.pictureR === null) {
             this.pictureR = new MyPicture(this, this.textures.get('picture_r'), this.textures.get('wood_black'));
             this.pictureR.rotateY(-Math.PI/2);
-            this.pictureR.position.set(4.5, 2.6, 3.2);
+            this.pictureR.position.set(4.5, 2.6, 3);
             this.app.scene.add(this.pictureR);
         }
 
@@ -766,9 +762,9 @@ class MyContents  {
             this.app.scene.add(orangeHelper);
         }
 
-        // === CEILING LIGHTS FOR GENERAL ILLUMINATION ===
-        const ceilingLight1 = new THREE.PointLight(0xffffff, 5, 8);
-        ceilingLight1.position.set(-2, 4, -2);
+        // === CEILING LIGHTS FOR WINDOW ===
+        const ceilingLight1 = new THREE.PointLight(0xffffff, 1, 8);
+        ceilingLight1.position.set(-4, 3, -2);
         this.lights.ceiling1 = ceilingLight1;
         this.app.scene.add(ceilingLight1);
 
@@ -778,8 +774,8 @@ class MyContents  {
         this.app.scene.add(ceiling1Helper);
 
 
-        const ceilingLight2 = new THREE.PointLight(0xffffff, 5, 8);
-        ceilingLight2.position.set(2, 4, 2);
+        const ceilingLight2 = new THREE.PointLight(0xffffff, 0.3, 8);
+        ceilingLight2.position.set(3, 3, 4);
         this.lights.ceiling2 = ceilingLight2;
         this.app.scene.add(ceilingLight2);
 
@@ -1156,12 +1152,12 @@ class MyContents  {
             case 'shelf':
                 this.lights.shelf.forEach(light => light.visible = enabled);
                 break;
-            case 'ceiling1':
-                if (this.lights.ceiling1) this.lights.ceiling1.visible = enabled;
-                break;
-            case 'ceiling2':
-                if (this.lights.ceiling2) this.lights.ceiling2.visible = enabled;
-                break;
+            // case 'ceiling1':
+            //     if (this.lights.ceiling1) this.lights.ceiling1.visible = enabled;
+            //     break;
+            // case 'ceiling2':
+            //     if (this.lights.ceiling2) this.lights.ceiling2.visible = enabled;
+            //     break;
             case 'lightBars':
                 this.lights.lightBars.forEach(light => light.visible = enabled);
                 this.lightBars.forEach(lightBar => {

@@ -106,73 +106,79 @@ class MyGuiInterface  {
         // Master toggle for all lights
         lightsFolder.add(this.contents.lightsEnabled, 'all')
             .name('All Lights')
-            .onChange((value) => { this.contents.toggleAllLights(value) });
+            .onChange((value) => { 
+                this.contents.toggleAllLights(value);
+                this.updateLightControllers();
+            });
+
+        // Store references to individual light controllers
+        this.lightControllers = {};
 
         const sceneLightFolder = lightsFolder.addFolder('Scene Light');
         sceneLightFolder.add(this.contents, 'sceneLightIntensity', 0, 2)
             .name('Intensity')
             .onChange((value) => { this.contents.updateSceneLightIntensity(value) });
         
-        sceneLightFolder.add(this.contents.lightsEnabled, 'sceneLight')
+        this.lightControllers.scene = sceneLightFolder.add(this.contents.lightsEnabled, 'sceneLight')
             .name('Enabled')
             .onChange((value) => { this.contents.toggleLightGroup('sceneLight', value) });
         
         sceneLightFolder.open();
 
         // Individual light controls
-        lightsFolder.add(this.contents.lightsEnabled, 'ceiling1')
-            .name('Ceiling Light 1')
-            .onChange((value) => { this.contents.toggleLightGroup('ceiling1', value) });
+        // this.lightControllers.ceiling1 = lightsFolder.add(this.contents.lightsEnabled, 'ceiling1')
+        //     .name('Ceiling Light 1')
+        //     .onChange((value) => { this.contents.toggleLightGroup('ceiling1', value) });
 
-        lightsFolder.add(this.contents.lightsEnabled, 'ceiling2')
-            .name('Ceiling Light 2')
-            .onChange((value) => { this.contents.toggleLightGroup('ceiling2', value) });
+        // this.lightControllers.ceiling2 = lightsFolder.add(this.contents.lightsEnabled, 'ceiling2')
+        //     .name('Ceiling Light 2')
+        //     .onChange((value) => { this.contents.toggleLightGroup('ceiling2', value) });
 
-        lightsFolder.add(this.contents.lightsEnabled, 'coffeeTable')
+        this.lightControllers.coffeeTable = lightsFolder.add(this.contents.lightsEnabled, 'coffeeTable')
             .name('Coffee Table Light')
             .onChange((value) => { this.contents.toggleLightGroup('coffeeTable', value) });
 
-        lightsFolder.add(this.contents.lightsEnabled, 'floorLamp1')
+        this.lightControllers.floorLamp1 = lightsFolder.add(this.contents.lightsEnabled, 'floorLamp1')
             .name('Floor Lamp 1')
             .onChange((value) => { this.contents.toggleLightGroup('floorLamp1', value) });
 
-        lightsFolder.add(this.contents.lightsEnabled, 'floorLamp2')
+        this.lightControllers.floorLamp2 = lightsFolder.add(this.contents.lightsEnabled, 'floorLamp2')
             .name('Floor Lamp 2')
             .onChange((value) => { this.contents.toggleLightGroup('floorLamp2', value) });
 
-        lightsFolder.add(this.contents.lightsEnabled, 'lightBars')
+        this.lightControllers.lightBars = lightsFolder.add(this.contents.lightsEnabled, 'lightBars')
             .name('Light Bars')
             .onChange((value) => { this.contents.toggleLightGroup('lightBars', value) });
         
-        lightsFolder.add(this.contents.lightsEnabled, 'lightWall')
+        this.lightControllers.lightWall = lightsFolder.add(this.contents.lightsEnabled, 'lightWall')
             .name('Light Wall')
             .onChange((value) => { this.contents.toggleLightGroup('lightWall', value) });
 
-        lightsFolder.add(this.contents.lightsEnabled, 'monitorScreen')
+        this.lightControllers.monitorScreen = lightsFolder.add(this.contents.lightsEnabled, 'monitorScreen')
             .name('Monitor Screen')
             .onChange((value) => { this.contents.toggleLightGroup('monitorScreen', value) });
 
-        lightsFolder.add(this.contents.lightsEnabled, 'icons')
+        this.lightControllers.icons = lightsFolder.add(this.contents.lightsEnabled, 'icons')
             .name('PS Icons')
             .onChange((value) => { this.contents.toggleLightGroup('icons', value) });
 
-        lightsFolder.add(this.contents.lightsEnabled, 'shelf')
+        this.lightControllers.shelf = lightsFolder.add(this.contents.lightsEnabled, 'shelf')
             .name('Shelf Lights')
             .onChange((value) => { this.contents.toggleLightGroup('shelf', value) });
 
-        lightsFolder.add(this.contents.lightsEnabled, 'sofaBacklight')
+        this.lightControllers.sofaBacklight = lightsFolder.add(this.contents.lightsEnabled, 'sofaBacklight')
             .name('Sofa Backlight')
             .onChange((value) => { this.contents.toggleLightGroup('sofaBacklight', value) });
 
-        lightsFolder.add(this.contents.lightsEnabled, 'tableLamp')
+        this.lightControllers.tableLamp = lightsFolder.add(this.contents.lightsEnabled, 'tableLamp')
             .name('Table Lamp')
             .onChange((value) => { this.contents.toggleLightGroup('tableLamp', value) });
 
-        lightsFolder.add(this.contents.lightsEnabled, 'tvBacklight')
+        this.lightControllers.tvBacklight = lightsFolder.add(this.contents.lightsEnabled, 'tvBacklight')
             .name('TV Backlight')
             .onChange((value) => { this.contents.toggleLightGroup('tvBacklight', value) });
 
-        lightsFolder.add(this.contents.lightsEnabled, 'tvScreen')
+        this.lightControllers.tvScreen = lightsFolder.add(this.contents.lightsEnabled, 'tvScreen')
             .name('TV Screen')
             .onChange((value) => { this.contents.toggleLightGroup('tvScreen', value) });
 
@@ -191,6 +197,13 @@ class MyGuiInterface  {
             .name('Spot Light Helpers')
             .onChange((value) => { this.contents.toggleSpotHelpers(value) });
 
+        lightsFolder.open();
+    }
+
+    updateLightControllers() {
+        Object.keys(this.lightControllers).forEach(key => {
+            this.lightControllers[key].updateDisplay();
+        });
     }
 }
 
