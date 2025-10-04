@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 class MyIcons extends THREE.Object3D {
-    constructor() {
+    constructor(woodTexture) {
         super();
         this.type = 'Group';
 
@@ -101,11 +101,6 @@ class MyIcons extends THREE.Object3D {
         
         squareGroup.position.x = spacing * 1.5;
         this.add(squareGroup);
-
-        const woodTexture = new THREE.TextureLoader().load('textures/wood_light.jpg');
-        woodTexture.wrapS = THREE.RepeatWrapping;
-        woodTexture.wrapT = THREE.RepeatWrapping;
-        woodTexture.repeat.set(2, 2);
 
         const baseGeometry = new THREE.BoxGeometry(2, 0.02, 0.5);
         const baseMaterial = new THREE.MeshPhongMaterial({ 

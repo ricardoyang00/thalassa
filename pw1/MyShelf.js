@@ -2,40 +2,29 @@ import * as THREE from 'three';
 
 class MyShelf extends THREE.Object3D {
 
-    constructor(app) {
+    constructor(app, blackWoodTexture, inoxTexture) {
         super();
         this.app = app;
         this.type = 'Group';
 
-        // Load textures
-        const blackWoodTexture = new THREE.TextureLoader().load('textures/wood_black.jpg');
-        blackWoodTexture.wrapS = THREE.RepeatWrapping;
-        blackWoodTexture.wrapT = THREE.RepeatWrapping;
-        blackWoodTexture.repeat.set(2, 1); // Horizontal grain for shelves
-
-        const inoxTexture = new THREE.TextureLoader().load('textures/inox_black.jpg');
-        inoxTexture.wrapS = THREE.RepeatWrapping;
-        inoxTexture.wrapT = THREE.RepeatWrapping;
-        inoxTexture.repeat.set(1, 3); // Vertical pattern for legs
-
-        // Create materials
+        // materials
         const blackWoodMaterial = new THREE.MeshPhongMaterial({
-            color: "#2a2a2a",        // Dark gray tint for black wood
-            specular: "#404040",     // Medium gray specular
+            color: "#2a2a2a",
+            specular: "#404040",
             emissive: "#000000",
-            shininess: 30,           // Medium shine for finished wood
+            shininess: 30,
             map: blackWoodTexture
         });
 
         const inoxMaterial = new THREE.MeshPhongMaterial({
-            color: "#1a1a1a",        // Very dark gray for black steel
-            specular: "#666666",     // Bright specular for metallic shine
+            color: "#1a1a1a",
+            specular: "#666666",
             emissive: "#000000",
-            shininess: 90,           // High shininess for polished metal
+            shininess: 90,
             map: inoxTexture
         });
 
-        // Legs (inox/steel material)
+        // Legs
         const legGeometry = new THREE.CylinderGeometry(0.02, 0.02, 3.5, 32);
         
         const leg1Mesh = new THREE.Mesh(legGeometry, inoxMaterial);

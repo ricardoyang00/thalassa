@@ -1,76 +1,51 @@
 import * as THREE from 'three';
 
 class MyGamingChair extends THREE.Object3D {
-    constructor(app, {
-        seatWidth = 0.6,
-        seatDepth = 0.5,
-        seatHeight = 0.1,
-        backrestHeight = 0.8,
-        armrestHeight = 0.6,
-        legHeight = 0.5,
-        primaryColor = 0x000000,    // Black base
-        accentColor = 0xff6600,     // Orange accents to match room
-        metalColor = 0x1a1a1a      // Dark metal
-    } = {}) {
+    constructor(app, leatherTexture, inoxBlackTexture) {
         super();
         this.app = app;
         this.type = 'Group';
 
-        // Load textures with error handling
-        const textureLoader = new THREE.TextureLoader();
-        
-        const leatherTexture = textureLoader.load('textures/leather_black.jpg', 
-            () => console.log('Leather texture loaded'),
-            undefined,
-            () => console.warn('Leather texture failed to load')
-        );
-        leatherTexture.wrapS = THREE.RepeatWrapping;
-        leatherTexture.wrapT = THREE.RepeatWrapping;
-        leatherTexture.repeat.set(1, 1);
+        const seatWidth = 0.6
+        const seatDepth = 0.5
+        const seatHeight = 0.1
+        const backrestHeight = 0.8
+        const legHeight = 0.5
 
-        const inoxBlackTexture = textureLoader.load('textures/inox_black.jpg',
-            () => console.log('Metal texture loaded'),
-            undefined,
-            () => console.warn('Metal texture failed to load')
-        );
-        inoxBlackTexture.wrapS = THREE.RepeatWrapping;
-        inoxBlackTexture.wrapT = THREE.RepeatWrapping;
-        inoxBlackTexture.repeat.set(1, 1);
 
-        // Create materials with orange accents
         const leatherMaterial = new THREE.MeshPhongMaterial({
-            color: "#1a1a1a",        // Dark black leather
-            specular: "#2a2a2a",     // Subtle specular for leather
+            color: "#1a1a1a",
+            specular: "#2a2a2a",
             emissive: "#000000",
-            shininess: 25,           // Medium shine for leather
+            shininess: 25,
             map: leatherTexture
         });
 
         const accentLeatherMaterial = new THREE.MeshPhongMaterial({
-            color: 0xff6600,         // Orange accent color to match room
-            specular: "#663300",     // Orange-tinted specular
-            emissive: "#331100",     // Slight orange glow
+            color: "#ff6600",
+            specular: "#663300",
+            emissive: "#331100",
             emissiveIntensity: 0.1,
-            shininess: 30,           // Medium shine for accent areas
+            shininess: 30,
             map: leatherTexture
         });
 
         const metalMaterial = new THREE.MeshPhongMaterial({
-            color: "#2a2a2a",        // Lighter metal
-            specular: "#666666",     // Bright metallic specular
+            color: "#2a2a2a",
+            specular: "#666666",
             emissive: "#000000",
-            shininess: 90,           // High shine for metal
+            shininess: 90, 
             map: inoxBlackTexture
         });
 
         const plasticMaterial = new THREE.MeshPhongMaterial({
-            color: "#1a1a1a",        // Dark plastic
-            specular: "#333333",     // Medium specular
+            color: "#1a1a1a",
+            specular: "#333333",
             emissive: "#000000",
-            shininess: 30            // Medium shine for plastic
+            shininess: 30
         });
 
-        // ===== CHAIR BASE (5-star base) - BIGGER for stability =====
+        // ===== CHAIR BASE =====
         const baseArmLength = 0.4; // Increased from 0.3 to 0.4
         const baseGeometry = new THREE.BoxGeometry(0.08, 0.04, baseArmLength); // Thicker arms
         
@@ -85,13 +60,13 @@ class MyGamingChair extends THREE.Object3D {
             this.add(baseArm);
         }
 
-        // Central hub - bigger
+        // Central hub
         const hubGeometry = new THREE.CylinderGeometry(0.07, 0.07, 0.05, 16); // Increased size
         const hub = new THREE.Mesh(hubGeometry, metalMaterial);
         hub.position.set(0, 0.095, 0);
         this.add(hub);
 
-        // Wheels at end of each base arm - positioned further out
+        // Wheels at end of each base arm
         const wheelGeometry = new THREE.CylinderGeometry(0.03, 0.03, 0.04, 12); // Bigger wheels
         for (let i = 0; i < 5; i++) {
             const wheel = new THREE.Mesh(wheelGeometry, plasticMaterial);
@@ -110,7 +85,7 @@ class MyGamingChair extends THREE.Object3D {
         this.add(pillar);
 
         // Gas cylinder mechanism
-        const cylinderGeometry = new THREE.CylinderGeometry(0.045, 0.045, 0.15, 16); // Bigger
+        const cylinderGeometry = new THREE.CylinderGeometry(0.045, 0.045, 0.15, 16);
         const cylinder = new THREE.Mesh(cylinderGeometry, plasticMaterial);
         cylinder.position.set(0, legHeight + 0.025, 0);
         this.add(cylinder);
@@ -121,7 +96,7 @@ class MyGamingChair extends THREE.Object3D {
         seat.position.set(0, legHeight + 0.1 + seatHeight/2, 0);
         this.add(seat);
 
-        // Seat accent stripes (properly positioned)
+        // Seat accent stripes
         const stripeWidth = 0.04;
         const stripeGeometry = new THREE.BoxGeometry(stripeWidth, seatHeight + 0.005, seatDepth - 0.1);
         for (let i = 0; i < 3; i++) {
@@ -134,7 +109,7 @@ class MyGamingChair extends THREE.Object3D {
         const backrestGeometry = new THREE.BoxGeometry(seatWidth, backrestHeight, 0.08);
         const backrest = new THREE.Mesh(backrestGeometry, leatherMaterial);
         backrest.position.set(0, legHeight + 0.1 + seatHeight + backrestHeight/2, -seatDepth/2);
-        backrest.rotation.x = -Math.PI / 20; // Slight recline
+        backrest.rotation.x = -Math.PI / 20; 
         this.add(backrest);
 
         // Backrest accent panel (center)
@@ -145,7 +120,7 @@ class MyGamingChair extends THREE.Object3D {
         this.add(backAccent);
 
         
-        // ===== ARMRESTS WITH PROPER SUPPORT =====
+        // ===== ARMRESTS =====
         const seatTopY = legHeight + 0.1 + seatHeight;
         const offset = -0.15;
         
@@ -222,21 +197,6 @@ class MyGamingChair extends THREE.Object3D {
         const rightHeadrestSupport = new THREE.Mesh(headrestSupportGeometry, metalMaterial);
         rightHeadrestSupport.position.set(0.1, legHeight + 0.1 + seatHeight + backrestHeight + 0.01, -seatDepth/2 - 0.02);
         this.add(rightHeadrestSupport);
-
-        // Store references
-        this.seat = seat;
-        this.backrest = backrest;
-        this.pillar = pillar;
-    }
-
-    // Method to change accent color
-    setAccentColor(color) {
-        this.children.forEach(child => {
-            if (child.material && child.material.color && 
-                (child.material.color.r > 0.8 || child.material.color.g > 0.8 || child.material.color.b > 0.8)) {
-                child.material.color.setHex(color);
-            }
-        });
     }
 }
 

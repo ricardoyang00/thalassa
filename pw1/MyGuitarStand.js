@@ -2,36 +2,24 @@ import * as THREE from 'three';
 
 class MyGuitarStand extends THREE.Object3D {
 
-    constructor(app) {
+    constructor(app, blackWoodTexture, inoxBlackTexture) {
         super();
         this.app = app;
         this.type = 'Group';
 
-        // Load textures
-        const blackWoodTexture = new THREE.TextureLoader().load('textures/wood_black.jpg');
-        blackWoodTexture.wrapS = THREE.RepeatWrapping;
-        blackWoodTexture.wrapT = THREE.RepeatWrapping;
-        blackWoodTexture.repeat.set(1, 2);
-
-        const inoxBlackTexture = new THREE.TextureLoader().load('textures/inox_black.jpg');
-        inoxBlackTexture.wrapS = THREE.RepeatWrapping;
-        inoxBlackTexture.wrapT = THREE.RepeatWrapping;
-        inoxBlackTexture.repeat.set(1, 1);
-
-        // Create materials
         const blackWoodMaterial = new THREE.MeshPhongMaterial({
-            color: "#2a2a2a",        // Dark gray tint for black wood
-            specular: "#1a1a1a",     // Much darker specular (reduced from "#404040")
+            color: "#2a2a2a",
+            specular: "#1a1a1a",
             emissive: "#000000",
-            shininess: 10,           // Much lower shininess (reduced from 40 to 10)
+            shininess: 10,
             map: blackWoodTexture
         });
 
         const inoxBlackMaterial = new THREE.MeshPhongMaterial({
-            color: "#1a1a1a",        // Very dark gray for black steel
-            specular: "#666666",     // Bright specular for metallic shine
+            color: "#1a1a1a",
+            specular: "#666666",
             emissive: "#000000",
-            shininess: 90,           // High shininess for polished metal
+            shininess: 90,
             map: inoxBlackTexture
         });
 

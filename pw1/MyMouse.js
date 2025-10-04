@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 class MyMouse extends THREE.Object3D {
 
-    constructor(app) {
+    constructor(app, feltTexture) {
         super();
         this.app = app;
         this.type = 'Group';
@@ -11,11 +11,6 @@ class MyMouse extends THREE.Object3D {
             color: 0x2c2c2c,
             shininess: 30 
         });
-
-        const feltTexture = new THREE.TextureLoader().load('textures/felt.jpg');
-        feltTexture.wrapS = THREE.RepeatWrapping;
-        feltTexture.wrapT = THREE.RepeatWrapping;
-        feltTexture.repeat.set(1, 1);
 
         const matMaterial = new THREE.MeshPhongMaterial({ 
             map: feltTexture,

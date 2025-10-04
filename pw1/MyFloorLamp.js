@@ -1,15 +1,10 @@
 import * as THREE from 'three';
 
 class MyFloorLamp extends THREE.Object3D {
-    constructor(app) {
+    constructor(app, blackWoodTexture) {
         super();
         this.app = app;
         this.type = 'Group';
-
-        const blackWoodTexture = new THREE.TextureLoader().load('textures/wood_black.jpg');
-        blackWoodTexture.wrapS = THREE.RepeatWrapping;
-        blackWoodTexture.wrapT = THREE.RepeatWrapping;
-        blackWoodTexture.repeat.set(2, 2);
 
         const blackWoodMaterial = new THREE.MeshPhongMaterial({
             color: "#2a2a2a",
@@ -36,9 +31,9 @@ class MyFloorLamp extends THREE.Object3D {
         base2Mesh.position.set(0, 0.05, 0);
         this.add(base2Mesh);
 
-        const mainStemGeometry = new THREE.CylinderGeometry(0.03, 0.03, 4, 16);
+        const mainStemGeometry = new THREE.CylinderGeometry(0.03, 0.03, 2.8, 16);
         const mainStem = new THREE.Mesh(mainStemGeometry, blackWoodMaterial);
-        mainStem.position.set(0, 0.6, 0);
+        mainStem.position.set(0, 1.4, 0);
         this.add(mainStem);
 
         const supportGeometry = new THREE.CylinderGeometry(0.16, 0.16, 0.05, 32);
