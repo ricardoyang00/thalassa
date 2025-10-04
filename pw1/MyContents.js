@@ -175,7 +175,7 @@ class MyContents  {
             mainLight: null,
         };
 
-        this.sceneLightIntensity = 0.2
+        this.sceneLightIntensity = 0.3
 
         // LIGHT HELPERS
         this.helpersVisible = {
