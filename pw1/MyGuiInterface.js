@@ -57,11 +57,11 @@ class MyGuiInterface  {
         };
 
         // adds a folder to the gui interface for the plane
-        const planeFolder = this.datgui.addFolder( 'Plane' );
-        planeFolder.addColor( data, 'diffuse color' ).onChange( (value) => { this.contents.updateDiffusePlaneColor(value) } );
-        planeFolder.addColor( data, 'specular color' ).onChange( (value) => { this.contents.updateSpecularPlaneColor(value) } );
-        planeFolder.add(this.contents, 'planeShininess', 0, 1000).name("shininess").onChange( (value) => { this.contents.updatePlaneShininess(value) } );
-        planeFolder.close();
+        // const planeFolder = this.datgui.addFolder( 'Plane' );
+        // planeFolder.addColor( data, 'diffuse color' ).onChange( (value) => { this.contents.updateDiffusePlaneColor(value) } );
+        // planeFolder.addColor( data, 'specular color' ).onChange( (value) => { this.contents.updateSpecularPlaneColor(value) } );
+        // planeFolder.add(this.contents, 'planeShininess', 0, 1000).name("shininess").onChange( (value) => { this.contents.updatePlaneShininess(value) } );
+        // planeFolder.close();
 
         // adds a folder to the gui interface for the camera
         const cameraFolder = this.datgui.addFolder('Camera')
@@ -107,6 +107,17 @@ class MyGuiInterface  {
         lightsFolder.add(this.contents.lightsEnabled, 'all')
             .name('All Lights')
             .onChange((value) => { this.contents.toggleAllLights(value) });
+
+        const sceneLightFolder = lightsFolder.addFolder('Scene Light');
+        sceneLightFolder.add(this.contents, 'sceneLightIntensity', 0, 2)
+            .name('Intensity')
+            .onChange((value) => { this.contents.updateSceneLightIntensity(value) });
+        
+        sceneLightFolder.add(this.contents.lightsEnabled, 'sceneLight')
+            .name('Enabled')
+            .onChange((value) => { this.contents.toggleLightGroup('sceneLight', value) });
+        
+        sceneLightFolder.open();
 
         // Individual light controls
         lightsFolder.add(this.contents.lightsEnabled, 'ceiling1')
@@ -164,6 +175,22 @@ class MyGuiInterface  {
         lightsFolder.add(this.contents.lightsEnabled, 'tvScreen')
             .name('TV Screen')
             .onChange((value) => { this.contents.toggleLightGroup('tvScreen', value) });
+
+
+        const helpersFolder = lightsFolder.addFolder('Light Helpers');
+    
+        helpersFolder.add(this.contents.helpersVisible, 'directional')
+            .name('Directional Helpers')
+            .onChange((value) => { this.contents.toggleDirectionalHelpers(value) });
+        
+        helpersFolder.add(this.contents.helpersVisible, 'point')
+            .name('Point Light Helpers')
+            .onChange((value) => { this.contents.togglePointHelpers(value) });
+        
+        helpersFolder.add(this.contents.helpersVisible, 'spot')
+            .name('Spot Light Helpers')
+            .onChange((value) => { this.contents.toggleSpotHelpers(value) });
+
     }
 }
 

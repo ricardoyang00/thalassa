@@ -55,8 +55,9 @@ class MyFloorLamp extends THREE.Object3D {
         this.add(this.spotLight);
         this.add(this.spotLight.target);
 
-        //const lightHelper = new THREE.SpotLightHelper(this.spotLight);
-        //this.add(lightHelper);
+        this.spotLightHelper = new THREE.SpotLightHelper(this.spotLight);
+        this.spotLightHelper.visible = false;
+        this.add(this.spotLightHelper);
 
         this.toggleLamp = (enabled) => {
             this.spotLight.visible = enabled;
@@ -68,6 +69,13 @@ class MyFloorLamp extends THREE.Object3D {
                 this.lampMesh.material.emissiveIntensity = 0;
             }
         };
+    }
+
+    setHelperVisible(visible) {
+        if (this.spotLightHelper) {
+            this.spotLightHelper.visible = visible;
+            this.spotLightHelper.update();
+        }
     }
 }
 

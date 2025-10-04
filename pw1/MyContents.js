@@ -122,7 +122,9 @@ class MyContents  {
             lightWall: true,
             tvScreen: true,
             monitorScreen: true,
-            icons: true
+            icons: true,
+            sceneLight: true,
+            pictures: true,
         };
 
         // Store light references
@@ -137,13 +139,38 @@ class MyContents  {
             tableLamp: null,
             floorLamp1: null,
             floorLamp2: null,
-            lightWall: null
+            lightWall: null,
+            mainLight: null,
         };
+
+        this.sceneLightIntensity = 0.2
+
+        // Add helper visibility properties
+        this.helpersVisible = {
+            directional: false,
+            point: false,
+            spot: false
+        };
+        
+        // Store helper references
+        this.lightHelpers = {
+            directional: [],
+            point: [],
+            spot: []
+        };
+        
+        // Store references to objects with helpers
+        this.objectsWithHelpers = {
+            windows: [],
+            lamps: [],
+            floorLamps: []
+        };
+
+
 
         // TEXTURE LOADER
         this.loader = new THREE.TextureLoader();
         this.textures = new Map();
-        //this.loadTextures();
     
 
         //this.planeMaterial = new THREE.MeshPhongMaterial({ color: this.diffusePlaneColor, 
@@ -217,8 +244,8 @@ class MyContents  {
             { name: 'plastic_black', path: 'textures/plastic.jpg', repeat: [1, 1] },
             { name: 'plastic_grey', path: 'textures/plastic_grey.jpg', repeat: [1, 1] },
             { name: 'sponge', path: 'textures/sponge.jpg', repeat: [1, 1] },
-            { name: 'picture_b', path: 'pictures/b.jpg', repeat: [1, 1] },
-            { name: 'picture_r', path: 'pictures/r.png', repeat: [1, 1] },
+            { name: 'picture_b', path: 'pictures/b.jpg' },
+            { name: 'picture_r', path: 'pictures/r2.jpg' },
         ];
         
         const loadPromises = textureConfigs.map(config => {
@@ -238,7 +265,7 @@ class MyContents  {
                     undefined, // onProgress
                     (error) => {
                         console.error(`Failed to load texture: ${config.path}`, error);
-                        resolve(); // Still resolve to not block other textures
+                        resolve();
                     }
                 );
             });
@@ -328,18 +355,21 @@ class MyContents  {
             this.lamp = new MyLamp(this, this.textures.get('wood_black'))
             this.lamp.scale.set(0.7, 0.7, 0.7)
             this.lamp.position.set(1.4, 1.05, -4)
+            this.objectsWithHelpers.lamps.push(this.lamp);
             this.app.scene.add(this.lamp)
         }
 
         if (this.floorLamp === null) {
             this.floorLamp = new MyFloorLamp(this, this.textures.get('wood_black'));
             this.floorLamp.position.set(4.1, 0, -0.7);
+            this.objectsWithHelpers.floorLamps.push(this.floorLamp);
             this.app.scene.add(this.floorLamp);
         }
 
         if (this.floorLamp2 === null) {
             this.floorLamp2 = new MyFloorLamp(this, this.textures.get('wood_black'));
             this.floorLamp2.position.set(0.8, 0, 4.1);
+            this.objectsWithHelpers.floorLamps.push(this.floorLamp2);
             this.app.scene.add(this.floorLamp2);
         }
 
@@ -535,14 +565,15 @@ class MyContents  {
             this.window1 = new MyWindow(this, this.textures.get('landscape3'), this.textures.get('inox_black'), 50, 0.03);
             this.window1.position.set(-4.49, 1.75, -2);
             this.window1.rotation.y = Math.PI / 2;
+            this.objectsWithHelpers.windows.push(this.window1);
             this.app.scene.add(this.window1);
         }
 
         if (this.window2 === null) {
             this.window2 = new MyWindow(this, this.textures.get('landscape2'), this.textures.get('inox_black'), 15, 0.01);
             this.window2.position.set(3, 1.75, 4.49);
-
             this.window2.rotation.y = Math.PI;
+            this.objectsWithHelpers.windows.push(this.window2);
             this.app.scene.add(this.window2);
         }
 
@@ -648,36 +679,57 @@ class MyContents  {
         
         // === AMBIENT LIGHT ===
         // Increase ambient light significantly for better visibility
-        const ambientLight = new THREE.AmbientLight(0x404040, 0.4); // Increased from 0.6 to 1.2
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
         this.app.scene.add(ambientLight);
 
         // === MAIN DIRECTIONAL LIGHT ===
-        // Add strong directional light for overall scene illumination
-        const mainLight = new THREE.DirectionalLight("#ffffff", 0.8); // Bright white light
-        mainLight.position.set(5, 10, 5);
+        // Strong directional light for overall scene illumination
+        const mainLight = new THREE.DirectionalLight("#ffffff", this.sceneLightIntensity);
+        mainLight.position.set(0, 10, 0);
         mainLight.target.position.set(0, 0, 0);
         mainLight.castShadow = true;
-        // this.app.scene.add(mainLight);
-        // this.app.scene.add(mainLight.target);
+        this.lights.mainLight = mainLight;
+        this.app.scene.add(mainLight);
+        this.app.scene.add(mainLight.target);
+
+        const mainLightHelper = new THREE.DirectionalLightHelper(mainLight, 1);
+        mainLightHelper.visible = this.helpersVisible.directional;
+        this.lightHelpers.directional.push(mainLightHelper);
+        this.app.scene.add(mainLightHelper);
 
         // === POINT LIGHTS ===
         // 1. Under coffee table - warm accent lighting
-        const coffeeTableLight = new THREE.PointLight(0xff6b35, 3, 4); // Increased intensity
+        const coffeeTableLight = new THREE.PointLight(0xff6b35, 3, 4);
         coffeeTableLight.position.set(1.5, 0.1, 1.4);
         this.lights.coffeeTable = coffeeTableLight;
         this.app.scene.add(coffeeTableLight);
 
+        const coffeeTableHelper = new THREE.PointLightHelper(coffeeTableLight, 0.2);
+        coffeeTableHelper.visible = this.helpersVisible.point;
+        this.lightHelpers.point.push(coffeeTableHelper);
+        this.app.scene.add(coffeeTableHelper);
+
         // 2. Behind TV - cool backlight effect
-        const tvBacklight = new THREE.PointLight(0x00d4ff, 4, 5); // Increased intensity
+        const tvBacklight = new THREE.PointLight(0x00d4ff, 4, 5);
         tvBacklight.position.set(-4.2, 0.6, 1.8);
         this.lights.tvBacklight = tvBacklight;
         this.app.scene.add(tvBacklight);
 
+        const tvBacklightHelper = new THREE.PointLightHelper(tvBacklight, 0.2);
+        tvBacklightHelper.visible = this.helpersVisible.point;
+        this.lightHelpers.point.push(tvBacklightHelper);
+        this.app.scene.add(tvBacklightHelper);
+
         // 3. Behind sofa - warm mood lighting
-        const sofaBacklight = new THREE.PointLight(0xffa500, 3, 4); // Increased intensity
+        const sofaBacklight = new THREE.PointLight(0xffa500, 3, 4);
         sofaBacklight.position.set(4.4, 0.8, 4.4);
         this.lights.sofaBacklight = sofaBacklight;
         this.app.scene.add(sofaBacklight);
+
+        const sofaBacklightHelper = new THREE.PointLightHelper(sofaBacklight, 0.2);
+        sofaBacklightHelper.visible = this.helpersVisible.point;
+        this.lightHelpers.point.push(sofaBacklightHelper);
+        this.app.scene.add(sofaBacklightHelper);
 
         // shelf
         const shelfLightPositions = [
@@ -689,31 +741,29 @@ class MyContents  {
         ];
 
         for (const lightPos of shelfLightPositions) {
-            const shelfLight = new THREE.PointLight(
-                0xff6b35,    // Same warm orange color as coffee table
-                2,           // Slightly less intensity than coffee table
-                3,           // Good range for shelf lighting
-                1            // Natural decay
-            );
-            
+            const shelfLight = new THREE.PointLight(0xff6b35, 2, 3, 1 );
             shelfLight.position.set(lightPos.x, lightPos.y, lightPos.z);
             this.lights.shelf.push(shelfLight);
             this.app.scene.add(shelfLight);
+
+            const shelfHelper = new THREE.PointLightHelper(shelfLight, 0.1);
+            shelfHelper.visible = this.helpersVisible.point;
+            this.lightHelpers.point.push(shelfHelper);
+            this.app.scene.add(shelfHelper);
         }
 
         // === LIGHTING FOR LIGHT BARS ===
         for (const lightBar of this.lightBars) {
-            const orangeLight = new THREE.PointLight(
-                "#ff5c00",
-                8,           // High intensity for visibility
-                6,           // Good range
-                1            // Natural decay
-            );
-            
+            const orangeLight = new THREE.PointLight("#ff5c00", 8, 6, 1);
             orangeLight.position.copy(lightBar.position);
             this.lights.lightBars.push(orangeLight);
             this.app.scene.add(orangeLight);
             lightBar.userData.accentLight = orangeLight;
+
+            const orangeHelper = new THREE.PointLightHelper(orangeLight, 0.1);
+            orangeHelper.visible = this.helpersVisible.point;
+            this.lightHelpers.point.push(orangeHelper);
+            this.app.scene.add(orangeHelper);
         }
 
         // === CEILING LIGHTS FOR GENERAL ILLUMINATION ===
@@ -722,10 +772,21 @@ class MyContents  {
         this.lights.ceiling1 = ceilingLight1;
         this.app.scene.add(ceilingLight1);
 
+        const ceiling1Helper = new THREE.PointLightHelper(ceilingLight1, 0.2);
+        ceiling1Helper.visible = this.helpersVisible.point;
+        this.lightHelpers.point.push(ceiling1Helper);
+        this.app.scene.add(ceiling1Helper);
+
+
         const ceilingLight2 = new THREE.PointLight(0xffffff, 5, 8);
         ceilingLight2.position.set(2, 4, 2);
         this.lights.ceiling2 = ceilingLight2;
         this.app.scene.add(ceilingLight2);
+
+        const ceiling2Helper = new THREE.PointLightHelper(ceilingLight2, 0.2);
+        ceiling2Helper.visible = this.helpersVisible.point;
+        this.lightHelpers.point.push(ceiling2Helper);
+        this.app.scene.add(ceiling2Helper);
 
         // === LAMPS ===
         if (this.lamp && this.lamp.spotLight) {
@@ -738,20 +799,6 @@ class MyContents  {
             this.lights.floorLamp2 = this.floorLamp2.spotLight;
         }
 
-        // === SPOT LIGHT===
-        // musical area spotlight
-        this.spotLight = new THREE.SpotLight(
-            0xffffff,    // White light
-            12,          // Higher intensity
-            8,           // Increased distance
-            THREE.MathUtils.degToRad(30), // Wider cone
-            0.2,         // Sharp edges
-            1            // Natural decay
-        );
-        this.spotLight.position.set(-2, 3.5, -3);
-        this.spotLight.target.position.set(0, 1, -4);
-        // this.app.scene.add(this.spotLight);
-        // this.app.scene.add(this.spotLight.target);
 
         // === LIGHT HELPERS (Optional - remove for final version) ===
         // const coffeeTableHelper = new THREE.PointLightHelper(coffeeTableLight, 0.2);
@@ -911,6 +958,28 @@ class MyContents  {
     }
 
     /**
+     * updates scene light intensity
+     * @param {number} value 
+     */
+    updateSceneLightIntensity(value) {
+        this.sceneLightIntensity = value;
+        if (this.lights.mainLight) {
+            this.lights.mainLight.intensity = this.sceneLightIntensity;
+        }
+    }
+
+    /**
+     * updates scene light visibility
+     * @param {boolean} value 
+     */
+    updateSceneLightEnabled(value) {
+        this.sceneLightEnabled = value;
+        if (this.lights.mainLight) {
+            this.lights.mainLight.visible = this.sceneLightEnabled;
+        }
+    }
+
+    /**
      * rebuilds the box mesh if required
      * this method is called from the gui interface
      */
@@ -1012,17 +1081,53 @@ class MyContents  {
         
     }
 
-    toggleLightHelpers(visible) {
-        if (this.lightHelpers && this.lightHelpers.length > 0) {
-            this.lightHelpers.forEach(helper => {
-                helper.visible = visible;
-            });
-        }
+    toggleDirectionalHelpers(visible) {
+        this.helpersVisible.directional = visible;
+        this.lightHelpers.directional.forEach(helper => {
+            helper.visible = visible;
+        });
+    }
+
+    togglePointHelpers(visible) {
+        this.helpersVisible.point = visible;
+        this.lightHelpers.point.forEach(helper => {
+            helper.visible = visible;
+        });
+    }
+
+    toggleSpotHelpers(visible) {
+        this.helpersVisible.spot = visible;
+        this.lightHelpers.spot.forEach(helper => {
+            helper.visible = visible;
+            if (helper.update) helper.update();
+        });
         
-        // Also toggle the spotlight helper if it exists
-        if (this.spotLightHelper) {
-            this.spotLightHelper.visible = visible;
-        }
+        // Control window spotlight helpers
+        this.objectsWithHelpers.windows.forEach(window => {
+            if (window && window.setHelperVisible) {
+                window.setHelperVisible(visible);
+            }
+        });
+        
+        // Control lamp spotlight helpers
+        this.objectsWithHelpers.lamps.forEach(lamp => {
+            if (lamp && lamp.setHelperVisible) {
+                lamp.setHelperVisible(visible);
+            }
+        });
+        
+        // Control floor lamp spotlight helpers
+        this.objectsWithHelpers.floorLamps.forEach(lamp => {
+            if (lamp && lamp.setHelperVisible) {
+                lamp.setHelperVisible(visible);
+            }
+        });
+    }
+
+    toggleLightHelpers(visible) {
+        this.toggleDirectionalHelpers(visible);
+        this.togglePointHelpers(visible);
+        this.toggleSpotHelpers(visible);
     }
 
     toggleAllLights(enabled) {
@@ -1091,6 +1196,9 @@ class MyContents  {
                 if (this.icons && this.icons.toggleIcons) {
                     this.icons.toggleIcons(enabled);
                 }
+                break;
+            case 'sceneLight':
+                this.updateSceneLightEnabled(enabled);
                 break;
         }
     }

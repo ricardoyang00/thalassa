@@ -16,7 +16,7 @@ class MyWindow extends THREE.Object3D {
         // window glass
         const windowGeometry = new THREE.PlaneGeometry(x - frameThickness * 2, y - frameThickness * 2);
         
-        const windowMaterial = new THREE.MeshBasicMaterial({
+        const windowMaterial = new THREE.MeshPhongMaterial({
             map: landscapeTexture,
             transparent: true,
             opacity: 1,
@@ -122,9 +122,21 @@ class MyWindow extends THREE.Object3D {
         this.add(this.moonlight);
         this.add(this.moonlight.target);
 
-        //this.spotLightHelper = new THREE.SpotLightHelper(this.moonlight);
-        //this.add(this.spotLightHelper);
+        this.spotLightHelper = new THREE.SpotLightHelper(this.moonlight);
+        this.spotLightHelper.visible = false;
+        this.add(this.spotLightHelper);
 
+    }
+
+    setHelperVisible(visible) {
+        if (this.spotLightHelper) {
+            this.spotLightHelper.visible = visible;
+            this.spotLightHelper.update();
+        }
+    }
+    
+    getLight() {
+        return this.moonlight;
     }
 }
 
