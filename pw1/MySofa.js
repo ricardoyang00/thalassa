@@ -72,7 +72,7 @@ class MySofa extends THREE.Object3D {
             }
 
             // armrests with smooth leather
-            const armGeom = new THREE.BoxGeometry(0.25, height * 0.6, segDepth - 0.1);
+            const armGeom = new THREE.BoxGeometry(0.25, height * 0.6, segDepth);
             const leftArm = new THREE.Mesh(armGeom, armMat);
             leftArm.position.set(-segWidth/2 + 0.125, armGeom.parameters.height/2 + 0.25/2, 0);
             group.add(leftArm);
