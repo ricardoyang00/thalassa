@@ -177,6 +177,9 @@ class MyContents  {
             { name: 'gold', path: 'textures/gold.jpg', repeat: [2, 2] },
             { name: 'felt', path: 'textures/felt.jpg', repeat: [1, 1] },
             { name: 'concrete', path: 'textures/concrete_light.jpg', repeat: [3, 2] },
+            { name: 'plastic_black', path: 'textures/plastic.jpg', repeat: [1, 1] },
+            { name: 'plastic_grey', path: 'textures/plastic_grey.jpg', repeat: [1, 1] },
+            { name: 'sponge', path: 'textures/sponge.jpg', repeat: [1, 1] }
         ];
         
         textureConfigs.forEach(config => {
@@ -411,7 +414,7 @@ class MyContents  {
         }
 
         if (this.pc === null) {
-            this.pc = new MyPc(this);
+            this.pc = new MyPc(this, this.textures.get('plastic_black'), this.textures.get('plastic_grey'));
             this.pc.rotateY(-Math.PI/2);
             this.pc.position.set(-1.5, 1.05, -3.6);
             this.app.scene.add(this.pc);
@@ -443,32 +446,24 @@ class MyContents  {
         }
 
         if (this.acousticFoam === null) {
-            this.acousticFoam = new MyAcousticFoam(this, {
+            this.acousticFoam = new MyAcousticFoam(this, this.textures.get('sponge'), {
                 wallWidth: 3.7,
                 wallHeight: 3.5,
                 triangleSize: 0.2,
-                triangleHeight: 0.1,
-                color: 0x444444,
-                rows: 10,
-                cols: 10
+                triangleHeight: 0.1
             });
-            // Position it on one of your walls (e.g., back wall)
             this.acousticFoam.position.set(4.5, 2, -2.6);
-            this.acousticFoam.rotation.y = -Math.PI / 2; // facing into the room
+            this.acousticFoam.rotation.y = -Math.PI / 2;
             this.app.scene.add(this.acousticFoam);
         }
 
         if (this.acousticFoam2 === null) {
-            this.acousticFoam2 = new MyAcousticFoam(this, {
+            this.acousticFoam2 = new MyAcousticFoam(this, this.textures.get('sponge'), {
                 wallWidth: 1.9,
                 wallHeight: 3.5,
                 triangleSize: 0.2,
-                triangleHeight: 0.1,
-                color: 0x444444,
-                rows: 10,
-                cols: 10
+                triangleHeight: 0.1
             });
-            // Position it on one of your walls (e.g., back wall)
             this.acousticFoam2.position.set(3.5, 2, -4.5);
             this.app.scene.add(this.acousticFoam2);
         }

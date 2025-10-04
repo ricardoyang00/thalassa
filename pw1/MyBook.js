@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 class MyBook extends THREE.Object3D {
-    constructor(app, paperTexture_, coverColor = "#8B4513") {
+    constructor(app, paperTexture, coverColor = "#8B4513") {
         super();
         this.app = app;
         this.type = 'Group';
@@ -11,11 +11,6 @@ class MyBook extends THREE.Object3D {
             shininess: 25,
             specular: 0,
         });
-
-        const paperTexture = new THREE.TextureLoader().load('textures/paper.jpg');
-        paperTexture.wrapS = THREE.RepeatWrapping;
-        paperTexture.wrapT = THREE.RepeatWrapping;
-        paperTexture.repeat.set(1, 1);
 
         const pagesMaterial = new THREE.MeshPhongMaterial({ 
             color: 0xfffaf0,

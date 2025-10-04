@@ -1,23 +1,13 @@
 import * as THREE from 'three';
 
 class MyPc extends THREE.Object3D {
-    constructor(app, caseColor = 0x2c2c2c) {
+    constructor(app, plasticTexture, plastic2Texture) {
         super();
         this.app = app;
         this.type = 'Group';
 
-        const plasticTexture = new THREE.TextureLoader().load('textures/plastic.jpg');
-        plasticTexture.wrapS = THREE.RepeatWrapping;
-        plasticTexture.wrapT = THREE.RepeatWrapping;
-        plasticTexture.repeat.set(1, 1);
-
-        const plastic2Texture = new THREE.TextureLoader().load('textures/grey_plastic.jpg');
-        plastic2Texture.wrapS = THREE.RepeatWrapping;
-        plastic2Texture.wrapT = THREE.RepeatWrapping;
-        plastic2Texture.repeat.set(1, 1);
-
         const caseMaterial = new THREE.MeshPhongMaterial({ 
-            color: caseColor,
+            color: 0x2c2c2c,
             shininess: 30,
             specular: 0x111111,
             map: plasticTexture,
