@@ -85,6 +85,7 @@ Comfortable seating area with sofa, coffee table, and gaming controllers. Floor 
 [MySofa](MySofa.js), [MyCoffeeTable](MyCoffeeTable.js), [MyFloorLamp](MyFloorLamp.js), [MyController](MyController.js)
 
 ![](screenshots/project-related/floorlamp-on.jpeg)
+(Spotlights OFF)
 ![](screenshots/project-related/floorlamp-off.jpeg)
 
 
@@ -103,6 +104,7 @@ Gaming/esports portraits mounted on the wall with dedicated spotlight illuminati
 [MyPicture](MyPicture.js)
 
 ![](screenshots/project-related/pictures-on.jpeg)
+(TV OFF)
 ![](screenshots/project-related/pictures-off.jpeg)
 
 
@@ -113,6 +115,7 @@ Realistic room boundaries including windows with night scenes. Windows feature d
 
 ![](screenshots/project-related/window-1.jpeg)
 ![](screenshots/project-related/window-2.jpeg)
+(All lights OFF)
 ![](screenshots/project-related/window-3.png)
 
 
