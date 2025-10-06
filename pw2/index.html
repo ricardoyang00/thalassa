@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>SGI Hello world TP1</title>
+
+    <link rel="shortcut icon" href="favicon.ico" />
+    <link rel="stylesheet" href="styles.css">
+
+
+    <!-- Importing JS libraries you can either load your local copies of the libs, or get them from a CDN. Choose the correct block below and comment out the other -->
+    <!-- WARNING: By default, we only provide the most basic ThreeJS/JSM addons in the local version. Make sure the ones you need are available in the lib/jsm folder, if not get them from the ThreeJS github or from the copy provided at Moodle  -->
+
+    <!-- BEGIN: use Local -->
+    <script async src="../lib/es-module-shims.js"></script>
+  
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "../lib/three.module.min.js",
+        "three/addons/": "../lib/jsm/"
+      }
+    }
+
+    </script>  
+    <!-- END: use Local -->
+    
+    <!-- BEGIN: use CDN -->
+    <!--
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.156.1/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.156.1/examples/jsm/"
+        }
+      }
+    </script>
+    -->
+    <!-- END: use CDN -->
+</head>
+
+<body>
+    <div id="canvas"></div>
+    <div id="camera"></div>
+    <script type="module" src="main.js"></script>
+</body>
+
+</html>
