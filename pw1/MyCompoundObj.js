@@ -97,7 +97,7 @@ class MyCompoundObj extends THREE.Object3D {
         this.add(base);
 
         // Power button
-        const buttonGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.02, 8);
+        const buttonGeometry = new THREE.ConeGeometry(0.03, 0.04, 8);
         const powerButton = new THREE.Mesh(buttonGeometry, powerButtonMaterial);
         powerButton.rotation.x = Math.PI / 2;
         powerButton.position.set(screenWidth/2 - 0.2, standHeight/2 + 0.47, 0);
