@@ -36,6 +36,8 @@ class MyApp  {
         // Initial fly camera position for reset
         this.flyCameraInitialPosition = new THREE.Vector3(5, 5, 5)
         this.flyCameraInitialTarget = new THREE.Vector3(0, 0, 0)
+
+        this.wireframeMode = false
     }
     /**
      * initializes the application
@@ -202,6 +204,21 @@ class MyApp  {
      */
     setGui(gui) {   
         this.gui = gui
+    }
+
+    setWireframeMode(enabled) {
+        this.wireframeMode = enabled
+        this.scene.traverse((object) => {
+            if (object.isMesh) {
+                if (Array.isArray(object.material)) {
+                    object.material.forEach(mat => {
+                        material.wireframe = enabled;
+                    });
+                } else {
+                    object.material.wireframe = enabled;
+                }
+            }
+        })
     }
 
     /**

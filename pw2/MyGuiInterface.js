@@ -84,6 +84,11 @@ class MyGuiInterface  {
         flyCameraFolder.add({ info4: 'Drag Mouse - Look around' }, 'info4').name('').disable();
 
         cameraFolder.open()
+
+
+        const renderFolder = this.datgui.addFolder('Rendering')
+        renderFolder.add(this.app, 'wireframeMode', false).name("Wireframe Mode").onChange( (value) => { this.app.setWireframeMode(value) } );
+        renderFolder.open()
     }
 }
 
