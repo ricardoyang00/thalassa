@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { MyAxis } from './MyAxis.js';
+import { TubeCoral } from './objects/corals/TubeCoral.js';
+import { SgiUtils } from './SgiUtils.js';
 
 /**
  *  This class contains the contents of out application
@@ -47,7 +49,9 @@ class MyContents  {
      * initializes the contents
      */
     init() {
-       
+        // (un)comment for fixed/random seeds
+        SgiUtils.setSeed(Math.floor(Math.random() * 4294967296));
+
         // create once 
         if (this.axis === null) {
             // create and attach the axis to the scene
@@ -78,6 +82,8 @@ class MyContents  {
         this.planeMesh.rotation.x = -Math.PI / 2;
         this.planeMesh.position.y = -0;
         this.app.scene.add( this.planeMesh );
+
+        this.app.scene.add(new TubeCoral());
     }
     
     /**
