@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MyAxis } from './MyAxis.js';
 import { TubeCoral } from './objects/corals/TubeCoral.js';
 import { SgiUtils } from './SgiUtils.js';
+import { BrainCoral } from './objects/corals/BrainCoral.js';
 
 /**
  *  This class contains the contents of out application
@@ -14,6 +15,8 @@ class MyContents  {
     */ 
     constructor(app) {
         this.app = app
+
+        this.axis = null;
     }
 
     /**
@@ -52,7 +55,22 @@ class MyContents  {
         this.planeMesh.position.y = -0;
         this.app.scene.add( this.planeMesh );
 
-        this.app.scene.add(new TubeCoral());
+        // Add Corals
+
+        const texture = new THREE.TextureLoader().load('textures/tube-coral.png');
+        const corals = [
+            new TubeCoral(0xff0000),
+            new BrainCoral(0xffff00, 0.7),
+        ];
+
+        for (let i = 0; i < 23; ++i)
+            corals.push(new TubeCoral(SgiUtils.rand(0, 0xffffff)));
+
+        corals.forEach((coral, i) => {
+            coral.position.x = -4 + 2 * Math.floor(i / 5);
+            coral.position.z = -4 + 2 * (i % 5);
+            this.app.scene.add(coral);
+        });
     }
 
     update() {

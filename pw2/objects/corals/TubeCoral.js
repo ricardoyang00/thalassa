@@ -3,12 +3,21 @@ import { Tube } from '../primitives/Tube.js';
 import { SgiUtils } from '../../SgiUtils.js';
 
 class TubeCoral extends THREE.Object3D {
-    constructor(material = new THREE.MeshPhongMaterial(), size = 1) {
+    static #texture = new THREE.TextureLoader().load('textures/tube-coral.png');
+
+    constructor(color = 0xffffff, size = 1) {
         super();
         const layers = 2;
         let n = 4;
         let angle = 0;
         let alphaAng = 2 * Math.PI / n;
+
+        const material = new THREE.MeshPhongMaterial({
+            color,
+            map: TubeCoral.#texture,
+            bumpMap: TubeCoral.#texture,
+            bumpScale: 5,
+        })
 
         for (let layer = 1; layer <= layers; ++layer, n *= 2, alphaAng /= 2) {
             for (let j = 0; j < n; ++j, angle += alphaAng) {
