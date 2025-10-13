@@ -3,6 +3,8 @@ import { MyAxis } from './MyAxis.js';
 import { TubeCoral } from './objects/corals/TubeCoral.js';
 import { SgiUtils } from './SgiUtils.js';
 import { BrainCoral } from './objects/corals/BrainCoral.js';
+import { MyTerrain } from './MyTerrain.js';
+import { MyRock } from './MyRock.js';
 
 /**
  *  This class contains the contents of out application
@@ -17,6 +19,34 @@ class MyContents  {
         this.app = app
 
         this.axis = null;
+        this.wireframeMode = false;
+
+        // seafloor related attributes
+        this.seafloorGroup = new THREE.Group();
+        this.terrain = null;
+        this.rocks = [];
+        this.showRocks = true; 
+    }
+
+    /**
+     * builds the seafloor with terrain and rocks
+     */
+    buildSeafloor() {
+        this.terrain = new MyTerrain(this);
+        this.seafloorGroup.add(this.terrain);
+
+        const seededRandom = SgiUtils.rand.bind(SgiUtils);
+
+        for (let i = 0; i < 15; i++) {
+            const rock = new MyRock(this, 0.5 + seededRandom() * 1.5, seededRandom);
+            rock.position.set(
+                (seededRandom() - 0.5) * 40,
+                seededRandom() - 1.2,
+                (seededRandom() - 0.5) * 40
+            );
+            this.rocks.push(rock);
+            this.seafloorGroup.add(rock);
+        }
     }
 
     /**
@@ -24,7 +54,7 @@ class MyContents  {
      */
     init() {
         // (un)comment for fixed/random seeds
-        SgiUtils.setSeed(Math.floor(Math.random() * 4294967296));
+        // SgiUtils.setSeed(Math.floor(Math.random() * 4294967296));
 
         // create once 
         if (this.axis === null) {
@@ -46,36 +76,51 @@ class MyContents  {
         // add an ambient light
         const ambientLight = new THREE.AmbientLight( 0x555555 );
         this.app.scene.add( ambientLight );
-        
-        // Create a Plane Mesh with basic material
 
-        let plane = new THREE.PlaneGeometry( 10, 10 );
-        this.planeMesh = new THREE.Mesh( plane, new THREE.MeshPhongMaterial({color: 0x00ffff}) );
-        this.planeMesh.rotation.x = -Math.PI / 2;
-        this.planeMesh.position.y = -0;
-        this.app.scene.add( this.planeMesh );
+        this.buildSeafloor();
+        this.app.scene.add(this.seafloorGroup);
 
         // Add Corals
 
-        const texture = new THREE.TextureLoader().load('textures/tube-coral.png');
         const corals = [
             new TubeCoral(0xff0000),
             new BrainCoral(0xffff00, 0.7),
         ];
 
         for (let i = 0; i < 23; ++i)
-            corals.push(new TubeCoral(SgiUtils.rand(0, 0xffffff)));
+            corals.push(new TubeCoral(SgiUtils.rand(0, 0xffffff), 2));
 
         corals.forEach((coral, i) => {
-            coral.position.x = -4 + 2 * Math.floor(i / 5);
-            coral.position.z = -4 + 2 * (i % 5);
+            coral.position.x = -20 + 10 * Math.floor(i / 5);
+            coral.position.y = -1.2;
+            coral.position.z = -20 + 10 * (i % 5);
             this.app.scene.add(coral);
+        });
+
+    }
+
+    /**
+     * toggles rock visibility
+     * @param {boolean} visible 
+     */
+    toggleRocks(visible) {
+        this.showRocks = visible;
+        this.rocks.forEach(rock => {
+            rock.visible = visible;
         });
     }
 
-    update() {
-
+    /**
+     * toggles wireframe mode for all objects
+     * @param {boolean} wireframe 
+     */
+    toggleWireframe(wireframe) {
+        this.wireframeMode = wireframe;
+        if (this.terrain) this.terrain.toggleWireframe(wireframe);
+        this.rocks.forEach(rock => rock.toggleWireframe(wireframe));
     }
+
+    update() {}
 }
 
 export { MyContents };

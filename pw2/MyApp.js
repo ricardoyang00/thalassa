@@ -1,6 +1,7 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { FlyControls } from 'three/addons/controls/FlyControls.js';
 import { MyContents } from './MyContents.js';
 import { MyGuiInterface } from './MyGuiInterface.js';
 import Stats from 'three/addons/libs/stats.module.js'
@@ -26,9 +27,17 @@ class MyApp  {
         // other attributes
         this.renderer = null
         this.controls = null
+        this.flyControls = null
+        this.clock = new THREE.Clock()
         this.gui = null
         this.axis = null
         this.contents == null
+        
+        // Initial fly camera position for reset
+        this.flyCameraInitialPosition = new THREE.Vector3(5, 5, 5)
+        this.flyCameraInitialTarget = new THREE.Vector3(0, 0, 0)
+
+        this.wireframeMode = false
     }
     /**
      * initializes the application
@@ -71,6 +80,12 @@ class MyApp  {
         const perspective1 = new THREE.PerspectiveCamera( 75, aspect, 0.1, 1000 )
         perspective1.position.set(10,10,3)
         this.cameras['Perspective'] = perspective1
+
+        // Create a free fly camera (another perspective camera)
+        const flyCamera = new THREE.PerspectiveCamera( 75, aspect, 0.1, 1000 )
+        flyCamera.position.set(5, 5, 5)
+        flyCamera.lookAt(0, 0, 0)
+        this.cameras['Fly'] = flyCamera
 
         // defines the frustum size for the orthographic cameras
         const left = -this.frustumSize / 2 * aspect
@@ -129,15 +144,39 @@ class MyApp  {
             // among other things
             this.onResize()
 
-            // are the controls yet?
-            if (this.controls === null) {
-                // Orbit controls allow the camera to orbit around a target.
-                this.controls = new OrbitControls( this.activeCamera, this.renderer.domElement );
-                this.controls.enableZoom = true;
-                this.controls.update();
-            }
-            else {
-                this.controls.object = this.activeCamera
+            // Handle fly camera controls
+            if (this.activeCameraName === 'Fly') {
+                // Reset fly camera to initial position
+                this.activeCamera.position.copy(this.flyCameraInitialPosition);
+                this.activeCamera.lookAt(this.flyCameraInitialTarget);
+                
+                // Disable orbit controls for fly camera
+                if (this.controls !== null) {
+                    this.controls.enabled = false;
+                }
+                
+                // Initialize fly controls if not yet created
+                if (this.flyControls === null) {
+                    this.flyControls = new FlyControls(this.activeCamera, this.renderer.domElement);
+                    this.flyControls.movementSpeed = 5.0;
+                    this.flyControls.rollSpeed = 1.0;
+                    this.flyControls.dragToLook = true;
+                } else {
+                    this.flyControls.object = this.activeCamera;
+                }
+            } else {
+                // Disable fly controls for other cameras (handled by Three.js FlyControls)
+                
+                // Enable/setup orbit controls
+                if (this.controls === null) {
+                    // Orbit controls allow the camera to orbit around a target.
+                    this.controls = new OrbitControls( this.activeCamera, this.renderer.domElement );
+                    this.controls.enableZoom = true;
+                    this.controls.update();
+                } else {
+                    this.controls.object = this.activeCamera;
+                    this.controls.enabled = true;
+                }
             }
         }
     }
@@ -167,6 +206,21 @@ class MyApp  {
         this.gui = gui
     }
 
+    setWireframeMode(enabled) {
+        this.wireframeMode = enabled
+        this.scene.traverse((object) => {
+            if (object.isMesh) {
+                if (Array.isArray(object.material)) {
+                    object.material.forEach(mat => {
+                        material.wireframe = enabled;
+                    });
+                } else {
+                    object.material.wireframe = enabled;
+                }
+            }
+        })
+    }
+
     /**
     * the main render function. Called in a requestAnimationFrame loop
     */
@@ -174,13 +228,22 @@ class MyApp  {
         this.stats.begin()
         this.updateCameraIfRequired()
 
+        const delta = this.clock.getDelta();
+
         // update the animation if contents were provided
         if (this.activeCamera !== undefined && this.activeCamera !== null) {
             this.contents.update()
         }
 
+        // Update fly camera if active
+        if (this.activeCameraName === 'Fly' && this.flyControls !== null) {
+            this.flyControls.update(delta);
+        }
+
         // required if controls.enableDamping or controls.autoRotate are set to true
-        this.controls.update();
+        if (this.controls !== null && this.controls.enabled) {
+            this.controls.update();
+        }
 
         // render the scene
         this.renderer.render(this.scene, this.activeCamera);
