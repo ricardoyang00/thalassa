@@ -28,11 +28,6 @@ class MyRock extends THREE.Object3D {
         rockMesh.rotation.z = this.random() * 0.3;
 
         this.add(rockMesh);
-        this.rockMesh = rockMesh;
-    }
-
-    toggleWireframe(wireframe) {
-        this.rockMesh.material.wireframe = wireframe;
     }
 }
 

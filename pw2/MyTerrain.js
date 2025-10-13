@@ -27,11 +27,6 @@ class MyTerrain extends THREE.Object3D {
         terrainMesh.position.y = -2;
 
         this.add(terrainMesh);
-        this.terrainMesh = terrainMesh;
-    }
-
-    toggleWireframe(wireframe) {
-        this.terrainMesh.material.wireframe = wireframe;
     }
 }
 

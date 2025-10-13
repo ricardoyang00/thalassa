@@ -110,16 +110,6 @@ class MyContents  {
         });
     }
 
-    /**
-     * toggles wireframe mode for all objects
-     * @param {boolean} wireframe 
-     */
-    toggleWireframe(wireframe) {
-        this.wireframeMode = wireframe;
-        if (this.terrain) this.terrain.toggleWireframe(wireframe);
-        this.rocks.forEach(rock => rock.toggleWireframe(wireframe));
-    }
-
     update() {}
 }
 
