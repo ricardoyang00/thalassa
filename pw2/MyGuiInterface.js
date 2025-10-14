@@ -1,6 +1,7 @@
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { MyApp } from './MyApp.js';
 import { MyContents } from './MyContents.js';
+import { SgiUtils } from './SgiUtils.js';
 
 /**
     This class customizes the gui interface for the app
@@ -69,9 +70,7 @@ class MyGuiInterface  {
         renderFolder.open()
 
         const rocksFolder = this.datgui.addFolder('Rocks');
-        rocksFolder.add(this.contents, 'showRocks', true).name("Show Rocks").onChange((value) => {
-            this.contents.toggleRocks(value);
-        });
+        rocksFolder.add(this.contents.rocks, 'visible').name("Show Rocks");
         rocksFolder.open();
     }
 }
