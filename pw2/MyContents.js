@@ -40,13 +40,22 @@ class MyContents  {
 
         this.rocks = new THREE.Group();
         this.rocks.name = "rocks";
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 16; i++) {
             const rock = new MyRock(this, SgiUtils.rand(0.5, 2) * 1.5, SgiUtils.rand.bind(SgiUtils));
-            rock.position.set( // TODO: collision detection
-                SgiUtils.rand(-.5, .5) * 40,
-                0,
-                SgiUtils.rand(-.5, .5) * 40,
-            );
+
+            while (true) {
+                const pos = new THREE.Vector3(
+                    SgiUtils.rand(-.5, .5) * 40,
+                    0,
+                    SgiUtils.rand(-.5, .5) * 40,
+                );
+
+                if (this.rocks.children.every((rocc) => rocc.position.distanceTo(pos) > rocc.size + rock.size)) {
+                    rock.position.copy(pos);
+                    break;
+                }
+            };
+
             this.rocks.add(rock);
         }
         this.seafloorGroup.add(this.rocks);
@@ -58,11 +67,21 @@ class MyContents  {
 
         for (let i = 0; i < 25; ++i) {
             const coral = new TubeCoral(SgiUtils.rand(0, 0xffffff), 2);
-            coral.position.set( // TODO: collision detection
-                SgiUtils.rand(-.5, .5) * 40,
-                0,
-                SgiUtils.rand(-.5, .5) * 40,
-            );
+
+            while (true) {
+                const pos = new THREE.Vector3(
+                    SgiUtils.rand(-.5, .5) * 40,
+                    0,
+                    SgiUtils.rand(-.5, .5) * 40,
+                );
+
+                if (this.rocks.children.every((rock) => rock.position.distanceTo(pos) > rock.size + 0.75)
+                    && this.corals.children.every((koral) => koral.position.distanceTo(pos) > 4)
+                ) {
+                    coral.position.copy(pos);
+                    break;
+                }
+            }
             this.corals.add(coral);
         }
         this.seafloorGroup.add(this.corals);
