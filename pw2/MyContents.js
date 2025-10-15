@@ -5,6 +5,8 @@ import { SgiUtils } from './SgiUtils.js';
 import { BrainCoral } from './objects/corals/BrainCoral.js';
 import { MyTerrain } from './MyTerrain.js';
 import { MyRock } from './MyRock.js';
+import { MyFish } from './objects/fish/MyFish.js';
+
 
 /**
  *  This class contains the contents of out application
@@ -26,6 +28,10 @@ class MyContents  {
         this.terrain = null;
         this.rocks = [];
         this.showRocks = true; 
+
+        this.fishGroup = new THREE.Group();
+        this.fish = [];
+        this.showFish = true;
     }
 
     /**
@@ -48,6 +54,22 @@ class MyContents  {
             this.seafloorGroup.add(rock);
         }
     }
+
+    /**
+     * Builds fish
+     */
+    buildFish() {
+        const fish = new MyFish({
+            scale: 0.5,
+            color: 0xff9933 
+        });
+
+        fish.position.set(0, 3, 0);
+
+        this.fish = [fish];
+        this.fishGroup.add(fish);
+    }
+
 
     /**
      * initializes the contents
@@ -78,10 +100,12 @@ class MyContents  {
         this.app.scene.add( ambientLight );
 
         this.buildSeafloor();
+        this.buildFish(); 
+        
         this.app.scene.add(this.seafloorGroup);
+        this.app.scene.add(this.fishGroup);
 
         // Add Corals
-
         const corals = [
             new TubeCoral(0xff0000),
             new BrainCoral(0xffff00, 0.7),
@@ -108,6 +132,14 @@ class MyContents  {
         this.rocks.forEach(rock => {
             rock.visible = visible;
         });
+    }
+
+    /**
+     * Toggle visibility of fish
+     */
+    toggleFish(visible) {
+        this.showFish = visible;
+        this.fish.forEach(f => f.visible = visible);
     }
 
     update() {}
