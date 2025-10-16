@@ -5,6 +5,7 @@ import { SgiUtils } from './SgiUtils.js';
 import { BrainCoral } from './objects/corals/BrainCoral.js';
 import { MyTerrain } from './MyTerrain.js';
 import { MyRock } from './MyRock.js';
+import { LSystemCoral } from './objects/corals/LSystemCoral.js';
 
 /**
  *  This class contains the contents of out application
@@ -65,8 +66,13 @@ class MyContents  {
         this.corals = new THREE.Group();
         this.corals.name = "corals";
 
+        const coralTypes = [
+            TubeCoral,
+            LSystemCoral,
+        ]
+
         for (let i = 0; i < 25; ++i) {
-            const coral = new TubeCoral(SgiUtils.rand(0, 0xffffff), 2);
+            const coral = new coralTypes[SgiUtils.randInt(coralTypes.length)](SgiUtils.rand(0, 0xffffff), 2);
 
             while (true) {
                 const pos = new THREE.Vector3(
