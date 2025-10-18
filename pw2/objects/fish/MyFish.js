@@ -67,13 +67,28 @@ class MyFish extends THREE.Object3D {
             const geometry = new THREE.BufferGeometry();
             geometry.setIndex(indices);
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            const minX = -5, maxX = 1, minY = -1, maxY = 1;
+            const lenX = maxX - minX, lenY = maxY - minY;
+            const uvArray = new Float32Array((vertices.length / 3) * 2);
+            for (let i = 0, j = 0; i < vertices.length; i += 3, j += 2) {
+                const x = vertices[i], y = vertices[i + 1];
+                let u = (x - minX) / lenX;
+                let v = (y - minY) / lenY;
+                // clamp to [0,1]
+                u = Math.max(0, Math.min(1, u));
+                v = Math.max(0, Math.min(1, v));
+                uvArray[j] = u;
+                uvArray[j + 1] = v;
+            }
+            geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvArray, 2));
+
             geometry.computeVertexNormals();
             MyFish._sharedGeometry = geometry;
         }
 
-        const matKey = this.texturePath ? `tex:${this.texturePath}` : `col:${String(this.color)}`;
+        const matKey = this.texturePath ? `tex:${this.texturePath}|col:${String(this.color)}` : `col:${String(this.color)}`;
+        
         MyFish._sharedMaterials = MyFish._sharedMaterials || new Map();
-
         MyFish._textureLoader = MyFish._textureLoader || new THREE.TextureLoader();
         MyFish._textureCache = MyFish._textureCache || new Map();
 
@@ -86,7 +101,7 @@ class MyFish extends THREE.Object3D {
                     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
                     MyFish._textureCache.set(this.texturePath, tex);
                 }
-                material = new THREE.MeshPhongMaterial({ map: tex });
+                material = new THREE.MeshPhongMaterial({ map: tex, color: this.color });
             } else {
                 material = new THREE.MeshPhongMaterial({ color: this.color });
             }

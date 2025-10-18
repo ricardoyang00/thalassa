@@ -29,6 +29,7 @@ class MyContents  {
         this.rocks = [];
         this.showRocks = true; 
 
+        // fish related attributes
         this.fishGroup = new THREE.Group();
         this.fish = [];
         this.showFish = true;
@@ -83,8 +84,10 @@ class MyContents  {
 
             const fish = new MyFish({
                 scale: 0.4 + SgiUtils.rand(0, 0.6),
-                color: color
+                color: color,
+                texturePath: '../pw2/textures/fish.jpg'
             });
+            
             fish.position.set(
                 SgiUtils.rand(-8, 8),
                 SgiUtils.rand(1, 6),
