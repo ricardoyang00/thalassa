@@ -15,11 +15,15 @@ class MyTerrain extends THREE.Object3D {
         terrainMap.wrapS = terrainMap.wrapT = THREE.RepeatWrapping;
         terrainMap.repeat.set(1, 1);
 
+        const texture = new THREE.TextureLoader().load('textures/sand.jpg');
+        texture.wrapT = texture.wrapS = THREE.RepeatWrapping;
+        texture.repeat.set(5, 5);
+
         const terrainMaterial = new THREE.MeshPhongMaterial({ 
             color: "#8B7355",
-            wireframe: false, 
             displacementMap: terrainMap,
-            displacementScale: 2.5
+            displacementScale: 2.5, 
+            map: texture
         });
 
         const terrainMesh = new THREE.Mesh(terrainGeometry, terrainMaterial);
