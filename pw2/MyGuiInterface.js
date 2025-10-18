@@ -73,6 +73,17 @@ class MyGuiInterface  {
             this.contents.toggleRocks(value);
         });
         rocksFolder.open();
+
+        const fishesFolder = this.datgui.addFolder('Fishes');
+        fishesFolder.add(this.contents, 'showFish', true).name("Show Fishes").onChange((value) => {
+            this.contents.toggleFish(value);
+        });
+        const initialScale = (this.contents && this.contents.fishGroup) ? this.contents.fishGroup.scale.x : 1;
+        const fishParams = { scale: initialScale };
+        fishesFolder.add(fishParams, 'scale', 0.1, 3, 0.01).name('Scale').onChange((value) => {
+            if (this.contents) this.contents.setFishesScale(value);
+        });
+        fishesFolder.open();
     }
 }
 

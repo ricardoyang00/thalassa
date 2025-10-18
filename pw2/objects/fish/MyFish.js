@@ -22,79 +22,102 @@ class MyFish extends THREE.Object3D {
         this.color = color;
         this.texturePath = texturePath;
 
+        this.finSize = 0.8;
+        
         this.buildFish();
 
         this.scale.setScalar(this.scaleFactor);
     }
 
     buildFish() {
-        const vertices = new Float32Array([
-            0, 0, -0.5, // 0 right front
-            0, 1, 0,    // 1 top
-            0, 0, 0.5,  // 2 left front
-            0, -1, 0,   // 3 bottom
-            1, 0, 0,    // 4 middle
-            
-            -4, 0, 0,   // 5 tail root
-            -5, 1.25, 0,   // 6 tail top tip
-            -4.5, 0, 0,   // 7 tail mid tip
-            -5, -1.25, 0   // 8 tail bottom tip
-        ]);
+        if (!MyFish._sharedGeometry) {
+            const vertices = new Float32Array([
+                0, 0, -0.5, // 0 right front
+                0, 1, 0,    // 1 top
+                0, 0, 0.5,  // 2 left front
+                0, -1, 0,   // 3 bottom
+                1, 0, 0,    // 4 middle
 
-        const indices = [
-            // head
-            0, 1, 4,
-            4, 1, 2,
-            2, 3, 4,
-            4, 3, 0,
+                -4, 0, 0,   // 5 tail root
+                -5, 1.25, 0,   // 6 tail top tip
+                -4.5, 0, 0,   // 7 tail mid tip
+                -5, -1.25, 0   // 8 tail bottom tip
+            ]);
 
-            // body
-            0, 5, 1,
-            1, 5, 2,
-            2, 5, 3,
-            3, 5, 0,
+            const indices = [
+                // head
+                0, 1, 4,
+                4, 1, 2,
+                2, 3, 4,
+                4, 3, 0,
 
-            // tail
-            5, 7, 6,
-            5, 6, 7,
-            5, 8, 7,
-            5, 7, 8
-        ];
+                // body
+                0, 5, 1,
+                1, 5, 2,
+                2, 5, 3,
+                3, 5, 0,
 
-        const geometry = new THREE.BufferGeometry();
-        geometry.setIndex(indices);
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-        geometry.computeVertexNormals();
+                // tail
+                5, 7, 6,
+                5, 6, 7,
+                5, 8, 7,
+                5, 7, 8
+            ];
 
-        let material;
-        if (this.texturePath) {
-            const tex = new THREE.TextureLoader().load(this.texturePath);
-            tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-            material = new THREE.MeshPhongMaterial({ map: tex });
-        } else {
-            material = new THREE.MeshPhongMaterial({ color: this.color });
+            const geometry = new THREE.BufferGeometry();
+            geometry.setIndex(indices);
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            geometry.computeVertexNormals();
+            MyFish._sharedGeometry = geometry;
         }
 
-        const bodyMesh = new THREE.Mesh(geometry, material);
+        const matKey = this.texturePath ? `tex:${this.texturePath}` : `col:${String(this.color)}`;
+        MyFish._sharedMaterials = MyFish._sharedMaterials || new Map();
+
+        MyFish._textureLoader = MyFish._textureLoader || new THREE.TextureLoader();
+        MyFish._textureCache = MyFish._textureCache || new Map();
+
+        let material = MyFish._sharedMaterials.get(matKey);
+        if (!material) {
+            if (this.texturePath) {
+                let tex = MyFish._textureCache.get(this.texturePath);
+                if (!tex) {
+                    tex = MyFish._textureLoader.load(this.texturePath);
+                    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+                    MyFish._textureCache.set(this.texturePath, tex);
+                }
+                material = new THREE.MeshPhongMaterial({ map: tex });
+            } else {
+                material = new THREE.MeshPhongMaterial({ color: this.color });
+            }
+            MyFish._sharedMaterials.set(matKey, material);
+        }
+
+        const bodyMesh = new THREE.Mesh(MyFish._sharedGeometry, material);
         this.add(bodyMesh);
 
         this.addFins(material);
     }
 
-    addFins(material) {
-        const finGeom = new THREE.BufferGeometry();
+    addFins(baseMaterial) {
+        MyFish._finGeometries = MyFish._finGeometries || new Map();
+        const finKey = String(this.finSize);
+        let finGeom = MyFish._finGeometries.get(finKey);
 
-        const vertices = new Float32Array([
-            0, 0, 0,
-            0.8, 0, 0,
-            0.8, 0.8, 0
-        ]);
+        if (!finGeom) {
+            finGeom = new THREE.BufferGeometry();
+            const vertices = new Float32Array([
+                0, 0, 0,
+                this.finSize, 0, 0,
+                this.finSize, this.finSize, 0
+            ]);
+            finGeom.setIndex([0, 1, 2]);
+            finGeom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            finGeom.computeVertexNormals();
+            MyFish._finGeometries.set(finKey, finGeom);
+        }
 
-        finGeom.setIndex([0, 1, 2]);
-        finGeom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-        finGeom.computeVertexNormals();
-
-        const finMaterial = (material && material.clone) ? material.clone() : new THREE.MeshPhongMaterial({ color: this.color });
+        const finMaterial = (baseMaterial && baseMaterial.clone) ? baseMaterial.clone() : new THREE.MeshPhongMaterial({ color: this.color });
         finMaterial.side = THREE.DoubleSide;
 
         // dorsal fin (top)
@@ -120,6 +143,11 @@ class MyFish extends THREE.Object3D {
         this.dorsalFin = dorsalFin;
         this.bellyFinLeft = bellyFinLeft;
         this.bellyFinRight = bellyFinRight;
+    }
+
+    setScaleFactor(s) {
+        this.scaleFactor = s;
+        this.scale.setScalar(s);
     }
 }
 
