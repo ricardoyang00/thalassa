@@ -2,23 +2,50 @@ import * as THREE from 'three';
 import { Tube } from '../primitives/Tube.js';
 import { SgiUtils } from '../../SgiUtils.js';
 
-class TubeCoral extends THREE.Object3D {
+class TubeCoral extends THREE.LOD {
     static #texture = new THREE.TextureLoader().load('textures/tube-coral.png');
 
     constructor(color = 0xffffff, size = 1) {
         super();
-        const layers = 2;
+        const layers = 3;
         let n = 4;
-        let angle = 0;
-        let alphaAng = 2 * Math.PI / n;
 
-        const material = new THREE.MeshPhongMaterial({
+        const highMaterial = new THREE.MeshPhongMaterial({
             color,
             map: TubeCoral.#texture,
             bumpMap: TubeCoral.#texture,
             bumpScale: 5,
         })
 
+        const highDetailObj = this.#createCoral(highMaterial, size, layers, n);
+
+        const mediumMaterial = new THREE.MeshPhongMaterial({
+            color,
+            map: TubeCoral.#texture,
+        })
+
+        const mediumDetailObj = this.#createCoral(mediumMaterial, size, layers - 1, n - 1);
+
+        const lowMaterial = new THREE.MeshPhongMaterial({
+            color,
+        })
+
+        const lowDetailObj = this.#createCoral(lowMaterial, size, layers / 2, n / 2);
+
+        this.addLevel(highDetailObj, 0);
+        this.addLevel(mediumDetailObj, 100);
+        this.addLevel(lowDetailObj, 200);
+
+
+    }
+
+    #createCoral(material, size, layers, n) {
+        if (layers < 1) layers = 1;
+        if (n < 1) n = 1;
+
+        const coralObject = new THREE.Object3D();
+        let angle = 0;
+        let alphaAng = 2 * Math.PI / n;
         for (let layer = 1; layer <= layers; ++layer, n *= 2, alphaAng /= 2) {
             for (let j = 0; j < n; ++j, angle += alphaAng) {
                 const ang = angle + SgiUtils.rand(-alphaAng / 3, alphaAng / 3);
@@ -42,9 +69,10 @@ class TubeCoral extends THREE.Object3D {
                     0,
                     layer * size * Math.cos(ang) / 8,
                 ));
-                this.add(container);
+                coralObject.add(container)
             }
         }
+        return coralObject;
     }
 }
 
