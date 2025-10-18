@@ -84,7 +84,7 @@ class MyContents  {
 
         const corals = [
             new TubeCoral(0xff0000),
-            new BrainCoral(0xffff00, 0.7),
+            new BrainCoral(0xffff00, 2),
         ];
 
         for (let i = 0; i < 23; ++i)
