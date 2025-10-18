@@ -116,7 +116,7 @@ class MyContents  {
         }
 
         // add a point light on top of the model
-        const pointLight = new THREE.PointLight( 0xffffff, 500, 0 );
+        const pointLight = new THREE.PointLight( 0xffffff, 1000, 0 );
         pointLight.position.set( 0, 20, 0 );
         this.app.scene.add( pointLight );
 
@@ -126,7 +126,7 @@ class MyContents  {
         this.app.scene.add( pointLightHelper );
 
         // add an ambient light
-        const ambientLight = new THREE.AmbientLight( 0x555555 );
+        const ambientLight = new THREE.AmbientLight( 0xffffff );
         this.app.scene.add( ambientLight );
 
         this.buildSeafloor();
