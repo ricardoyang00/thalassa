@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { SgiUtils } from '../../SgiUtils.js';
 
-export class LSystemCoral extends THREE.Group {
+export class LSystemCoral extends THREE.LOD {
     constructor(color = 0xffffff, size = 1) {
         super();
         this.size = size;
@@ -36,8 +36,8 @@ export class LSystemCoral extends THREE.Group {
         };
         const axiom = '[+R][-L][&R][^L]';
         const scaleFactor = 1;
-        const lengthFactor = 1;
-        const radiusFactor = 0.7;
+        // const lengthFactor = 1;
+        // const radiusFactor = 0.7;
 
         const baseAngle = 25 * THREE.MathUtils.DEG2RAD;
         const variableAngle = 10 * THREE.MathUtils.DEG2RAD; // random angle variation for more natural trees
@@ -133,29 +133,37 @@ export class LSystemCoral extends THREE.Group {
             }
         }
 
-        const group = this;
-        const branchGeo = new THREE.CylinderGeometry(0.15, 0.15, 1, 8).translate(0, 0.5, 0);
         const branchMat = new THREE.MeshStandardMaterial({ color, metalness: 0.1, roughness: 0.8 });
-        const branchMesh = new THREE.InstancedMesh(branchGeo, branchMat, branchMatrices.length);
-        branchMesh.name = "branches";
-        for (let i = 0; i < branchMatrices.length; i++) {
-            branchMesh.setMatrixAt(i, branchMatrices[i]);
-        }
-        group.add(branchMesh);
+        const branchMeshGen = (radialSegments) => new THREE.InstancedMesh(
+            new THREE.CylinderGeometry(0.15, 0.15, 1, radialSegments, 1).translate(0, 0.5, 0),
+            branchMat,
+            branchMatrices.length,
+        );
 
-        if (leafMatrices.length > 0) {
-            const leafGeo = new THREE.IcosahedronGeometry(0.2, 0);
-            const leafMat = new THREE.MeshStandardMaterial({ color: 0x228B22, metalness: 0, roughness: 0.8 });
-            const leafMesh = new THREE.InstancedMesh(leafGeo, leafMat, leafMatrices.length);
-            leafMesh.name = "leaves";
-            for (let i = 0; i < leafMatrices.length; i++) {
-                leafMesh.setMatrixAt(i, leafMatrices[i]);
-            }
-            group.add(leafMesh);
-        }
+        const detailLevels = [
+            branchMeshGen(16),
+            branchMeshGen(5),
+            branchMeshGen(3),
+        ];
+        detailLevels.forEach((level) => branchMatrices.forEach((matrix, i) => level.setMatrixAt(i, matrix)));
 
-        group.scale.setScalar(0.4);
-        group.position.y = -4;
+        this.addLevel(detailLevels[0], 0);
+        this.addLevel(detailLevels[1], 20);
+        this.addLevel(detailLevels[2], 50);
+
+        // if (leafMatrices.length > 0) {
+        //     const leafGeo = new THREE.IcosahedronGeometry(0.2, 0);
+        //     const leafMat = new THREE.MeshStandardMaterial({ color: 0x228B22, metalness: 0, roughness: 0.8 });
+        //     const leafMesh = new THREE.InstancedMesh(leafGeo, leafMat, leafMatrices.length);
+        //     leafMesh.name = "leaves";
+        //     for (let i = 0; i < leafMatrices.length; i++) {
+        //         leafMesh.setMatrixAt(i, leafMatrices[i]);
+        //     }
+        //     group.add(leafMesh);
+        // }
+
+        this.scale.setScalar(0.4);
+        this.position.y = -4;
 
         this.scale.set(.25, .25, .25);
     }
