@@ -76,6 +76,7 @@ class MyContents  {
         const coralTypes = [
             TubeCoral,
             LSystemCoral,
+            BrainCoral,
         ]
 
         for (let i = 0; i < 25; ++i) {

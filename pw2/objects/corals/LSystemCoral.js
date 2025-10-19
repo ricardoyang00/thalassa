@@ -2,37 +2,6 @@ import * as THREE from 'three';
 import { SgiUtils } from '../../SgiUtils.js';
 
 export class LSystemCoral extends THREE.Group {
-    /**
-     * Parameters (all optional):
-     * - rules
-     *      - L-System rules
-     *      - Default: {
-     *         'X': '',
-     *         'R': [
-                  {prob: 0.8, rule: 'FX[+R][-L]'},
-                  {prob: 0.2, rule: 'FX[-L]'},
-              ],
-              'L' : [
-                  {prob: 0.8, rule: 'FX[+R][-L]'},
-                  {prob: 0.2, rule: 'FX[+R]'},
-              ],
-     *       }
-     * - axiom
-     *      - L-System initial state
-     *      - Default: '[+R][-L]'
-     * - iterations
-     *      - number of iterations
-     *      - Default: 5
-     * - scaleFactor
-     *      - Scale factor between parent and child branches
-     *      - Default: 0.8
-     * - branchGeo
-     *      - Geometry to be used for the branch mesh
-     *      - Default: THREE.CylinderGeometry(0.05, 0.05, 1, 8).translate(0, 0.5, 0)
-     * - branchMat
-     *      - Material to be used for the branch mesh
-     *      - Default: THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.1, roughness: 0.8 })
-     */
     constructor(color = 0xffffff, size = 1) {
         super();
         this.size = size;
