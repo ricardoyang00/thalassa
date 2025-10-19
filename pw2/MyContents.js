@@ -5,6 +5,7 @@ import { SgiUtils } from './SgiUtils.js';
 import { BrainCoral } from './objects/corals/BrainCoral.js';
 import { MyTerrain } from './MyTerrain.js';
 import { MyRock } from './MyRock.js';
+import { LSystemCoral } from './objects/corals/LSystemCoral.js';
 import { MyFish } from './objects/fish/MyFish.js';
 
 
@@ -24,10 +25,10 @@ class MyContents  {
         this.wireframeMode = false;
 
         // seafloor related attributes
-        this.seafloorGroup = new THREE.Group();
+        this.seafloorGroup = null;
         this.terrain = null;
-        this.rocks = [];
-        this.showRocks = true; 
+        this.rocks = null;
+        this.corals = null;
 
         // fish related attributes
         this.fishGroup = new THREE.Group();
@@ -36,24 +37,70 @@ class MyContents  {
     }
 
     /**
-     * builds the seafloor with terrain and rocks
+     * builds the seafloor with terrain, rocks and corals
      */
     buildSeafloor() {
-        this.terrain = new MyTerrain(this);
-        this.seafloorGroup.add(this.terrain);
+        this.seafloorGroup = new THREE.Group();
+        this.seafloorGroup.name = "seafloorGroup";
 
-        const seededRandom = SgiUtils.rand.bind(SgiUtils);
+        const terrain = new MyTerrain(this.app);
+        this.seafloorGroup.add(terrain);
 
-        for (let i = 0; i < 15; i++) {
-            const rock = new MyRock(this, 0.5 + seededRandom() * 1.5, seededRandom);
-            rock.position.set(
-                (seededRandom() - 0.5) * 40,
-                seededRandom() - 1.2,
-                (seededRandom() - 0.5) * 40
-            );
-            this.rocks.push(rock);
-            this.seafloorGroup.add(rock);
+        this.rocks = new THREE.Group();
+        this.rocks.name = "rocks";
+        for (let i = 0; i < 16; i++) {
+            const rock = new MyRock(this, SgiUtils.rand(0.5, 2) * 1.5, SgiUtils.rand.bind(SgiUtils));
+
+            while (true) {
+                const pos = new THREE.Vector3(
+                    SgiUtils.rand(-.5, .5) * 40,
+                    0,
+                    SgiUtils.rand(-.5, .5) * 40,
+                );
+
+                if (this.rocks.children.every((rocc) => rocc.position.distanceTo(pos) > rocc.size + rock.size)) {
+                    rock.position.copy(pos);
+                    break;
+                }
+            };
+
+            this.rocks.add(rock);
         }
+        this.seafloorGroup.add(this.rocks);
+
+        // Add Corals
+
+        this.corals = new THREE.Group();
+        this.corals.name = "corals";
+
+        const coralTypes = [
+            TubeCoral,
+            LSystemCoral,
+            BrainCoral,
+        ]
+
+        for (let i = 0; i < 25; ++i) {
+            const coral = new coralTypes[SgiUtils.randInt(coralTypes.length)](SgiUtils.rand(0, 0xffffff), 2);
+
+            while (true) {
+                const pos = new THREE.Vector3(
+                    SgiUtils.rand(-.5, .5) * 40,
+                    0,
+                    SgiUtils.rand(-.5, .5) * 40,
+                );
+
+                if (this.rocks.children.every((rock) => rock.position.distanceTo(pos) > rock.size + 0.75)
+                    && this.corals.children.every((koral) => koral.position.distanceTo(pos) > 4)
+                ) {
+                    coral.position.copy(pos);
+                    break;
+                }
+            }
+            this.corals.add(coral);
+        }
+        this.seafloorGroup.add(this.corals);
+
+        this.app.scene.add(this.seafloorGroup);
     }
 
     /**
@@ -106,7 +153,7 @@ class MyContents  {
      */
     init() {
         // (un)comment for fixed/random seeds
-        // SgiUtils.setSeed(Math.floor(Math.random() * 4294967296));
+        SgiUtils.setSeed(Math.floor(Math.random() * 4294967296));
 
         // create once 
         if (this.axis === null) {
@@ -132,36 +179,7 @@ class MyContents  {
         this.buildSeafloor();
         this.buildFish();
 
-        this.app.scene.add(this.seafloorGroup);
         this.app.scene.add(this.fishGroup);
-
-        // Add Corals
-        const corals = [
-            new TubeCoral(0xff0000),
-            new BrainCoral(0xffff00, 2),
-        ];
-
-        for (let i = 0; i < 23; ++i)
-            corals.push(new TubeCoral(SgiUtils.rand(0, 0xffffff), 2));
-
-        corals.forEach((coral, i) => {
-            coral.position.x = -20 + 10 * Math.floor(i / 5);
-            coral.position.y = -1.2;
-            coral.position.z = -20 + 10 * (i % 5);
-            this.app.scene.add(coral);
-        });
-
-    }
-
-    /**
-     * toggles rock visibility
-     * @param {boolean} visible 
-     */
-    toggleRocks(visible) {
-        this.showRocks = visible;
-        this.rocks.forEach(rock => {
-            rock.visible = visible;
-        });
     }
 
     /**

@@ -5,7 +5,7 @@ class SgiUtils {
         this.#seed = seed;
     }
 
-    static rand(from = 0, to = 1) {
+    static rand(from = 1, to = 0) {
         if (from > to) {
             const temp = from;
             from = to;
@@ -17,6 +17,10 @@ class SgiUtils {
         t = Math.imul(t ^ t >>> 15, t | 1);
         t ^= t + Math.imul(t ^ t >>> 7, t | 61);
         return from + (to - from) * ((t ^ t >>> 14) >>> 0) / 4294967296;
+    }
+
+    static randInt(from = 1, to = 0) {
+        return Math.floor(this.rand(from, to));
     }
 }
 
