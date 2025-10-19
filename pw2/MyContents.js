@@ -6,6 +6,8 @@ import { BrainCoral } from './objects/corals/BrainCoral.js';
 import { MyTerrain } from './MyTerrain.js';
 import { MyRock } from './MyRock.js';
 import { LSystemCoral } from './objects/corals/LSystemCoral.js';
+import { MyFish } from './objects/fish/MyFish.js';
+
 
 /**
  *  This class contains the contents of out application
@@ -27,10 +29,15 @@ class MyContents  {
         this.terrain = null;
         this.rocks = null;
         this.corals = null;
+
+        // fish related attributes
+        this.fishGroup = new THREE.Group();
+        this.fish = [];
+        this.showFish = true;
     }
 
     /**
-     * builds the seafloor with terrain and rocks
+     * builds the seafloor with terrain, rocks and corals
      */
     buildSeafloor() {
         this.seafloorGroup = new THREE.Group();
@@ -96,6 +103,51 @@ class MyContents  {
     }
 
     /**
+     * Builds fish
+     * @param {number} count
+     * @param {Object} palette
+     */
+    buildFish(count = 8, palette = [0xff6b6b, 0x4ecdc4, 0xffd166, 0x5e60ce, 0xff9f1c]) {
+        this.fish = [];
+        while (this.fishGroup.children.length) {
+            this.fishGroup.remove(this.fishGroup.children[0]);
+        }
+
+        const rawPalette = Array.isArray(palette) && palette.length ? palette : [0xff9933];
+        const colors = rawPalette.map(c => {
+            if (typeof c === 'number') return c;
+            if (typeof c === 'string') {
+                if (c.startsWith('#')) return parseInt(c.slice(1), 16);
+                if (c.startsWith('0x')) return parseInt(c.slice(2), 16);
+                const n = Number(c);
+                return Number.isFinite(n) ? n : parseInt(c, 16);
+            }
+            return Number(c);
+        });
+
+        for (let i = 0; i < count; ++i) {
+            const color = colors[Math.floor(Math.random() * colors.length)];
+
+            const fish = new MyFish({
+                scale: 0.4 + SgiUtils.rand(0, 0.6),
+                color: color,
+                texturePath: '../pw2/textures/fish.jpg'
+            });
+            
+            fish.position.set(
+                SgiUtils.rand(-8, 8),
+                SgiUtils.rand(1, 6),
+                SgiUtils.rand(-8, 8)
+            );
+
+            fish.rotation.y = SgiUtils.rand(-Math.PI, Math.PI);
+
+            this.fish.push(fish);
+            this.fishGroup.add(fish);
+        }
+    }
+
+    /**
      * initializes the contents
      */
     init() {
@@ -110,7 +162,7 @@ class MyContents  {
         }
 
         // add a point light on top of the model
-        const pointLight = new THREE.PointLight( 0xffffff, 500, 0 );
+        const pointLight = new THREE.PointLight( 0xffffff, 1000, 0 );
         pointLight.position.set( 0, 20, 0 );
         this.app.scene.add( pointLight );
 
@@ -120,10 +172,27 @@ class MyContents  {
         this.app.scene.add( pointLightHelper );
 
         // add an ambient light
-        const ambientLight = new THREE.AmbientLight( 0x555555 );
+        const ambientLight = new THREE.AmbientLight( 0xffffff );
         this.app.scene.add( ambientLight );
 
         this.buildSeafloor();
+        this.buildFish();
+
+        this.app.scene.add(this.fishGroup);
+    }
+
+    /**
+     * toggles visibility of fish
+     * @param {boolean} visible
+     */
+    toggleFish(visible) {
+        this.showFish = visible;
+        this.fishGroup.visible = visible;
+        this.fish.forEach(f => f.visible = visible);
+    }
+
+    setFishesScale(s) {
+        this.fishGroup.scale.setScalar(s);
     }
 
     update() {}

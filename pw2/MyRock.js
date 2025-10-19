@@ -16,9 +16,13 @@ class MyRock extends THREE.Object3D {
             this.size * (0.8 + this.random() * 0.4)
         );
 
+        const texture = new THREE.TextureLoader().load('textures/im-the-rock.jpg');
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1,1);
+
         const rockMaterial = new THREE.MeshPhongMaterial({ 
             color: "#696969",
-            wireframe: false 
+            map: texture,
         });
 
         const rockMesh = new THREE.Mesh(rockGeometry, rockMaterial);
@@ -28,11 +32,6 @@ class MyRock extends THREE.Object3D {
         rockMesh.rotation.z = this.random() * 0.3;
 
         this.add(rockMesh);
-        this.rockMesh = rockMesh;
-    }
-
-    toggleWireframe(wireframe) {
-        this.rockMesh.material.wireframe = wireframe;
     }
 }
 
