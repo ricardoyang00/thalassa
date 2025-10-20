@@ -6,7 +6,7 @@ import { BrainCoral } from './objects/corals/BrainCoral.js';
 import { MyTerrain } from './MyTerrain.js';
 import { MyRock } from './MyRock.js';
 import { LSystemCoral } from './objects/corals/LSystemCoral.js';
-import { MyFish } from './objects/fish/MyFish.js';
+import { MyFishLOD } from './objects/fish/MyFishLOD.js';
 
 
 /**
@@ -129,19 +129,21 @@ class MyContents  {
         for (let i = 0; i < count; ++i) {
             const color = colors[Math.floor(Math.random() * colors.length)];
 
-            const fish = new MyFish({
+            const fish = new MyFishLOD({
                 scale: 0.4 + SgiUtils.rand(0, 0.6),
                 color: color,
                 texturePath: '../pw2/textures/fish.jpg'
             });
             
-            fish.position.set(
-                SgiUtils.rand(-8, 8),
-                SgiUtils.rand(1, 6),
-                SgiUtils.rand(-8, 8)
-            );
+            // fish.position.set(
+            //     SgiUtils.rand(-8, 8),
+            //     SgiUtils.rand(1, 6),
+            //     SgiUtils.rand(-8, 8)
+            // );
 
-            fish.rotation.y = SgiUtils.rand(-Math.PI, Math.PI);
+            fish.position.set(0, 6, 0);
+
+            //fish.rotation.y = SgiUtils.rand(-Math.PI, Math.PI);
 
             this.fish.push(fish);
             this.fishGroup.add(fish);
@@ -177,7 +179,7 @@ class MyContents  {
         this.app.scene.add( ambientLight );
 
         this.buildSeafloor();
-        this.buildFish();
+        this.buildFish(1);
 
         this.app.scene.add(this.fishGroup);
     }
