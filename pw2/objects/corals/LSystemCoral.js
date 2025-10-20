@@ -151,8 +151,8 @@ export class LSystemCoral extends THREE.LOD {
         detailLevels.forEach((level) => branchMatrices.forEach((matrix, i) => level.setMatrixAt(i, matrix)));
 
         this.addLevel(detailLevels[0], 0);
-        this.addLevel(detailLevels[1], 20);
-        this.addLevel(detailLevels[2], 50);
+        this.addLevel(detailLevels[1], size * 10);
+        this.addLevel(detailLevels[2], size * 25);
 
         // if (leafMatrices.length > 0) {
         //     const leafGeo = new THREE.IcosahedronGeometry(0.2, 0);

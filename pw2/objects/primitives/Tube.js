@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 class Tube extends THREE.Object3D {
-    constructor(material = new THREE.MeshPhongMaterial(), radiusTop = 1, radiusBottom = 1, height = 1, thickness = .1) {
+    constructor(material = new THREE.MeshPhongMaterial(), radiusTop = 1, radiusBottom = 1, height = 1, thickness = .1, radialSegments = 32, heightSegments = 1) {
         super();
         this.height = height;
 
@@ -10,7 +10,7 @@ class Tube extends THREE.Object3D {
         const innerMaterial = material.clone();
         innerMaterial.side = THREE.BackSide;
 
-        const tube = new THREE.Mesh(new THREE.CylinderGeometry(radiusTop, radiusBottom, height, undefined, undefined, true), outerMaterial);
+        const tube = new THREE.Mesh(new THREE.CylinderGeometry(radiusTop, radiusBottom, height, radialSegments, heightSegments, true), outerMaterial);
 
         const outerCylinder = new THREE.Object3D();
         outerCylinder.add(tube.clone());
@@ -23,7 +23,7 @@ class Tube extends THREE.Object3D {
         innerCylinder.scale.set(innerScale, 1, innerScale);
         this.add(innerCylinder);
 
-        const ring = new THREE.Mesh(new THREE.RingGeometry(innerScale * radiusTop, radiusTop), outerMaterial);
+        const ring = new THREE.Mesh(new THREE.RingGeometry(innerScale * radiusTop, radiusTop, radialSegments), outerMaterial);
         ring.rotateX(-Math.PI / 2);
         ring.position.y = height / 2;
         this.add(ring.clone());
