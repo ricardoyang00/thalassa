@@ -25,10 +25,10 @@ class MyFish extends THREE.LOD {
 
     #buildFish() {
         const vertices = new Float32Array([
-            0, 0, -0.5, // 0 right front
-            0, 1, 0,    // 1 top
-            0, 0, 0.5,  // 2 left front
-            0, -1, 0,   // 3 bottom
+            -0.2, 0, -0.5, // 0 right front
+            0, 0.8, 0,    // 1 top
+            -0.2, 0, 0.5,  // 2 left front
+            0, -0.8, 0,   // 3 bottom
             1, 0, 0,    // 4 middle
 
             -4, 0, 0,   // 5 tail root
@@ -100,7 +100,7 @@ class MyFish extends THREE.LOD {
 
         // dorsal fin (top)
         const dorsalFin = new THREE.Mesh(finGeom, finMaterial);
-        dorsalFin.position.set(-0.5, 0.8, 0);
+        dorsalFin.position.set(-0.5, 0.7, 0);
         dorsalFin.rotateY(Math.PI);
         dorsalFin.rotateZ(-Math.PI / 6);
         highDetailGroup.add(dorsalFin);
