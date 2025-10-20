@@ -7,6 +7,7 @@ import { MyTerrain } from './MyTerrain.js';
 import { MyRock } from './MyRock.js';
 import { LSystemCoral } from './objects/corals/LSystemCoral.js';
 import { MyFish } from './objects/fish/MyFish.js';
+import { SUBTRACTION, Brush, Evaluator } from 'https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.17/+esm'
 
 
 /**
@@ -22,7 +23,6 @@ class MyContents  {
         this.app = app
 
         this.axis = null;
-        this.wireframeMode = false;
 
         // seafloor related attributes
         this.seafloorGroup = null;
@@ -45,6 +45,7 @@ class MyContents  {
 
         const terrain = new MyTerrain(this.app);
         this.seafloorGroup.add(terrain);
+        this.terrain = terrain;
 
         this.rocks = new THREE.Group();
         this.rocks.name = "rocks";
@@ -180,6 +181,54 @@ class MyContents  {
         this.buildFish();
 
         this.app.scene.add(this.fishGroup);
+
+
+        // Create the large cylinder brush
+        const grooveCount = 32;           // number of flutes
+        const grooveRadius = 0.0986;        // radius of each flute cutter
+        const grooveOffset = 1.05;        // radial offset from center (slightly > pillar radius)
+        const grooveHeight = 20;          // slightly taller so it cuts through cleanly
+
+        const geometry = new THREE.CylinderGeometry(1, 1, grooveHeight, grooveCount);
+        let currentBrush = new Brush(geometry);
+        currentBrush.updateMatrixWorld();
+
+        const evaluator = new Evaluator();
+
+
+
+        for (let i = 0; i < grooveCount; i++) {
+            const angle = (i / grooveCount) * Math.PI * 2;
+            const gGeo = new THREE.CylinderGeometry(grooveRadius, grooveRadius, grooveHeight, 16);
+            const grooveBrush = new Brush(gGeo);
+            // place the small cutter so its axis is parallel to the pillar and offset radially
+            grooveBrush.position.set(Math.cos(angle) * grooveOffset, 0, Math.sin(angle) * grooveOffset);
+            grooveBrush.updateMatrixWorld();
+            currentBrush = evaluator.evaluate(currentBrush, grooveBrush, SUBTRACTION);
+        }
+
+        // Create the final mesh
+        const material = new THREE.MeshPhongMaterial({ color: "#979797" });
+        const hollowCylinder = new THREE.Mesh(currentBrush.geometry, material);
+        const x_position = 10;
+        const y_position = grooveHeight/2
+        hollowCylinder.position.set(x_position, y_position, 0);
+
+        const clone2 = hollowCylinder.clone();
+        clone2.position.set(-x_position, y_position, 0);
+        
+        this.app.scene.add(clone2);
+
+        const clone3 = hollowCylinder.clone();
+        clone3.position.set(0, y_position, x_position);
+        this.app.scene.add(clone3);
+        
+        const clone4 = hollowCylinder.clone();
+        clone4.position.set(0, y_position, -x_position);
+        this.app.scene.add(clone4);
+
+
+        this.app.scene.add(hollowCylinder);
     }
 
     /**
