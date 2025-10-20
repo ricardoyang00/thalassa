@@ -133,7 +133,10 @@ export class LSystemCoral extends THREE.LOD {
             }
         }
 
-        const branchMat = new THREE.MeshStandardMaterial({ color, metalness: 0.1, roughness: 0.8 });
+        const branchMat = new THREE.MeshStandardMaterial({ 
+            color, metalness: 0.1, 
+            roughness: 0.8, 
+            map: new THREE.TextureLoader().load('textures/tube-coral.png') });
         const branchMeshGen = (radialSegments) => new THREE.InstancedMesh(
             new THREE.CylinderGeometry(0.15, 0.15, 1, radialSegments, 1).translate(0, 0.5, 0),
             branchMat,
