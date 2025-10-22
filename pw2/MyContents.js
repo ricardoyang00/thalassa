@@ -142,6 +142,7 @@ class MyContents  {
             // );
 
             fish.position.set(0, 6, 0);
+            // fish.position.set(0, 0, 0);
 
             //fish.rotation.y = SgiUtils.rand(-Math.PI, Math.PI);
 
@@ -198,7 +199,15 @@ class MyContents  {
         this.fishGroup.scale.setScalar(s);
     }
 
-    update() {}
+    update() {
+        // Animate all fish
+        const time = Date.now() * 0.001; // Convert to seconds
+        this.fish.forEach(fish => {
+            if (fish.animate) {
+                fish.animate(time);
+            }
+        });
+    }
 }
 
 export { MyContents };

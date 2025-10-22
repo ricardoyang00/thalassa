@@ -2,22 +2,28 @@ import * as THREE from 'three';
 import { FishGeometry } from './FishGeometry.js';
 
 class MyFishModel extends THREE.Group {
-    /**
-     * @param {Object} params - configuration for the fish geometry
-     * @param {number} params.scale - overall scale of the fish
-     * @param {THREE.Color | number | string} params.color - fish color
-     * @param {string} params.texturePath - texture image path
-     */
     constructor({
         scale = 1,
         color = 0xff9933,
-        texturePath = null
+        texturePath = null,
+        numBones = 3,
+        //showBones = true
     } = {}) {
         super();
         this.scaleFactor = scale;
         this.color = color;
         this.texturePath = texturePath;
         this.finSize = 0.8;
+        this.numBones = Math.max(3, numBones);
+        //this.showBones = showBones;
+
+        this.skeleton = null;
+        this.bones = [];
+        this.skinnedMesh = null;
+        this.skeletonHelper = null;
+
+        this.swimSpeed = 2;
+        this.swimAmplitude = 0.25;
 
         this.#buildFish();
 
@@ -25,36 +31,189 @@ class MyFishModel extends THREE.Group {
     }
 
     #buildFish() {
-        // Create body mesh using shared geometry
-        const completeFishGeometry = FishGeometry.createBodyGeometry();
-        const highDetailMaterial = FishGeometry.getSharedMaterial(this.color, this.texturePath);
+        // Create skeleton with specified number of bones
+        this.bones = this.#createSkeleton();
+
+        const bodyGeometry = FishGeometry.createBodyGeometry(this.numBones * 2);
+        this.#addSkinningData(bodyGeometry);
         
-        const bodyMeshHigh = new THREE.Mesh(completeFishGeometry, highDetailMaterial);
-        this.add(bodyMeshHigh);
+        const material = FishGeometry.getSharedMaterial(this.color, this.texturePath);
         
-        // Create fins using shared geometry
+        this.skinnedMesh = new THREE.SkinnedMesh(bodyGeometry, material);
+        this.skinnedMesh.add(this.bones[0]);
+        if (this.bones[1]) this.skinnedMesh.add(this.bones[1]);
+
+        this.add(this.skinnedMesh);
+        
+        this.skeleton = new THREE.Skeleton(this.bones);
+        this.skinnedMesh.bind(this.skeleton);
+        
+        this.#addFins(material);
+
+        // skeleton helper to visualize bones
+        // uncomment constructor param to enable
+        if (this.showBones) {
+            this.skeletonHelper = new THREE.SkeletonHelper(this.skinnedMesh);
+            this.skeletonHelper.material.linewidth = 3;
+            this.add(this.skeletonHelper);
+        }
+    }
+
+    #createSkeleton() {
+        const bones = [];
+        const fishLength = 5; // Fish spans from x=1 to x=-4
+        const segmentLength = fishLength / (this.numBones - 1);
+
+        // HEAD BONE (index 0)
+        const headBone = new THREE.Bone();
+        headBone.position.set(1, 0, 0);
+        bones.push(headBone);
+
+        // SPINE ROOT (index 1)
+        const spineRoot = new THREE.Bone();
+        spineRoot.position.set(1, 0, 0);
+        bones.push(spineRoot);
+
+        // Create remaining spine bones as a chain starting from spineRoot
+        for (let i = 2; i < this.numBones; i++) {
+            const bone = new THREE.Bone();
+            // each child is placed segmentLength behind its parent
+            bone.position.set(-segmentLength, 0, 0);
+            bones[i - 1].add(bone); // parent is previous spine bone
+            bones.push(bone);
+        }
+
+        return bones;
+    }
+
+    #addSkinningData(geometry) {
+        const position = geometry.attributes.position;
+        const vertexCount = position.count;
+        
+        const skinIndices = [];
+        const skinWeights = [];
+        
+        // Calculate bone positions along the fish spine
+        const bonePositions = [];
+        const fishLength = 5;
+        const segmentLength = fishLength / (this.numBones - 1);
+        
+        for (let i = 0; i < this.numBones; i++) {
+            bonePositions.push(1 - i * segmentLength);
+        }
+        
+        for (let i = 0; i < vertexCount; i++) {
+            const x = position.getX(i);
+            
+            const weights = new Array(this.numBones).fill(0);
+            
+            let segmentIndex = 0;
+            for (let j = 0; j < this.numBones - 1; j++) {
+                if (x >= bonePositions[j + 1] && x <= bonePositions[j]) {
+                    segmentIndex = j;
+                    break;
+                }
+            }
+            
+            if (x > bonePositions[0]) {
+                weights[0] = 1.0;
+            } else if (x < bonePositions[this.numBones - 1]) {
+                weights[this.numBones - 1] = 1.0;
+            } else {
+                const bone1Pos = bonePositions[segmentIndex];
+                const bone2Pos = bonePositions[segmentIndex + 1];
+                const segmentSize = bone1Pos - bone2Pos;
+                
+                if (segmentSize !== 0) {
+                    const t = (x - bone2Pos) / segmentSize;
+                    weights[segmentIndex] = t;
+                    weights[segmentIndex + 1] = 1 - t;
+                } else {
+                    weights[segmentIndex] = 0.5;
+                    weights[segmentIndex + 1] = 0.5;
+                }
+            }
+            
+            // Find up to 4 bones with non-zero weights
+            const influences = [];
+            for (let j = 0; j < this.numBones; j++) {
+                if (weights[j] > 0) {
+                    influences.push({ index: j, weight: weights[j] });
+                }
+            }
+            
+            // Sort by weight (descending) and take top 4
+            influences.sort((a, b) => b.weight - a.weight);
+            influences.length = Math.min(4, influences.length);
+            
+            // Normalize weights to sum to 1.0
+            const totalWeight = influences.reduce((sum, inf) => sum + inf.weight, 0);
+            
+            // Pad to 4 influences
+            while (influences.length < 4) {
+                influences.push({ index: 0, weight: 0 });
+            }
+            
+            const indices = influences.map(inf => inf.index);
+            const finalWeights = influences.map(inf => totalWeight > 0 ? inf.weight / totalWeight : 0);
+            
+            skinIndices.push(...indices);
+            skinWeights.push(...finalWeights);
+        }
+        
+        geometry.setAttribute(
+            'skinIndex',
+            new THREE.Uint16BufferAttribute(skinIndices, 4)
+        );
+        geometry.setAttribute(
+            'skinWeight',
+            new THREE.Float32BufferAttribute(skinWeights, 4)
+        );
+    }
+
+    #addFins(baseMaterial) {
         const finGeom = FishGeometry.createFinGeometry(this.finSize);
-        const finMaterial = (highDetailMaterial && highDetailMaterial.clone) ? highDetailMaterial.clone() : new THREE.MeshPhongMaterial({ color: this.color });
+        const finMaterial = baseMaterial.clone();
         finMaterial.side = THREE.DoubleSide;
+
+        const middleBone = this.bones[2];
 
         // dorsal fin (top)
         const dorsalFin = new THREE.Mesh(finGeom, finMaterial);
         dorsalFin.position.set(-0.5, 0.7, 0);
         dorsalFin.rotateY(Math.PI);
         dorsalFin.rotateZ(-Math.PI / 6);
-        this.add(dorsalFin);
+        middleBone.add(dorsalFin);
 
         // belly fin (left)
         const bellyFinLeft = new THREE.Mesh(finGeom, finMaterial);
         bellyFinLeft.position.set(-1.2, -1, 0.6);
         bellyFinLeft.rotateX(-Math.PI / 6);
-        this.add(bellyFinLeft);
+        middleBone.add(bellyFinLeft);
 
         // belly fin (right)
         const bellyFinRight = new THREE.Mesh(finGeom, finMaterial);
         bellyFinRight.position.set(-1.2, -1, -0.6);
         bellyFinRight.rotateX(Math.PI / 6);
-        this.add(bellyFinRight);
+        middleBone.add(bellyFinRight);
+    }
+
+    animate(time) {
+        if (this.bones.length < 2) return;
+
+        const head = this.bones[0];
+        const headAmplitude = this.swimAmplitude * 0.3;
+        head.rotation.y = -Math.sin(time * this.swimSpeed) * headAmplitude;
+
+        const spineCount = this.bones.length - 1;
+        for (let i = 1; i < this.bones.length; i++) {
+            const k = i - 1; // 0..spineCount-1
+            const phase = (k / Math.max(1, spineCount - 1)) * Math.PI * 0.5;
+            const amplitudeFactor = Math.pow((k + 1) / Math.max(1, spineCount), 1.5);
+            const amplitude = this.swimAmplitude * amplitudeFactor;
+
+            this.bones[i].rotation.y = Math.sin(time * this.swimSpeed + phase) * amplitude;
+        }
     }
 
     setScaleFactor(s) {

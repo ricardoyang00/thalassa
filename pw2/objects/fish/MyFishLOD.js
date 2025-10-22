@@ -2,25 +2,28 @@ import * as THREE from 'three';
 import { MyFishModel } from './MyFishModel.js';
 import { FishGeometry } from './FishGeometry.js';
 
-/**
- * Fish with LOD (Level of Detail) implementation
- */
 class MyFishLOD extends THREE.LOD {
     /**
      * @param {Object} params - configuration for the fish geometry
      * @param {number} params.scale - overall scale of the fish
      * @param {THREE.Color | number | string} params.color - fish color
      * @param {string} params.texturePath - texture image path
+     * @param {number} params.numBones - number of bones in the skeleton (2-4 recommended)
+     * @param {boolean} params.showBones - whether to show bone helpers
      */
     constructor({
         scale = 1,
         color = 0xff9933,
-        texturePath = null
+        texturePath = null,
+        numBones = 5,
     } = {}) {
         super();
         this.scaleFactor = scale;
         this.color = color;
         this.texturePath = texturePath;
+        this.numBones = numBones;
+
+        this.highDetailModel = null;
 
         this.#buildFish();
 
@@ -29,10 +32,11 @@ class MyFishLOD extends THREE.LOD {
 
     #buildFish() {
         // high detail - use MyFishModel directly
-        const highDetailGroup = new MyFishModel({
+        this.highDetailModel = new MyFishModel({
             scale: 1,
             color: this.color,
-            texturePath: this.texturePath
+            texturePath: this.texturePath,
+            numBones: this.numBones
         });
 
         // medium detail - body only, no texture, no fins
@@ -51,9 +55,19 @@ class MyFishLOD extends THREE.LOD {
         lowDetailGroup.add(bodyMeshLow);
         
         // LODs
-        this.addLevel(highDetailGroup, 0);
+        this.addLevel(this.highDetailModel, 0);
         this.addLevel(mediumDetailGroup, 150);
         this.addLevel(lowDetailGroup, 200);
+    }
+
+    /**
+     * Animate the fish (forwards to high detail model)
+     * @param {number} time - current time in seconds
+     */
+    animate(time) {
+        if (this.highDetailModel && this.highDetailModel.animate) {
+            this.highDetailModel.animate(time);
+        }
     }
 
     setScaleFactor(s) {
