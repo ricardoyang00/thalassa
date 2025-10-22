@@ -12,7 +12,7 @@ class MyFishLOD extends THREE.LOD {
      * @param {boolean} params.showBones - whether to show bone helpers
      */
     constructor({
-        scale = 1,
+        scale = 0.3,
         color = 0xff9933,
         texturePath = null,
         numBones = 5,

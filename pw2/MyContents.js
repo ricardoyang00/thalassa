@@ -130,21 +130,20 @@ class MyContents  {
             const color = colors[Math.floor(Math.random() * colors.length)];
 
             const fish = new MyFishLOD({
-                scale: 0.4 + SgiUtils.rand(0, 0.6),
+                scale: 0.1 + SgiUtils.rand(0, 0.1),
                 color: color,
                 texturePath: '../pw2/textures/fish.jpg'
             });
             
-            // fish.position.set(
-            //     SgiUtils.rand(-8, 8),
-            //     SgiUtils.rand(1, 6),
-            //     SgiUtils.rand(-8, 8)
-            // );
+            fish.position.set(
+                SgiUtils.rand(-8, 8),
+                SgiUtils.rand(1, 6),
+                SgiUtils.rand(-8, 8)
+            );
 
-            fish.position.set(0, 6, 0);
-            // fish.position.set(0, 0, 0);
+            //fish.position.set(0, 6, 0);
 
-            //fish.rotation.y = SgiUtils.rand(-Math.PI, Math.PI);
+            fish.rotation.y = SgiUtils.rand(-Math.PI, Math.PI);
 
             this.fish.push(fish);
             this.fishGroup.add(fish);
@@ -180,7 +179,7 @@ class MyContents  {
         this.app.scene.add( ambientLight );
 
         this.buildSeafloor();
-        this.buildFish(1);
+        this.buildFish();
 
         this.app.scene.add(this.fishGroup);
     }

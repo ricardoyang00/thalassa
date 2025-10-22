@@ -53,7 +53,7 @@ class FishGeometry {
         
         // BODY SEGMENTS
         const bodyStart = 0;
-        const bodyEnd = -4;
+        const bodyEnd = -3;
         const bodyLength = bodyEnd - bodyStart;
 
         for (let i = 0; i <= segments; i++) {
@@ -101,17 +101,17 @@ class FishGeometry {
 
         // Add tail base vertices
         vertices.push(
-            -4, 0.3, 0,     // tail base top
-            -4, -0.3, 0,    // tail base bottom
-            -4, 0, 0.2,     // tail base left
-            -4, 0, -0.2     // tail base right
+            -3, 0.3, 0,     // tail base top
+            -3, -0.3, 0,    // tail base bottom
+            -3, 0, 0.2,     // tail base left
+            -3, 0, -0.2     // tail base right
         );
 
         // Add tail fin vertices
         vertices.push(
-            -5, 1.25, 0,    // tail top tip
-            -5, -1.25, 0,   // tail bottom tip
-            -4.5, 0, 0      // tail center tip
+            -4, 1.25, 0,    // tail top tip
+            -4, -1.25, 0,   // tail bottom tip
+            -3.5, 0, 0      // tail center tip
         );
 
         const tailBaseTop = tailRootIndex;
@@ -141,7 +141,7 @@ class FishGeometry {
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(verticesArray, 3));
         
         // Calculate and set UV coordinates
-        const minX = -5, maxX = 1, minY = -1.25, maxY = 1.25;
+        const minX = -4, maxX = 1, minY = -1.25, maxY = 1.25;
         const lenX = maxX - minX, lenY = maxY - minY;
         const uvArray = new Float32Array((verticesArray.length / 3) * 2);
         for (let i = 0, j = 0; i < verticesArray.length; i += 3, j += 2) {

@@ -3,10 +3,10 @@ import { FishGeometry } from './FishGeometry.js';
 
 class MyFishModel extends THREE.Group {
     constructor({
-        scale = 1,
+        scale = 0.3,
         color = 0xff9933,
         texturePath = null,
-        numBones = 3,
+        numBones = 5,
         //showBones = true
     } = {}) {
         super();
@@ -23,7 +23,7 @@ class MyFishModel extends THREE.Group {
         this.skeletonHelper = null;
 
         this.swimSpeed = 2;
-        this.swimAmplitude = 0.25;
+        this.swimAmplitude = 0.15;
 
         this.#buildFish();
 
@@ -61,7 +61,7 @@ class MyFishModel extends THREE.Group {
 
     #createSkeleton() {
         const bones = [];
-        const fishLength = 5; // Fish spans from x=1 to x=-4
+        const fishLength = 4; // Fish spans from x=1 to x=-3
         const segmentLength = fishLength / (this.numBones - 1);
 
         // HEAD BONE (index 0)
@@ -95,7 +95,7 @@ class MyFishModel extends THREE.Group {
         
         // Calculate bone positions along the fish spine
         const bonePositions = [];
-        const fishLength = 5;
+        const fishLength = 4;
         const segmentLength = fishLength / (this.numBones - 1);
         
         for (let i = 0; i < this.numBones; i++) {
