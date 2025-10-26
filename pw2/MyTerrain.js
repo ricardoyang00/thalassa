@@ -12,8 +12,8 @@ class MyTerrain extends THREE.Object3D {
     }
 
     buildTerrain() {
-        this.#width = 50;
-        this.#length = 50;
+        this.#width = 200;
+        this.#length = 200;
 
         const terrainGeometry = new THREE.PlaneGeometry(this.#width, this.#length, 64, 64);
 
