@@ -12,8 +12,8 @@ class MyTerrain extends THREE.Object3D {
     }
 
     buildTerrain() {
-        this.#width = 50;
-        this.#length = 50;
+        this.#width = 200;
+        this.#length = 200;
 
         const terrainGeometry = new THREE.PlaneGeometry(this.#width, this.#length, 64, 64);
 
@@ -37,12 +37,12 @@ class MyTerrain extends THREE.Object3D {
 
         const texture = new THREE.TextureLoader().load('textures/sand.jpg');
         texture.wrapT = texture.wrapS = THREE.RepeatWrapping;
-        texture.repeat.set(5, 5);
+        texture.repeat.set(15, 15);
 
         const terrainMaterial = new THREE.MeshPhongMaterial({ 
             color: "#8B7355",
             displacementMap: terrainMap,
-            displacementScale: 2.5, 
+            displacementScale: 5, 
             map: texture
         });
 
