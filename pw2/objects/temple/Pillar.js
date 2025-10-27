@@ -6,7 +6,7 @@ class Pillar extends THREE.Object3D {
         super();
 
         const radius = 1;
-        const height = 12;
+        const height = 15;
         const grooveCount = 32;
         const grooveRadius = 0.0986;
         const grooveOffset = 1.05;
@@ -72,10 +72,12 @@ class Pillar extends THREE.Object3D {
         const hexTopCapGeo = new THREE.CylinderGeometry(hexCapRadius, hexCapRadius, hexCapThicknessTop, hexCapSegments);
         const hexTopCap = new THREE.Mesh(hexTopCapGeo, material);
         // place top cap at top of pillar
-        hexTopCap.position.set(0, height - capThickness / 2 + hexCapThicknessTop / 2, 0);
-        this.add(hexTopCap);
 
         this.height = height - capThickness / 2 + hexCapThicknessTop / 2;
+        hexTopCap.position.set(0, this.height, 0);
+        this.add(hexTopCap);
+
+        
     }
 
     getHeight() {
