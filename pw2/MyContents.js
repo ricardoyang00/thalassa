@@ -31,8 +31,10 @@ class MyContents  {
         this.corals = null;
 
         // fish related attributes
-        this.fishGroup = new THREE.Group();
-        this.fish = [];
+        this.fishGroup = new THREE.Group(); // parent container
+        this.fishGroups = [];               // array of THREE.Group (one per group)
+        this.fishByGroup = [];              // array of arrays with fish references per group
+        this.fish = [];                     // flat list of all fish
         this.showFish = true;
     }
 
@@ -104,16 +106,15 @@ class MyContents  {
     }
 
     /**
-     * Builds fish
-     * @param {number} count
-     * @param {Object} palette
+     * Create multiple fish groups. Each group is a THREE.Group with 20-30 fish by default.
+     * Fish references are stored in this.fishByGroup (array of arrays) and flat in this.fish.
      */
-    buildFish(count = 8, palette = [0xff6b6b, 0x4ecdc4, 0xffd166, 0x5e60ce, 0xff9f1c]) {
+    buildFishGroups(numGroups = 3, minPer = 20, maxPer = 30, palette = [0xff6b6b, 0x4ecdc4, 0xffd166]) {
         this.fish = [];
-        while (this.fishGroup.children.length) {
-            this.fishGroup.remove(this.fishGroup.children[0]);
-        }
-
+        this.fishGroups.forEach(g => this.fishGroup.remove(g));
+        this.fishGroups = [];
+        this.fishByGroup = [];
+    
         const rawPalette = Array.isArray(palette) && palette.length ? palette : [0xff9933];
         const colors = rawPalette.map(c => {
             if (typeof c === 'number') return c;
@@ -125,28 +126,43 @@ class MyContents  {
             }
             return Number(c);
         });
+    
+        for (let g = 0; g < numGroups; ++g) {
+            const group = new THREE.Group();
+            group.name = `fishGroup_${g}`;
+        
+            const cols = Math.ceil(Math.sqrt(numGroups));
+            const rows = Math.ceil(numGroups / cols);
+            const spacing = 20;
+            const col = g % cols;
+            const row = Math.floor(g / cols);
+            const cx = (cols - 1) / 2;
+            const rz = (rows - 1) / 2;
+            group.position.set((col - cx) * spacing, SgiUtils.rand(1, 6), (row - rz) * spacing);
 
-        for (let i = 0; i < count; ++i) {
-            const color = colors[Math.floor(Math.random() * colors.length)];
-
-            const fish = new MyFishLOD({
-                scale: 0.1 + SgiUtils.rand(0, 0.1),
-                color: color,
-                texturePath: '../pw2/textures/fish.jpg'
-            });
+            const count = Math.max(minPer, Math.floor(SgiUtils.rand(minPer, maxPer + 1)));
+            const groupFishes = [];
+        
+            for (let i = 0; i < count; ++i) {
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const fish = new MyFishLOD({
+                    scale: 0.08 + SgiUtils.rand(0, 0.08),
+                    color: color,
+                    texturePath: '../pw2/textures/fish.jpg'
+                });
             
-            fish.position.set(
-                SgiUtils.rand(-8, 8),
-                SgiUtils.rand(1, 6),
-                SgiUtils.rand(-8, 8)
-            );
-
-            //fish.position.set(0, 6, 0);
-
-            fish.rotation.y = SgiUtils.rand(-Math.PI, Math.PI);
-
-            this.fish.push(fish);
-            this.fishGroup.add(fish);
+                // local position inside group (clustered)
+                fish.position.set(SgiUtils.rand(-4, 4), SgiUtils.rand(-1, 3), SgiUtils.rand(-4, 4));
+                fish.rotation.y = SgiUtils.rand(-Math.PI, Math.PI);
+            
+                group.add(fish);
+                groupFishes.push(fish);
+                this.fish.push(fish);
+            }
+        
+            this.fishGroups.push(group);
+            this.fishByGroup.push(groupFishes);
+            this.fishGroup.add(group);
         }
     }
 
@@ -179,7 +195,7 @@ class MyContents  {
         this.app.scene.add( ambientLight );
 
         this.buildSeafloor();
-        this.buildFish();
+        this.buildFishGroups(3, 100, 200);
 
         this.app.scene.add(this.fishGroup);
     }
