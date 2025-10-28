@@ -7,6 +7,7 @@ import { MyTerrain } from './MyTerrain.js';
 import { MyRock } from './MyRock.js';
 import { LSystemCoral } from './objects/corals/LSystemCoral.js';
 import { MyFishLOD } from './objects/fish/MyFishLOD.js';
+import { FishFlock } from './objects/fish/FishFlock.js';
 
 
 /**
@@ -36,6 +37,9 @@ class MyContents  {
         this.fishByGroup = [];              // array of arrays with fish references per group
         this.fish = [];                     // flat list of all fish
         this.showFish = true;
+
+        this.flocks = [];
+        this._lastUpdateTime = null;
     }
 
     /**
@@ -145,16 +149,33 @@ class MyContents  {
         
             for (let i = 0; i < count; ++i) {
                 const color = colors[Math.floor(Math.random() * colors.length)];
-                const fish = new MyFishLOD({
+                const fishLOD = new MyFishLOD({
                     scale: 0.08 + SgiUtils.rand(0, 0.08),
                     color: color,
                     texturePath: '../pw2/textures/fish.jpg'
                 });
             
+                const fish = new THREE.Group(); // new 'fish' object for the flock
+                fish.add(fishLOD);
+
+                // Apply correction. This rotates the model *inside* the wrapper
+                // so its "nose" points down the wrapper's +Z axis.
+                //
+                // ** CHOOSE ONE: **
+                // 1. If fish strafe (point 90 deg right):
+                fishLOD.rotation.y = -Math.PI / 2; // (Assumes nose is +X)
+
+                // 2. If fish strafe (point 90 deg left):
+                // fishLOD.rotation.y = Math.PI / 2; // (Assumes nose is -X)
+
+                // 3. If fish move backwards:
+                // fishLOD.rotation.y = Math.PI; // (Assumes nose is -Z)
+                // --- END FIX ---
+
                 // local position inside group (clustered)
                 fish.position.set(SgiUtils.rand(-4, 4), SgiUtils.rand(-1, 3), SgiUtils.rand(-4, 4));
                 fish.rotation.y = SgiUtils.rand(-Math.PI, Math.PI);
-            
+
                 group.add(fish);
                 groupFishes.push(fish);
                 this.fish.push(fish);
@@ -163,6 +184,10 @@ class MyContents  {
             this.fishGroups.push(group);
             this.fishByGroup.push(groupFishes);
             this.fishGroup.add(group);
+
+            // create a FishFlock to govern the boids for this group
+            const flock = new FishFlock(groupFishes);
+            this.flocks.push(flock);
         }
     }
 
@@ -198,6 +223,8 @@ class MyContents  {
         this.buildFishGroups(3, 100, 200);
 
         this.app.scene.add(this.fishGroup);
+
+        this._lastUpdateTime = Date.now() * 0.001;
     }
 
     /**
@@ -216,10 +243,16 @@ class MyContents  {
 
     update() {
         // Animate all fish
-        const time = Date.now() * 0.001; // Convert to seconds
+        const now = Date.now() * 0.001; // Convert to seconds
+        const dt = this._lastUpdateTime ? Math.min(0.1, now - this._lastUpdateTime) : 0;
+        this._lastUpdateTime = now;
+        
+        this.flocks.forEach(f => f.update(dt));
+
         this.fish.forEach(fish => {
-            if (fish.animate) {
-                fish.animate(time);
+            const fishLOD = fish.children[0];
+            if (fishLOD && fishLOD.animate) {
+                fishLOD.animate(now);
             }
         });
     }
