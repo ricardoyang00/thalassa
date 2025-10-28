@@ -22,8 +22,10 @@ class MyFishModel extends THREE.Group {
         this.skinnedMesh = null;
         this.skeletonHelper = null;
 
-        this.swimSpeed = 2;
+        this.swimSpeed = 30;
         this.swimAmplitude = 0.15;
+        this.idleSpeed = 7;
+        this.animationTime = 0;
 
         this.#buildFish();
 
@@ -198,12 +200,26 @@ class MyFishModel extends THREE.Group {
         middleBone.add(bellyFinRight);
     }
 
-    animate(time) {
-        if (this.bones.length < 2) return;
+    /**
+     * Animate the fish based on its current speed.
+     * @param {number} dt - Delta time (time since last frame).
+     * @param {number} [speedFactor=0] - Current speed as a factor (0.0 to 1.0).
+     */
+    animate(dt, speedFactor = 0) {
+        if (this.bones.length < 2 || dt <= 0) return;
+
+        // Calculate an effective speed:
+        // - At speedFactor=0 (stationary), it uses idleSpeed.
+        // - At speedFactor=1 (max speed), it uses swimSpeed.
+        const effectiveSwimSpeed = this.idleSpeed + (this.swimSpeed - this.idleSpeed) * speedFactor;
+
+        // Advance our internal animation clock based on dt and effective speed
+        this.animationTime += dt * effectiveSwimSpeed;
 
         const head = this.bones[0];
         const headAmplitude = this.swimAmplitude * 0.3;
-        head.rotation.y = -Math.sin(time * this.swimSpeed) * headAmplitude;
+        // Use this.animationTime instead of 'time * this.swimSpeed'
+        head.rotation.y = -Math.sin(this.animationTime) * headAmplitude;
 
         const spineCount = this.bones.length - 1;
         for (let i = 1; i < this.bones.length; i++) {
@@ -212,7 +228,8 @@ class MyFishModel extends THREE.Group {
             const amplitudeFactor = Math.pow((k + 1) / Math.max(1, spineCount), 1.5);
             const amplitude = this.swimAmplitude * amplitudeFactor;
 
-            this.bones[i].rotation.y = Math.sin(time * this.swimSpeed + phase) * amplitude;
+            // Use this.animationTime instead of 'time * this.swimSpeed'
+            this.bones[i].rotation.y = Math.sin(this.animationTime + phase) * amplitude;
         }
     }
 

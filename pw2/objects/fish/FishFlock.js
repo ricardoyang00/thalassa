@@ -228,6 +228,13 @@ class FishFlock {
                     bi.fish.lookAt(this._vec);
                 }
             }
+
+            // bi.fish is the wrapper Group, children[0] is the MyFishLOD
+            const fishLOD = bi.fish.children[0]; 
+            if (fishLOD && fishLOD.animate) {
+                const speedFactor = bi.velocity.length() / this.opt.maxSpeed;
+                fishLOD.animate(dt, speedFactor);
+            }
         }
     }
 }

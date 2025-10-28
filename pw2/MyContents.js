@@ -158,19 +158,7 @@ class MyContents  {
                 const fish = new THREE.Group(); // new 'fish' object for the flock
                 fish.add(fishLOD);
 
-                // Apply correction. This rotates the model *inside* the wrapper
-                // so its "nose" points down the wrapper's +Z axis.
-                //
-                // ** CHOOSE ONE: **
-                // 1. If fish strafe (point 90 deg right):
-                fishLOD.rotation.y = -Math.PI / 2; // (Assumes nose is +X)
-
-                // 2. If fish strafe (point 90 deg left):
-                // fishLOD.rotation.y = Math.PI / 2; // (Assumes nose is -X)
-
-                // 3. If fish move backwards:
-                // fishLOD.rotation.y = Math.PI; // (Assumes nose is -Z)
-                // --- END FIX ---
+                fishLOD.rotation.y = -Math.PI / 2;
 
                 // local position inside group (clustered)
                 fish.position.set(SgiUtils.rand(-4, 4), SgiUtils.rand(-1, 3), SgiUtils.rand(-4, 4));
@@ -248,13 +236,6 @@ class MyContents  {
         this._lastUpdateTime = now;
         
         this.flocks.forEach(f => f.update(dt));
-
-        this.fish.forEach(fish => {
-            const fishLOD = fish.children[0];
-            if (fishLOD && fishLOD.animate) {
-                fishLOD.animate(now);
-            }
-        });
     }
 }
 

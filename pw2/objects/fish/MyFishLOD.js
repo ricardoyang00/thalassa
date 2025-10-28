@@ -62,11 +62,12 @@ class MyFishLOD extends THREE.LOD {
 
     /**
      * Animate the fish (forwards to high detail model)
-     * @param {number} time - current time in seconds
+     * @param {number} dt - Delta time.
+     * @param {number} speedFactor - Current speed factor (0.0 to 1.0).
      */
-    animate(time) {
+    animate(dt, speedFactor) {
         if (this.highDetailModel && this.highDetailModel.animate) {
-            this.highDetailModel.animate(time);
+            this.highDetailModel.animate(dt, speedFactor);
         }
     }
 
