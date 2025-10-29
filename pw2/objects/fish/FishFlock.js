@@ -41,9 +41,9 @@ class FishFlock {
             keepRadius: 30,
             boundaryForce: 3,
             // vertical constraints
-            minY: 2,
+            minY: 4,
             maxY: 30,
-            verticalWeight: 2.5,
+            verticalWeight: 0.8,
             wanderIntensity: 0.5,
 
             avoidanceRadius: 10,
@@ -161,6 +161,7 @@ class FishFlock {
             if (totalNeighbors > 0) {
                 // alignment
                 alignment.divideScalar(totalNeighbors);
+                alignment.y *= 0.1;
                 alignment.normalize();
                 alignment.multiplyScalar(maxSpeed);
                 const alignSteer = new THREE.Vector3().subVectors(alignment, vel);
@@ -171,6 +172,7 @@ class FishFlock {
                 // cohesion
                 cohesion.divideScalar(totalNeighbors);
                 const desired = new THREE.Vector3().subVectors(cohesion, pos);
+                desired.y *= 0.1;
                 desired.normalize();
                 desired.multiplyScalar(maxSpeed);
                 const cohSteer = new THREE.Vector3().subVectors(desired, vel);
@@ -251,11 +253,17 @@ class FishFlock {
 
             // vertical correction
             if (pos.y < minY) {
-                const up = new THREE.Vector3(0, (minY - pos.y) * verticalWeight, 0);
-                steer.add(up);
+                const desired = new THREE.Vector3(0, maxSpeed, 0);
+                const upSteer = new THREE.Vector3().subVectors(desired, vel);
+                this.limit(upSteer, maxForce);
+                upSteer.multiplyScalar((minY - pos.y) * verticalWeight); 
+                steer.add(upSteer);
             } else if (pos.y > maxY) {
-                const down = new THREE.Vector3(0, -(pos.y - maxY) * (verticalWeight * 0.5), 0);
-                steer.add(down);
+                const desired = new THREE.Vector3(0, -maxSpeed, 0);
+                const downSteer = new THREE.Vector3().subVectors(desired, vel);
+                this.limit(downSteer, maxForce);
+                downSteer.multiplyScalar((pos.y - maxY) * verticalWeight * 0.5);
+                steer.add(downSteer);
             }
 
             // integrate acceleration/velocity (acceleration is per second)
@@ -265,9 +273,6 @@ class FishFlock {
 
             // update position
             bi.position.add(bi.velocity.clone().multiplyScalar(dt));
-
-            // enforce minimum height hard clamp to avoid tunneling under terrain
-            if (bi.position.y < minY) bi.position.y = minY;
 
             // write back into fish local position
             bi.fish.position.copy(bi.position);
