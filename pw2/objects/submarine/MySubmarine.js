@@ -5,6 +5,7 @@ class MySubmarine extends THREE.Object3D {
         super();
         this.app = app;
         this.size = size;
+        const s = this.size;
 
         this.controlsEnabled = true;
 
@@ -17,13 +18,26 @@ class MySubmarine extends THREE.Object3D {
         this.verticalAccel = 4;
         this.yawRate = Math.PI; 
 
-        this._keys = { w: false, s: false, a: false, d: false, p: false, l: false };
+        this._keys = { 
+            w: false, 
+            s: false, 
+            a: false, 
+            d: false, 
+            p: false, 
+            l: false
+        };
 
         this._onKeyDown = this._onKeyDown.bind(this);
         this._onKeyUp = this._onKeyUp.bind(this);
 
         window.addEventListener('keydown', this._onKeyDown);
         window.addEventListener('keyup', this._onKeyUp);
+
+        this.fpvCamera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
+        // adjust later
+        this.fpvCamera.position.set(-s * 1.0, s * 0.7, 0);
+        this.fpvCamera.rotation.y = Math.PI / 2;
+        this.add(this.fpvCamera);
 
         this.buildSubmarine();
     }

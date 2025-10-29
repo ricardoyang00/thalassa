@@ -169,6 +169,10 @@ class MyApp  {
                 if (this.contents && this.contents.submarine && typeof this.contents.submarine.setControlsEnabled === 'function') {
                     this.contents.submarine.setControlsEnabled(false);
                 }
+            } else if (this.activeCameraName === 'SubmarineFPV') {
+                if (this.contents && this.contents.submarine && typeof this.contents.submarine.setControlsEnabled === 'function') {
+                    this.contents.submarine.setControlsEnabled(true);
+                }
             } else {
                 // Disable fly controls for other cameras (handled by Three.js FlyControls)
                 
@@ -207,6 +211,9 @@ class MyApp  {
      */
     setContents(contents) {
         this.contents = contents;
+        if (this.contents && this.contents.submarine && this.contents.submarine.fpvCamera) {
+            this.cameras['SubmarineFPV'] = this.contents.submarine.fpvCamera;
+        }
     }
 
     /**
