@@ -113,6 +113,12 @@ class MyContents  {
         this.app.scene.add(this.seafloorGroup);
     }
 
+    buildSubmarine() {
+        this.submarine = new MySubmarine(this.app, 1);
+        this.submarine.position.set(0, 5, 0);
+        this.app.scene.add(this.submarine);
+    }
+
     /**
      * Create multiple fish groups. Each group is a THREE.Group with 20-30 fish by default.
      * Fish references are stored in this.fishByGroup (array of arrays) and flat in this.fish.
@@ -179,14 +185,12 @@ class MyContents  {
 
             // create a FishFlock to govern the boids for this group
             const flock = new FishFlock(groupFishes);
+            if (this.submarine) {
+                flock.addDanger(this.submarine);
+            }
             this.flocks.push(flock);
         }
-    }
-
-    buildSubmarine() {
-        this.submarine = new MySubmarine(this.app, 1);
-        this.submarine.position.set(0, 5, 0);
-        this.app.scene.add(this.submarine);
+        this.app.scene.add(this.fishGroup);
     }
 
     /**
@@ -218,10 +222,8 @@ class MyContents  {
         this.app.scene.add( ambientLight );
 
         this.buildSeafloor();
-        this.buildFishGroups(3, 100, 200);
         this.buildSubmarine();
-
-        this.app.scene.add(this.fishGroup);
+        this.buildFishGroups(3, 100, 200);
 
         this._lastUpdateTime = Date.now() * 0.001;
     }

@@ -95,6 +95,8 @@ class MyGuiInterface  {
                 neighborRadius: defaultOpts.neighborRadius,
                 separationRadius: defaultOpts.separationRadius,
                 wanderIntensity: defaultOpts.wanderIntensity,
+                avoidanceRadius: defaultOpts.avoidanceRadius,
+                avoidanceWeight: defaultOpts.avoidanceWeight,
             };
 
             const flockFolder = this.datgui.addFolder('Flocking Controls');
@@ -114,6 +116,11 @@ class MyGuiInterface  {
             flockFolder.add(flockParams, 'neighborRadius', 1.0, 20.0).name('Neighbor Radius').onChange(v => updateAllFlocks('neighborRadius', v));
             flockFolder.add(flockParams, 'separationRadius', 0.1, 10.0).name('Separation Radius').onChange(v => updateAllFlocks('separationRadius', v));
             flockFolder.add(flockParams, 'wanderIntensity', 0.0, 2.0).name('Wander').onChange(v => updateAllFlocks('wanderIntensity', v));
+            
+            const avoidanceFolder = flockFolder.addFolder('Danger Avoidance');
+            avoidanceFolder.add(flockParams, 'avoidanceRadius', 1.0, 30.0).name('Avoid Radius').onChange(v => updateAllFlocks('avoidanceRadius', v));
+            avoidanceFolder.add(flockParams, 'avoidanceWeight', 0.0, 10.0).name('Avoid Force').onChange(v => updateAllFlocks('avoidanceWeight', v));
+            avoidanceFolder.open();
 
             flockFolder.open();
         }

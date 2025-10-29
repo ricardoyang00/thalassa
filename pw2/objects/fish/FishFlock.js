@@ -13,17 +13,20 @@ class FishFlock {
      * @param {number} [options.alignmentWeight=1.2] - How strongly fish match neighbors' direction.
      * @param {number} [options.cohesionWeight=1] - How strongly fish move toward neighbors' center.
      * @param {number} [options.separationWeight=1.8] - How strongly fish avoid close neighbors.
-     * @param {THREE.Vector3} [options.center] - The `Vector3` anchor point the flock stays near.
+     * @param {THREE.Vector3} [options.center] - The Vector3 anchor point the flock stays near.
      * @param {number} [options.keepRadius=30] - Max distance fish can stray from the center.
      * @param {number} [options.boundaryForce=3] - How strongly fish are pushed back to the center.
      * @param {number} [options.minY=2] - Minimum vertical position (floor).
      * @param {number} [options.maxY=50] - Maximum vertical position (surface).
      * @param {number} [options.verticalWeight=2.5] - How strongly fish are pushed from floor/surface.
      * @param {number} [options.wanderIntensity=0.5] - Adds random jitter for a more natural look.
-     */
+     * @param {number} [options.avoidanceRadius=10] - "Danger zone" - fish flee if a danger is this close.
+     * @param {number} [options.avoidanceWeight=5] - How strongly fish flee dangers (higher = more panic).
+    */
     constructor(fishArray = [], options = {}) {
         this.fish = fishArray.slice(); // references to fish objects
         this.boids = []; // internal state per fish
+        this.dangers = [];
 
         // default parameters
         const defaults = {
@@ -41,7 +44,10 @@ class FishFlock {
             minY: 2,
             maxY: 50,
             verticalWeight: 2.5,
-            wanderIntensity: 0.5
+            wanderIntensity: 0.5,
+
+            avoidanceRadius: 10,
+            avoidanceWeight: 5
         };
 
         this.opt = Object.assign({}, defaults, options);
@@ -79,6 +85,13 @@ class FishFlock {
         this._vec = new THREE.Vector3();
         this._vec2 = new THREE.Vector3();
         this._center = new THREE.Vector3();
+
+        // reusable vectors for avoidance
+        this._fishWorldPos = new THREE.Vector3();
+        this._dangerWorldPos = new THREE.Vector3();
+        this._worldAvoidSteer = new THREE.Vector3();
+        this._localAvoidSteer = new THREE.Vector3();
+        this._worldToLocalMatrix = new THREE.Matrix4();
     }
 
     // Helper to limit a vector's length to cap fish speed and steer force
@@ -87,13 +100,21 @@ class FishFlock {
         if (l > max) vec.multiplyScalar(max / l);
     }
 
+    // Registers a danger object that fish will avoid
+    addDanger(object3D) {
+        if (object3D && !this.dangers.includes(object3D)) {
+            this.dangers.push(object3D);
+        }
+    }
+
     update(dt) {
         if (dt <= 0) return;
         const {
             maxSpeed, maxForce, neighborRadius, separationRadius,
             alignmentWeight, cohesionWeight, separationWeight,
             center, keepRadius, boundaryForce,
-            minY, maxY, verticalWeight, wanderIntensity
+            minY, maxY, verticalWeight, wanderIntensity,
+            avoidanceRadius, avoidanceWeight
         } = this.opt;
 
         // sync positions from fish objects to boids
@@ -175,6 +196,49 @@ class FishFlock {
                 (Math.random() - 0.5) * wanderIntensity
             );
             steer.add(wander);
+
+            const parent = bi.fish.parent;
+            if (parent && this.dangers.length > 0) {
+                let avoidance = new THREE.Vector3(); // Accumulator for this fish
+                let totalAvoidance = 0;
+
+                bi.fish.getWorldPosition(this._fishWorldPos);
+                
+                // Get parent's inverted matrix (to convert world-space vector to local-space)
+                parent.updateWorldMatrix(true, false);
+                this._worldToLocalMatrix.copy(parent.matrixWorld).invert();
+
+                for (const danger of this.dangers) {
+                    danger.getWorldPosition(this._dangerWorldPos);
+                    const d = this._fishWorldPos.distanceTo(this._dangerWorldPos);
+
+                    if (d < avoidanceRadius && d > 0) {
+                        // Calculate steering force AWAY from danger (in WORLD space)
+                        this._worldAvoidSteer.subVectors(this._fishWorldPos, this._dangerWorldPos);
+                        this._worldAvoidSteer.normalize();
+                        this._worldAvoidSteer.divideScalar(d); // Weight by inverse distance
+
+                        // Transform this WORLD direction into the fish's LOCAL direction
+                        this._localAvoidSteer.copy(this._worldAvoidSteer).transformDirection(this._worldToLocalMatrix);
+
+                        avoidance.add(this._localAvoidSteer);
+                        totalAvoidance++;
+                    }
+                }
+
+                if (totalAvoidance > 0) {
+                    avoidance.divideScalar(totalAvoidance);
+                    avoidance.normalize();
+                    avoidance.multiplyScalar(maxSpeed); // Desire max speed away
+                    
+                    // Steering = Desired Velocity - Current Velocity
+                    const avoidSteer = new THREE.Vector3().subVectors(avoidance, vel);
+                    this.limit(avoidSteer, maxForce * 2.0); 
+                    avoidSteer.multiplyScalar(avoidanceWeight);
+                    
+                    steer.add(avoidSteer);
+                }
+            }
 
             // boundary / keep close to center
             const distToCenter = pos.distanceTo(center);
