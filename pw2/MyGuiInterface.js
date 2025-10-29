@@ -83,6 +83,40 @@ class MyGuiInterface  {
             if (this.contents) this.contents.setFishesScale(value);
         });
         fishesFolder.open();
+
+        if (this.contents.flocks && this.contents.flocks.length > 0) {
+            const defaultOpts = this.contents.flocks[0].opt;
+            const flockParams = {
+                alignmentWeight: defaultOpts.alignmentWeight,
+                cohesionWeight: defaultOpts.cohesionWeight,
+                separationWeight: defaultOpts.separationWeight,
+                maxSpeed: defaultOpts.maxSpeed,
+                maxForce: defaultOpts.maxForce,
+                neighborRadius: defaultOpts.neighborRadius,
+                separationRadius: defaultOpts.separationRadius,
+                wanderIntensity: defaultOpts.wanderIntensity,
+            };
+
+            const flockFolder = this.datgui.addFolder('Flocking Controls');
+            
+            // helper function to update all flocks when a slider changes
+            const updateAllFlocks = (paramName, value) => {
+                this.contents.flocks.forEach(flock => {
+                    flock.opt[paramName] = value;
+                });
+            };
+
+            flockFolder.add(flockParams, 'alignmentWeight', 0.0, 5.0).name('Alignment').onChange(v => updateAllFlocks('alignmentWeight', v));
+            flockFolder.add(flockParams, 'cohesionWeight', 0.0, 5.0).name('Cohesion').onChange(v => updateAllFlocks('cohesionWeight', v));
+            flockFolder.add(flockParams, 'separationWeight', 0.0, 5.0).name('Separation').onChange(v => updateAllFlocks('separationWeight', v));
+            flockFolder.add(flockParams, 'maxSpeed', 1.0, 10.0).name('Max Speed').onChange(v => updateAllFlocks('maxSpeed', v));
+            flockFolder.add(flockParams, 'maxForce', 0.1, 10.0).name('Max Force (Turn)').onChange(v => updateAllFlocks('maxForce', v));
+            flockFolder.add(flockParams, 'neighborRadius', 1.0, 20.0).name('Neighbor Radius').onChange(v => updateAllFlocks('neighborRadius', v));
+            flockFolder.add(flockParams, 'separationRadius', 0.1, 10.0).name('Separation Radius').onChange(v => updateAllFlocks('separationRadius', v));
+            flockFolder.add(flockParams, 'wanderIntensity', 0.0, 2.0).name('Wander').onChange(v => updateAllFlocks('wanderIntensity', v));
+
+            flockFolder.open();
+        }
     }
 }
 
