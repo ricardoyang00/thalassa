@@ -14,6 +14,9 @@ class MySubmarine extends THREE.Object3D {
         this.maxForwardSpeed = 10;
         this.maxVerticalSpeed = 5;
 
+        this.minY = 5;
+        this.maxY = 30;
+
         this.forwardAccel = 6;
         this.verticalAccel = 4;
         this.yawRate = Math.PI; 
@@ -101,8 +104,15 @@ class MySubmarine extends THREE.Object3D {
         const localForward = new THREE.Vector3(1, 0, 0);
         localForward.applyQuaternion(this.quaternion); // world direction
         this.position.addScaledVector(localForward, this.forwardSpeed * dt);
-
         this.position.y += this.verticalSpeed * dt;
+
+        if (this.position.y < this.minY) {
+            this.position.y = this.minY;
+            if (this.verticalSpeed < 0) this.verticalSpeed = 0;
+        } else if (this.position.y > this.maxY) {
+            this.position.y = this.maxY;
+            if (this.verticalSpeed > 0) this.verticalSpeed = 0;
+        }
     }
 
     dispose() {

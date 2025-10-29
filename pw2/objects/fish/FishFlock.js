@@ -42,7 +42,7 @@ class FishFlock {
             boundaryForce: 3,
             // vertical constraints
             minY: 2,
-            maxY: 50,
+            maxY: 30,
             verticalWeight: 2.5,
             wanderIntensity: 0.5,
 
