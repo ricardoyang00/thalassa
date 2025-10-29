@@ -8,6 +8,7 @@ import { MyRock } from './MyRock.js';
 import { LSystemCoral } from './objects/corals/LSystemCoral.js';
 import { MyFishLOD } from './objects/fish/MyFishLOD.js';
 import { FishFlock } from './objects/fish/FishFlock.js';
+import { MySubmarine } from './objects/submarine/MySubmarine.js';
 
 
 /**
@@ -40,6 +41,9 @@ class MyContents  {
 
         this.flocks = [];
         this._lastUpdateTime = null;
+
+        // submarine
+        this.submarine = null;
     }
 
     /**
@@ -179,6 +183,12 @@ class MyContents  {
         }
     }
 
+    buildSubmarine() {
+        this.submarine = new MySubmarine(this.app, 1);
+        this.submarine.position.set(0, 5, 0);
+        this.app.scene.add(this.submarine);
+    }
+
     /**
      * initializes the contents
      */
@@ -209,6 +219,7 @@ class MyContents  {
 
         this.buildSeafloor();
         this.buildFishGroups(3, 100, 200);
+        this.buildSubmarine();
 
         this.app.scene.add(this.fishGroup);
 
@@ -236,6 +247,9 @@ class MyContents  {
         this._lastUpdateTime = now;
         
         this.flocks.forEach(f => f.update(dt));
+        if (this.submarine && typeof this.submarine.update === 'function') {
+            this.submarine.update(dt);
+        }
     }
 }
 

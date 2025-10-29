@@ -164,6 +164,11 @@ class MyApp  {
                 } else {
                     this.flyControls.object = this.activeCamera;
                 }
+
+                // Disable submarine keyboard controls when using the fly camera
+                if (this.contents && this.contents.submarine && typeof this.contents.submarine.setControlsEnabled === 'function') {
+                    this.contents.submarine.setControlsEnabled(false);
+                }
             } else {
                 // Disable fly controls for other cameras (handled by Three.js FlyControls)
                 
@@ -176,6 +181,11 @@ class MyApp  {
                 } else {
                     this.controls.object = this.activeCamera;
                     this.controls.enabled = true;
+                }
+                
+                // Re-enable submarine keyboard controls for non-fly cameras
+                if (this.contents && this.contents.submarine && typeof this.contents.submarine.setControlsEnabled === 'function') {
+                    this.contents.submarine.setControlsEnabled(true);
                 }
             }
         }
