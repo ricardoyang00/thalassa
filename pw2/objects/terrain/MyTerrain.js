@@ -37,7 +37,7 @@ class MyTerrain extends THREE.Object3D {
 
         const texture = new THREE.TextureLoader().load('textures/sand.jpg');
         texture.wrapT = texture.wrapS = THREE.RepeatWrapping;
-        texture.repeat.set(15, 15);
+        texture.repeat.set(25, 25);
 
         const terrainMaterial = new THREE.MeshPhongMaterial({ 
             color: "#8B7355",

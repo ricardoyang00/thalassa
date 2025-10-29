@@ -10,10 +10,17 @@ class MyRock extends THREE.Object3D {
     }
 
     buildRock() {
-        const rockGeometry = new THREE.BoxGeometry(
-            this.size * (0.8 + this.random() * 0.4),
-            this.size * (0.6 + this.random() * 0.8),
-            this.size * (0.8 + this.random() * 0.4)
+        const baseRadius = this.size * (0.4 + this.random() * 0.2);
+        const topRadius = baseRadius * (0.4 + this.random() * 0.2);
+        const height = this.size * (0.6 + this.random() * 0.6);
+
+        const radialSegments = Math.floor(this.random() * 3) + 3;
+
+        const rockGeometry = new THREE.CylinderGeometry(
+            topRadius,
+            baseRadius,
+            height,
+            radialSegments
         );
 
         const texture = new THREE.TextureLoader().load('textures/im-the-rock.jpg');
@@ -27,9 +34,9 @@ class MyRock extends THREE.Object3D {
 
         const rockMesh = new THREE.Mesh(rockGeometry, rockMaterial);
         
-        rockMesh.rotation.x = this.random() * 0.3;
-        rockMesh.rotation.y = this.random() * Math.PI;
-        rockMesh.rotation.z = this.random() * 0.3;
+        rockMesh.rotation.x = (this.random() * 2 - 1) * 0.3;
+        rockMesh.rotation.y = (this.random() * 2 - 1) * Math.PI;
+        rockMesh.rotation.z = (this.random() * 2 - 1) * 0.3;
 
         this.add(rockMesh);
     }

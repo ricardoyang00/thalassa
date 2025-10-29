@@ -3,8 +3,8 @@ import { MyAxis } from './MyAxis.js';
 import { TubeCoral } from './objects/corals/TubeCoral.js';
 import { SgiUtils } from './SgiUtils.js';
 import { BrainCoral } from './objects/corals/BrainCoral.js';
-import { MyTerrain } from './MyTerrain.js';
-import { MyRock } from './MyRock.js';
+import { MyTerrain } from './objects/terrain/MyTerrain.js';
+import { MyRock } from './objects/terrain/MyRock.js';
 import { LSystemCoral } from './objects/corals/LSystemCoral.js';
 import { MyFishLOD } from './objects/fish/MyFishLOD.js';
 import { FishFlock } from './objects/fish/FishFlock.js';
@@ -58,7 +58,7 @@ class MyContents  {
 
         this.rocks = new THREE.Group();
         this.rocks.name = "rocks";
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < 50; i++) {
             const rock = new MyRock(this, SgiUtils.rand(0.5, 2) * 1.5, SgiUtils.rand.bind(SgiUtils));
 
             while (true) {
@@ -68,12 +68,11 @@ class MyContents  {
                     SgiUtils.rand(-.5, .5) * 40,
                 );
 
-                if (this.rocks.children.every((rocc) => rocc.position.distanceTo(pos) > rocc.size + rock.size)) {
+                if (this.rocks.children.every((rock) => rock.position.distanceTo(pos) > rock.size + rock.size)) {
                     rock.position.copy(pos);
                     break;
                 }
             };
-
             this.rocks.add(rock);
         }
         this.seafloorGroup.add(this.rocks);
