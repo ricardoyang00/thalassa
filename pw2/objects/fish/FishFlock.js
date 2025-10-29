@@ -16,9 +16,9 @@ class FishFlock {
      * @param {THREE.Vector3} [options.center] - The Vector3 anchor point the flock stays near.
      * @param {number} [options.keepRadius=30] - Max distance fish can stray from the center.
      * @param {number} [options.boundaryForce=3] - How strongly fish are pushed back to the center.
-     * @param {number} [options.minY=2] - Minimum vertical position (floor).
-     * @param {number} [options.maxY=50] - Maximum vertical position (surface).
-     * @param {number} [options.verticalWeight=2.5] - How strongly fish are pushed from floor/surface.
+     * @param {number} [options.minY=4] - Minimum vertical position (floor).
+     * @param {number} [options.maxY=30] - Maximum vertical position (surface).
+     * @param {number} [options.verticalWeight=0.8] - How strongly fish are pushed from floor/surface.
      * @param {number} [options.wanderIntensity=0.5] - Adds random jitter for a more natural look.
      * @param {number} [options.avoidanceRadius=10] - "Danger zone" - fish flee if a danger is this close.
      * @param {number} [options.avoidanceWeight=5] - How strongly fish flee dangers (higher = more panic).
@@ -32,7 +32,7 @@ class FishFlock {
         const defaults = {
             maxSpeed: 4,
             maxForce: 3.5,
-            neighborRadius: 4,
+            neighborRadius: 10,
             separationRadius: 2,
             alignmentWeight: 1.2,
             cohesionWeight: 1,
