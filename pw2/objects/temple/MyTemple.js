@@ -6,6 +6,19 @@ class MyTemple extends THREE.Object3D {
     constructor() {
         super();
 
+        const limestoneTexture = new THREE.TextureLoader().load('textures/limestone.jpg');
+        limestoneTexture.wrapS = THREE.RepeatWrapping;
+        limestoneTexture.wrapT = THREE.RepeatWrapping;
+        const repeatFactor = 5;
+        limestoneTexture.repeat.set(repeatFactor, repeatFactor);
+
+        const limestoneMaterial = new THREE.MeshPhongMaterial({
+            color: "#f9f6e3", //"#DCD5B4",
+            specular: 0x111111,
+            shininess: 10,
+            map: limestoneTexture,
+        });
+
         const gridSize = 7;
         const spacing = 5;
         const half = Math.floor(gridSize / 2);
@@ -35,7 +48,7 @@ class MyTemple extends THREE.Object3D {
                     switch (randomState) {
                         case 'perfect':
                         case 'broken': {
-                            const p = new Pillar({state: randomState});
+                            const p = new Pillar({state: randomState}, limestoneMaterial);
                             p.position.set(x, 0, z);
                             const pillarScale = 1.3;
                             p.scale.set(pillarScale, 1, pillarScale);
@@ -51,14 +64,35 @@ class MyTemple extends THREE.Object3D {
 
 
 
-// roof
+        // roof
         const roofGroup = new THREE.Group();
         roofGroup.name = "RoofGroup";
         const size = gridSize * spacing;
 
         const slabThickness = 2;
         const largeStoneGeo = new THREE.BoxGeometry(size * 0.95, slabThickness, size * 0.95);
-        const largeStoneMat = new THREE.MeshPhongMaterial({ color: '#979797' });
+        const largeStoneMat = limestoneMaterial;
+
+        //////////////////////////
+        // apply UV fix before any CSG operations
+        const uvAttribute = largeStoneGeo.getAttribute('uv');
+        const slabWidth = size * 0.95; 
+        const slabHeight = slabThickness;
+        
+        const sideVRepeat = (slabHeight / slabWidth) * repeatFactor;
+        
+        // scale the V (y) coordinate of the side UVs
+        const vScale = sideVRepeat / repeatFactor;
+
+        for (let i = 0; i < uvAttribute.count; i++) {
+            const isTopOrBottom = (i >= 8 && i < 16);
+            
+            if (!isTopOrBottom) {
+                const v = uvAttribute.getY(i);
+                uvAttribute.setY(i, v * vScale);
+            }
+        }
+         ////////////////////////
 
         const evaluator = new Evaluator();
 
@@ -210,7 +244,7 @@ class MyTemple extends THREE.Object3D {
         prismBrush.rotation.set(-Math.PI / 2, 0, Math.PI / 2);
         prismBrush.updateMatrixWorld();
 
-        combinedRoofBrush = evaluator.evaluate(combinedRoofBrush, prismBrush, ADDITION);
+        //combinedRoofBrush = evaluator.evaluate(combinedRoofBrush, prismBrush, ADDITION);
 
 
         // roof destruction cut
@@ -228,9 +262,19 @@ class MyTemple extends THREE.Object3D {
         largeCutterBrush.updateMatrixWorld();
         
         combinedRoofBrush = evaluator.evaluate(combinedRoofBrush, largeCutterBrush, SUBTRACTION);
+        prismBrush = evaluator.evaluate(prismBrush, largeCutterBrush, SUBTRACTION);
 
-        const finalRoofMesh = new THREE.Mesh(combinedRoofBrush.geometry, largeStoneMat);
-        roofGroup.add(finalRoofMesh);
+        // const finalRoofMesh = new THREE.Mesh(combinedRoofBrush.geometry, largeStoneMat);
+        // finalRoofMesh.geometry.computeVertexNormals();
+        // roofGroup.add(finalRoofMesh);
+
+        const finalSlabMesh = new THREE.Mesh(combinedRoofBrush.geometry, largeStoneMat);
+        finalSlabMesh.geometry.computeVertexNormals(); // Fix normals for slabs
+        roofGroup.add(finalSlabMesh);
+
+        const finalPrismMesh = new THREE.Mesh(prismBrush.geometry, largeStoneMat);
+        finalPrismMesh.geometry.computeVertexNormals(); // Fix normals for prism
+        roofGroup.add(finalPrismMesh);
 
 
         

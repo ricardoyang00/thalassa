@@ -7,7 +7,7 @@ class Pillar extends THREE.Object3D {
      * @param {object} options
      * @param {string} options.state - 'perfect', 'broken'.
      */
-    constructor(options = {}) {
+    constructor(options = {}, material) {
         super();
 
         const { state = 'perfect' } = options;
@@ -29,7 +29,7 @@ class Pillar extends THREE.Object3D {
         this.hexCapRadius = this.radius * 1.5;
         this.hexCapSegments = 6;
 
-        this.material = new THREE.MeshPhongMaterial({ color: this.materialColor });
+        this.material = material;
         this.evaluator = new Evaluator();
         
         this.totalHeight = this.pillarShaftHeight + this.hexCapThicknessTop + this.capThickness;

@@ -198,7 +198,8 @@ class MyContents  {
 
         this.temple = new MyTemple();
         this.temple.position.set(0, 0, 0);
-        //this.temple.scale.set(3, 3, 3);
+        const templeScale = 0.75;
+        this.temple.scale.setScalar(templeScale);
         this.app.scene.add(this.temple);
     }
 
