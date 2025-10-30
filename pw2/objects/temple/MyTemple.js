@@ -63,6 +63,8 @@ class MyTemple extends THREE.Object3D {
         const individualStairHeight = 1;
         const baseHeight = steps * individualStairHeight;
 
+        let isFirstMissing = true;
+        let firstMissingCoords = null;
         for (let ix = 0; ix < gridSize; ix++) {
             for (let iz = 0; iz < gridSize; iz++) {
                 if (ix === 0 || ix === gridSize - 1 || iz === 0 || iz === gridSize - 1) {
@@ -73,7 +75,7 @@ class MyTemple extends THREE.Object3D {
                     let randomState = 'perfect';
 
                     if (!isCorner) {
-                        const states = ['perfect', 'broken', 'perfect', 'broken', 'missing'];
+                        const states = ['perfect', 'broken', 'missing', 'perfect', 'broken', 'perfect', 'broken', 'missing'];
                         randomState = states[Math.floor(Math.random() * states.length)];
                     } else {
                         randomState = 'perfect';
@@ -90,6 +92,64 @@ class MyTemple extends THREE.Object3D {
                             break;
                         }
                         case 'missing':
+                            if (firstMissingCoords !== null) {
+                                if ((firstMissingCoords.x > 0 && x < 0) || (firstMissingCoords.x < 0 && x > 0)) {
+                                    if ((firstMissingCoords.z < 0 && z > 0) || (firstMissingCoords.z > 0 && z < 0)) {
+                                        isFirstMissing = true;
+                                    }
+                                }
+                            }
+
+                            if (isFirstMissing) {
+                                const p = new Pillar({state: 'broken'}, limestoneMaterial);
+                                
+                                const h = p.getHeight();
+                                const r = 1.5;
+                                const shaftRadius = 1.0;
+
+                                // This is based on the pillar resting on the edge of its
+                                // base (r=1.5) and the edge of its shaft (r=1.0).
+                                // Hypotenuse = h (pillar height)
+                                // Opposite side = r - shaftRadius (0.5)
+                                // Angle = tiltAngle]
+                                const tiltAngle = Math.asin((r - shaftRadius) / h);
+
+            
+                                const baseDirection = new THREE.Vector3(-x, 0, -z);
+                                const variationStrength = 0.7;
+                                const randomVariation = new THREE.Vector3(
+                                    (Math.random() - 0.5) * variationStrength,
+                                    0,
+                                    (Math.random() - 0.5) * variationStrength
+                                );
+                                const finalDirection = baseDirection.add(randomVariation);
+                                const d = finalDirection.normalize();
+
+                                
+                                //first rotation: Pointing the pillar's length (Y-axis) along 'd'
+                                const directionQuat = new THREE.Quaternion();
+                                directionQuat.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d);
+                                
+                                // seconds rotation: tilting the pillar
+                                // tilt around its local X-axis (its "side")
+                                const tiltQuat = new THREE.Quaternion();
+                                const localTiltAxis = new THREE.Vector3(1, 0, 0); // Pillar's local X-axis
+                                tiltQuat.setFromAxisAngle(localTiltAxis, tiltAngle);
+
+                                // combine the rotations:
+                                p.quaternion.copy(directionQuat).multiply(tiltQuat);
+                                
+                                const offset = 2 * r;
+                                p.position.set(x - d.x * (-offset), r, z - d.z * (-offset));
+
+
+                                const pillarScale = 1.3;
+                                p.scale.set(pillarScale, 1, pillarScale);
+                                pillarGroup.add(p);
+                                
+                                isFirstMissing = false;
+                                firstMissingCoords = {x: x, z: z};
+                            }
                             break;
                     }
                 }

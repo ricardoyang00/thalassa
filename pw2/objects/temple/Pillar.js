@@ -190,29 +190,25 @@ class Pillar extends THREE.Object3D {
     buildBottomCaps() {
         const group = new THREE.Group();
 
-        // --- Round Cap ---
+        // round cap
         const bottomCapGeo = new THREE.CylinderGeometry(this.capRadius, this.capRadius, this.capThickness, this.radialSegments);
         let bottomCapBrush = new Brush(bottomCapGeo);
         bottomCapBrush.position.set(0, this.capThickness / 2, 0);
         bottomCapBrush.updateMatrixWorld();
 
-        // 50% chance to damage
-        if (this.random() > 0.5) {
-            bottomCapBrush = this.chipEdge(bottomCapBrush, this.capRadius, this.capThickness);
-        }
+        bottomCapBrush = this.chipEdge(bottomCapBrush, this.capRadius, this.capThickness);
+        
         const bottomCap = new THREE.Mesh(bottomCapBrush.geometry, this.material);
         group.add(bottomCap);
 
-        // --- Hex Cap ---
+        // hex cap
         const hexBottomCapGeo = new THREE.CylinderGeometry(this.hexCapRadius, this.hexCapRadius, this.hexCapThicknessBottom, this.hexCapSegments);
         let hexBottomBrush = new Brush(hexBottomCapGeo);
-        hexBottomBrush.position.set(0, this.capThickness / 2, 0); // Aligns with bottom cap
+        hexBottomBrush.position.set(0, this.capThickness / 2, 0);
         hexBottomBrush.updateMatrixWorld();
         
-        // 50% chance to damage
-        if (this.random() > 0.5) {
-            hexBottomBrush = this.chipEdge(hexBottomBrush, this.hexCapRadius, this.hexCapThicknessBottom);
-        }
+        hexBottomBrush = this.chipEdge(hexBottomBrush, this.hexCapRadius, this.hexCapThicknessBottom);
+        
         const hexBottomCap = new THREE.Mesh(hexBottomBrush.geometry, this.material);
         group.add(hexBottomCap);
 
