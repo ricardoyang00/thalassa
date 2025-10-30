@@ -12,11 +12,45 @@ class MyTemple extends THREE.Object3D {
         const repeatFactor = 5;
         limestoneTexture.repeat.set(repeatFactor, repeatFactor);
 
+        const cobbleTexture = new THREE.TextureLoader().load('textures/cobble3.jpg');
+        cobbleTexture.wrapS = THREE.RepeatWrapping;
+        cobbleTexture.wrapT = THREE.RepeatWrapping;
+        const cobbleRepeatFactor = 20;
+        cobbleTexture.repeat.set(cobbleRepeatFactor, cobbleRepeatFactor);
+
+        const cobbleBumpTexture = new THREE.TextureLoader().load('images/cobble3-bump.jpg');
+        cobbleBumpTexture.wrapS = THREE.RepeatWrapping;
+        cobbleBumpTexture.wrapT = THREE.RepeatWrapping;
+        cobbleBumpTexture.repeat.set(cobbleRepeatFactor, cobbleRepeatFactor);
+
+        const goldMarbleTexture = new THREE.TextureLoader().load('textures/gold-marble.jpg');
+        goldMarbleTexture.wrapS = THREE.RepeatWrapping;
+        goldMarbleTexture.wrapT = THREE.RepeatWrapping;
+        const goldMarbleRepeatFactor = 10;
+        goldMarbleTexture.repeat.set(goldMarbleRepeatFactor, goldMarbleRepeatFactor);
+
+
         const limestoneMaterial = new THREE.MeshPhongMaterial({
             color: "#f9f6e3", //"#DCD5B4",
             specular: 0x111111,
             shininess: 10,
             map: limestoneTexture,
+        });
+
+        const cobbleMaterial = new THREE.MeshPhongMaterial({
+            color: "#888888",
+            specular: 0x111111,
+            shininess: 5,
+            map: cobbleTexture,
+            bumpMap: cobbleBumpTexture,
+            bumpScale: 1
+        });
+
+        const goldMarbleMaterial = new THREE.MeshPhongMaterial({
+            color: "#d4c19c",
+            specular: 0x222222,
+            shininess: 30,
+            map: goldMarbleTexture,
         });
 
         const gridSize = 7;
@@ -244,7 +278,6 @@ class MyTemple extends THREE.Object3D {
         prismBrush.rotation.set(-Math.PI / 2, 0, Math.PI / 2);
         prismBrush.updateMatrixWorld();
 
-        //combinedRoofBrush = evaluator.evaluate(combinedRoofBrush, prismBrush, ADDITION);
 
 
         // roof destruction cut
@@ -264,16 +297,12 @@ class MyTemple extends THREE.Object3D {
         combinedRoofBrush = evaluator.evaluate(combinedRoofBrush, largeCutterBrush, SUBTRACTION);
         prismBrush = evaluator.evaluate(prismBrush, largeCutterBrush, SUBTRACTION);
 
-        // const finalRoofMesh = new THREE.Mesh(combinedRoofBrush.geometry, largeStoneMat);
-        // finalRoofMesh.geometry.computeVertexNormals();
-        // roofGroup.add(finalRoofMesh);
-
         const finalSlabMesh = new THREE.Mesh(combinedRoofBrush.geometry, largeStoneMat);
-        finalSlabMesh.geometry.computeVertexNormals(); // Fix normals for slabs
+        finalSlabMesh.geometry.computeVertexNormals();
         roofGroup.add(finalSlabMesh);
 
         const finalPrismMesh = new THREE.Mesh(prismBrush.geometry, largeStoneMat);
-        finalPrismMesh.geometry.computeVertexNormals(); // Fix normals for prism
+        finalPrismMesh.geometry.computeVertexNormals();
         roofGroup.add(finalPrismMesh);
 
 
@@ -281,7 +310,7 @@ class MyTemple extends THREE.Object3D {
         // base, stairs
         const baseGroup = new THREE.Group();
         baseGroup.name = "BaseGroup";
-        const baseMat = new THREE.MeshPhongMaterial({ color: '#5a5a5a' });
+        const baseMat = cobbleMaterial;
 
 
         function applyGouge(targetBrush, bottomRadius, totalHeight, evaluator) {
@@ -320,8 +349,33 @@ class MyTemple extends THREE.Object3D {
             const stepSize = size * scale;
             const stepHeight = individualStairHeight;
 
+            ////////////
+            // fix uvs
             const stepGeo = new THREE.BoxGeometry(stepSize, stepHeight, stepSize);
+    
+            const stepUvAttribute = stepGeo.getAttribute('uv');
+            const stepWidth = stepSize;
+
+            const stepVRepeat = (stepHeight / stepWidth) * cobbleRepeatFactor; 
+            const vScale = stepVRepeat / cobbleRepeatFactor;
+    
+            for (let j = 0; j < stepUvAttribute.count; j++) {
+                const isTopOrBottom = (j >= 8 && j < 16);
+                if (!isTopOrBottom) {
+                    const u = stepUvAttribute.getX(j);
+                    const v = stepUvAttribute.getY(j);
+                    
+                    stepUvAttribute.setX(j, v);
+                    stepUvAttribute.setY(j, u);
+
+                    stepUvAttribute.setX(j, v * vScale);
+                }
+            }
+            ////////////
+
+
             let stepBrush = new Brush(stepGeo);
+
             stepBrush.position.set(0, -(currentTotalHeightFromTop + stepHeight / 2), 0);
             stepBrush.updateMatrixWorld();
             
@@ -344,6 +398,7 @@ class MyTemple extends THREE.Object3D {
             }
 
             const baseMesh = new THREE.Mesh(combinedBrush.geometry, baseMat);
+            baseMesh.geometry.computeVertexNormals();
             baseGroup.add(baseMesh);
         }
         
