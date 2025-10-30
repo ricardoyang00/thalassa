@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Pillar } from './pillar.js';
-import { SUBTRACTION, Brush, Evaluator } from 'https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.17/+esm';
+import { SUBTRACTION, ADDITION, Brush, Evaluator } from 'https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.17/+esm';
 
 class MyTemple extends THREE.Object3D {
     constructor() {
@@ -10,17 +10,41 @@ class MyTemple extends THREE.Object3D {
         const spacing = 5;
         const half = Math.floor(gridSize / 2);
         const pillarGroup = new THREE.Group();
+        pillarGroup.name = "PillarGroup";
+    
+        const steps = 6;
+        const individualStairHeight = 1;
+        const baseHeight = steps * individualStairHeight;
 
         for (let ix = 0; ix < gridSize; ix++) {
             for (let iz = 0; iz < gridSize; iz++) {
                 if (ix === 0 || ix === gridSize - 1 || iz === 0 || iz === gridSize - 1) {
                     const x = (ix - half) * spacing;
                     const z = (iz - half) * spacing;
-                    const p = new Pillar();
-                    p.position.set(x, 0, z);
-                    const pillarScale = 1.3;
-                    p.scale.set(pillarScale, 1, pillarScale);
-                    pillarGroup.add(p);
+
+                    const isCorner = (ix === 0 || ix === gridSize - 1) && (iz === 0 || iz === gridSize - 1);
+                    let randomState = 'perfect';
+
+                    if (!isCorner) {
+                        const states = ['perfect', 'broken', 'perfect', 'broken', 'missing'];
+                        randomState = states[Math.floor(Math.random() * states.length)];
+                    } else {
+                        randomState = 'perfect';
+                    }
+
+                    switch (randomState) {
+                        case 'perfect':
+                        case 'broken': {
+                            const p = new Pillar({state: randomState});
+                            p.position.set(x, 0, z);
+                            const pillarScale = 1.3;
+                            p.scale.set(pillarScale, 1, pillarScale);
+                            pillarGroup.add(p);
+                            break;
+                        }
+                        case 'missing':
+                            break;
+                    }
                 }
             }
         }
@@ -29,6 +53,7 @@ class MyTemple extends THREE.Object3D {
 
         // roof
         const roofGroup = new THREE.Group();
+        roofGroup.name = "RoofGroup";
         const size = gridSize * spacing;
 
 
@@ -103,7 +128,7 @@ class MyTemple extends THREE.Object3D {
 
         const detailY = stoneRing.position.y + (slabThickness * stoneRing.scale.y) / 2 + (detailHeight / 2);
         const spacingBetweenDetails = detailWidth + 1.8;
-        const numDetailsPerSide = Math.floor(ringSideLength / spacingBetweenDetails);
+        let numDetailsPerSide = Math.floor(ringSideLength / spacingBetweenDetails);
 
 
         if (numDetailsPerSide < 1 && ringSideLength > detailWidth) {
@@ -191,13 +216,42 @@ class MyTemple extends THREE.Object3D {
 
         
 
-        // base - stairs
+        // base, stairs
         const baseGroup = new THREE.Group();
-        const steps = 6;
+        baseGroup.name = "BaseGroup";
         const baseMat = new THREE.MeshPhongMaterial({ color: '#5a5a5a' });
 
-        const individualStairHeight = 1;
 
+        function applyGouge(targetBrush, bottomRadius, totalHeight, evaluator) {
+            const cutterSize = bottomRadius * (0.05 + Math.random() * 0.15);
+            const cutterGeo = new THREE.IcosahedronGeometry(cutterSize, 0);
+            const cutterBrush = new Brush(cutterGeo);
+
+            const angle = Math.random() * Math.PI * 2;
+            const offset = bottomRadius * (0.8 + Math.random() * 0.2); 
+
+            const brushPos = targetBrush.position;
+
+            // steps build from y=0 down to y=-totalHeight.
+            const yPos = -(totalHeight / 2) - (Math.random() * (totalHeight / 2));
+
+            cutterBrush.position.set(
+                brushPos.x + Math.cos(angle) * offset,
+                yPos,
+                brushPos.z + Math.sin(angle) * offset
+            );
+            cutterBrush.rotation.set(
+                Math.random() * Math.PI,
+                Math.random() * Math.PI,
+                Math.random() * Math.PI
+            );
+            cutterBrush.updateMatrixWorld();
+
+            return evaluator.evaluate(targetBrush, cutterBrush, SUBTRACTION);
+        }
+
+        let currentTotalHeightFromTop = 0;
+        let combinedBrush = null;
 
         for (let i = 0; i < steps; i++) {
             const scale = 1 + i * 0.18;
@@ -205,21 +259,33 @@ class MyTemple extends THREE.Object3D {
             const stepHeight = individualStairHeight;
 
             const stepGeo = new THREE.BoxGeometry(stepSize, stepHeight, stepSize);
-            const step = new THREE.Mesh(stepGeo, baseMat);
+            let stepBrush = new Brush(stepGeo);
+            stepBrush.position.set(0, -(currentTotalHeightFromTop + stepHeight / 2), 0);
+            stepBrush.updateMatrixWorld();
+            
+            if (combinedBrush === null) {
+                combinedBrush = stepBrush;
+            } else {
+                combinedBrush = evaluator.evaluate(combinedBrush, stepBrush, ADDITION);
+            }
 
-            const bottomOfCurrentStepY = i * stepHeight;
-
-            step.position.set(0, bottomOfCurrentStepY + stepHeight / 2, 0);
-
-            baseGroup.add(step);
-
+            currentTotalHeightFromTop += stepHeight;
         }
 
-        baseGroup.rotateX(Math.PI);
-        const baseHeight = steps * individualStairHeight;
-        baseGroup.position.set(0, baseHeight/2, 0);
+        if (combinedBrush) {
+            
+            const damageCount = 4;
+            const bottomStepRadius = (size * (1 + (steps - 1) * 0.18)) / 2;
 
+            for(let d = 0; d < damageCount; d++) {
+                combinedBrush = applyGouge(combinedBrush, bottomStepRadius, baseHeight, evaluator);
+            }
 
+            const baseMesh = new THREE.Mesh(combinedBrush.geometry, baseMat);
+            baseGroup.add(baseMesh);
+        }
+        
+        baseGroup.position.set(0, baseHeight, 0);
 
 
         // groups
@@ -228,14 +294,18 @@ class MyTemple extends THREE.Object3D {
         templeGroup.add(roofGroup);
         templeGroup.add(baseGroup);
 
-
                 
-        pillarGroup.position.set(0, baseHeight/2 + individualStairHeight/2, 0);
+        // group positioning
+        // pillar group on top of the base
+        pillarGroup.position.set(0, baseHeight, 0);
 
-        const box = new THREE.Box3().setFromObject(pillarGroup);
-        const pillarHeight = box.max.y;
-        roofGroup.position.set(0, pillarHeight, 0);
+        // roof on top of perfect pillars
+        const perfectPillarHeight = new Pillar({state: 'perfect'}).getHeight();
+        const pillarScaleY = 1;
+        
+        roofGroup.position.set(0, baseHeight + (perfectPillarHeight * pillarScaleY), 0);
 
+        //templeGroup.translateY(-2*individualStairHeight);
         this.add(templeGroup);
 
     }

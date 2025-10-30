@@ -197,7 +197,7 @@ class MyContents  {
 
 
         this.temple = new MyTemple();
-        this.temple.position.set(0, 2, 0);
+        this.temple.position.set(0, 0, 0);
         //this.temple.scale.set(3, 3, 3);
         this.app.scene.add(this.temple);
     }
