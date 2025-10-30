@@ -50,6 +50,8 @@ class MyContents  {
      * builds the seafloor with terrain, rocks and corals
      */
     buildSeafloor() {
+        // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+        /// temp function, only for visualization, still need to organize the scene and optimize the constructors
         this.seafloorGroup = new THREE.Group();
         this.seafloorGroup.name = "seafloorGroup";
 
@@ -57,18 +59,25 @@ class MyContents  {
         this.seafloorGroup.add(terrain);
         this.terrain = terrain;
 
+        // --- Define the spawn boundaries ---
+        const minArea = 50;
+        const maxArea = 90;
+
+
+
+        const maxRadius = maxArea/2;
+        const templeRadius = minArea/2;
+
         this.rocks = new THREE.Group();
         this.rocks.name = "rocks";
         for (let i = 0; i < 50; i++) {
             const rock = new MyRock(this, SgiUtils.rand(0.5, 2) * 1.5, SgiUtils.rand.bind(SgiUtils));
 
             while (true) {
-                const pos = new THREE.Vector3(
-                    SgiUtils.rand(-.5, .5) * 40,
-                    0,
-                    SgiUtils.rand(-.5, .5) * 40,
-                );
+                // Use the new spawn function to get a valid position
+                const pos = this.generateRandomSpawnPos(templeRadius, maxRadius);
 
+                // Now we only need to check for rock-to-rock distance
                 if (this.rocks.children.every((rock) => rock.position.distanceTo(pos) > rock.size + rock.size)) {
                     rock.position.copy(pos);
                     break;
@@ -79,7 +88,6 @@ class MyContents  {
         this.seafloorGroup.add(this.rocks);
 
         // Add Corals
-
         this.corals = new THREE.Group();
         this.corals.name = "corals";
 
@@ -89,18 +97,16 @@ class MyContents  {
             BrainCoral,
         ]
 
-        for (let i = 0; i < 25; ++i) {
+        for (let i = 0; i < 50; ++i) {
             const coral = new coralTypes[SgiUtils.randInt(coralTypes.length)](SgiUtils.rand(0, 0xffffff), 2);
 
             while (true) {
-                const pos = new THREE.Vector3(
-                    SgiUtils.rand(-.5, .5) * 40,
-                    0,
-                    SgiUtils.rand(-.5, .5) * 40,
-                );
+                // Use the new spawn function to get a valid position
+                const pos = this.generateRandomSpawnPos(templeRadius, maxRadius);
 
+                // Now we only need to check for rock/coral distances
                 if (this.rocks.children.every((rock) => rock.position.distanceTo(pos) > rock.size + 0.75)
-                    && this.corals.children.every((koral) => koral.position.distanceTo(pos) > 4)
+                    && this.corals.children.every((coral) => coral.position.distanceTo(pos) > 4)
                 ) {
                     coral.position.copy(pos);
                     break;
@@ -115,7 +121,7 @@ class MyContents  {
 
     buildSubmarine() {
         this.submarine = new MySubmarine(this.app, 1);
-        this.submarine.position.set(0, 5, 0);
+        this.submarine.position.set(0, 10, 0);
         this.app.scene.add(this.submarine);
     }
 
@@ -241,7 +247,7 @@ class MyContents  {
 
 
         this.temple = new MyTemple();
-        this.temple.position.set(0, 0, 0);
+        this.temple.position.set(0, 1, 0);
         const templeScale = 0.75;
         this.temple.scale.setScalar(templeScale);
         this.app.scene.add(this.temple);
@@ -271,6 +277,31 @@ class MyContents  {
         if (this.submarine && typeof this.submarine.update === 'function') {
             this.submarine.update(dt);
         }
+    }
+
+    generateRandomSpawnPos(templeRadius, maxRadius) {
+        // Generate a random position in the full area
+        let x = SgiUtils.rand(-maxRadius, maxRadius);
+        let z = SgiUtils.rand(-maxRadius, maxRadius);
+
+        // 
+
+        // Check if it's inside the temple's "forbidden" box
+        if (Math.abs(x) < templeRadius && Math.abs(z) < templeRadius) {
+            // It's inside. We must "push" it out to the allowed frame.
+            // Randomly pick which axis (X or Z) to push.
+            if (Math.random() > 0.5) {
+                // Push on the X-axis
+                // Set x to be in [templeRadius, maxRadius] or [-maxRadius, -templeRadius]
+                x = (x > 0 ? 1 : -1) * SgiUtils.rand(templeRadius, maxRadius);
+            } else {
+                // Push on the Z-axis
+                // Set z to be in [templeRadius, maxRadius] or [-maxRadius, -templeRadius]
+                z = (z > 0 ? 1 : -1) * SgiUtils.rand(templeRadius, maxRadius);
+            }
+        }
+
+        return new THREE.Vector3(x, 0, z);
     }
 }
 
