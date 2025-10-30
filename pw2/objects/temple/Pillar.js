@@ -1,0 +1,226 @@
+import * as THREE from 'three';
+import { SUBTRACTION, Brush, Evaluator } from 'https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.17/+esm';
+
+class Pillar extends THREE.Object3D {
+    /**
+     * Creates a Pillar, which can be in various states of disrepair.
+     * @param {object} options
+     * @param {string} options.state - 'perfect', 'broken'.
+     */
+    constructor(options = {}, material) {
+        super();
+
+        const { state = 'perfect' } = options;
+        this.random = Math.random;
+
+        this.pillarShaftHeight = 15;
+        this.radius = 1;
+        this.grooveCount = 32;
+        this.grooveRadius = 0.0986;
+        this.grooveOffset = 1.05;
+        this.radialSegments = 32;
+        this.materialColor = '#979797';
+
+        this.capThickness = 0.5;
+        this.capRadius = this.radius * 1.08;
+        
+        this.hexCapThicknessTop = 0.5;
+        this.hexCapThicknessBottom = 1;
+        this.hexCapRadius = this.radius * 1.5;
+        this.hexCapSegments = 6;
+
+        this.material = material;
+        this.evaluator = new Evaluator();
+        
+        this.totalHeight = this.pillarShaftHeight + this.hexCapThicknessTop + this.capThickness;
+        this.finalHeight = 0;
+
+        switch (state) {
+            case 'broken':
+                this.buildBrokenPillar();
+                break;
+            case 'perfect':
+            default:
+                this.buildPerfectPillar();
+                break;
+        }
+    }
+
+    buildPerfectPillar() {
+        let columnBrush = this.buildGroovedColumn(this.pillarShaftHeight);
+
+        const mesh = new THREE.Mesh(columnBrush.geometry, this.material);
+        this.add(mesh);
+
+        this.add(this.buildTopCaps());
+        this.add(this.buildBottomCaps());
+        
+        this.finalHeight = this.totalHeight;
+    }
+
+    buildBrokenPillar() {
+        const brokenHeight = this.pillarShaftHeight * (0.3 + this.random() * 0.6);
+        let columnBrush = this.buildGroovedColumn(brokenHeight);
+
+        const cutterRadius = this.radius * 2.5;
+        const breakCutterGeo = this.random() > 0.5 
+            ? new THREE.DodecahedronGeometry(cutterRadius, 0) 
+            : new THREE.IcosahedronGeometry(cutterRadius, 0);
+        const breakCutter = new Brush(breakCutterGeo);
+        
+        breakCutter.position.set(
+            (this.random() * 2 - 1) * 0.5,
+            brokenHeight,
+            (this.random() * 2 - 1) * 0.5 
+        );
+        breakCutter.rotation.set(
+            (this.random() * 2 - 1) * 0.7,
+            this.random() * Math.PI,      
+            (this.random() * 2 - 1) * 0.7
+        );
+        breakCutter.updateMatrixWorld();
+
+        columnBrush = this.evaluator.evaluate(columnBrush, breakCutter, SUBTRACTION);
+        
+        const mesh = new THREE.Mesh(columnBrush.geometry, this.material);
+        this.add(mesh);
+
+        this.add(this.buildBottomCaps());
+        
+        this.finalHeight = brokenHeight;
+    }
+
+    /**
+     * Subtracts a small, random, irregular shape from a brush's edge.
+     * @param {Brush} targetBrush - The brush to be damaged (must be positioned).
+     * @param {number} radius - The radius of the brush, for positioning the chip.
+     * @param {number} height - The height of the brush, for positioning.
+     * @returns {Brush} The resulting damaged brush.
+     */
+    chipEdge(targetBrush, radius, height) {
+        const cutterSize = radius * (0.4 + this.random() * 0.4);
+        const cutterGeo = new THREE.IcosahedronGeometry(cutterSize, 0);
+        
+        const heightScale = 0.5 + this.random() * 1.0;
+        cutterGeo.scale(1, heightScale, 1);
+        
+        const cutterBrush = new Brush(cutterGeo);
+
+        const angle = this.random() * Math.PI * 2;
+        const offset = radius * (0.8 + this.random() * 0.2);
+
+        const brushPos = targetBrush.position;
+        cutterBrush.position.set(
+            brushPos.x + Math.cos(angle) * offset,
+            brushPos.y + (this.random() - 0.5) * height,
+            brushPos.z + Math.sin(angle) * offset
+        );
+        cutterBrush.rotation.set(
+            this.random() * Math.PI,
+            this.random() * Math.PI,
+            this.random() * Math.PI
+        );
+        cutterBrush.updateMatrixWorld();
+
+        return this.evaluator.evaluate(targetBrush, cutterBrush, SUBTRACTION);
+    }
+
+
+    buildGroovedColumn(height) {
+        // base pillar brush (y=0)
+        const baseGeo = new THREE.CylinderGeometry(this.radius, this.radius, height, this.radialSegments);
+        let currentBrush = new Brush(baseGeo);
+        currentBrush.position.set(0, height / 2, 0);
+        currentBrush.updateMatrixWorld();
+
+        // Groove cutters
+        const grooveHeight = height + 2;
+
+        for (let i = 0; i < this.grooveCount; i++) {
+            const angle = (i / this.grooveCount) * Math.PI * 2;
+            const gGeo = new THREE.CylinderGeometry(this.grooveRadius, this.grooveRadius, grooveHeight, 16);
+            const grooveBrush = new Brush(gGeo);
+            
+            grooveBrush.position.set(
+                Math.cos(angle) * this.grooveOffset,
+                height / 2,
+                Math.sin(angle) * this.grooveOffset
+            );
+            grooveBrush.updateMatrixWorld();
+            currentBrush = this.evaluator.evaluate(currentBrush, grooveBrush, SUBTRACTION);
+        }
+
+        const damageCount = 2 + Math.floor(this.random() * 4);
+        for (let i = 0; i < damageCount; i++) {
+            currentBrush = this.chipEdge(currentBrush, this.radius, height);
+        }
+
+        return currentBrush;
+    }
+
+    buildTopCaps() {
+        const group = new THREE.Group();
+        
+        // round cap
+        const topCapGeo = new THREE.CylinderGeometry(this.capRadius, this.capRadius, this.capThickness, this.radialSegments);
+        let topCapBrush = new Brush(topCapGeo);
+        const topCapY = this.pillarShaftHeight + this.capThickness / 2;
+        topCapBrush.position.set(0, topCapY, 0);
+        topCapBrush.updateMatrixWorld();
+
+        topCapBrush = this.chipEdge(topCapBrush, this.capRadius, this.capThickness);
+        const topCap = new THREE.Mesh(topCapBrush.geometry, this.material);
+        group.add(topCap);
+
+        // hex cap
+        const hexTopCapGeo = new THREE.CylinderGeometry(this.hexCapRadius, this.hexCapRadius, this.hexCapThicknessTop, this.hexCapSegments);
+        let hexTopBrush = new Brush(hexTopCapGeo);
+        const hexTopY = this.pillarShaftHeight + this.capThickness + this.hexCapThicknessTop / 2;
+        hexTopBrush.rotationY = this.random() * Math.PI * 2;
+        hexTopBrush.position.set(0, hexTopY, 0);
+        hexTopBrush.updateMatrixWorld();
+
+        hexTopBrush = this.chipEdge(hexTopBrush, this.hexCapRadius, this.hexCapThicknessTop);
+        const hexTopCap = new THREE.Mesh(hexTopBrush.geometry, this.material);
+        group.add(hexTopCap);
+
+        return group;
+    }
+
+    buildBottomCaps() {
+        const group = new THREE.Group();
+
+        // round cap
+        const bottomCapGeo = new THREE.CylinderGeometry(this.capRadius, this.capRadius, this.capThickness, this.radialSegments);
+        let bottomCapBrush = new Brush(bottomCapGeo);
+        bottomCapBrush.position.set(0, this.capThickness / 2, 0);
+        bottomCapBrush.updateMatrixWorld();
+
+        bottomCapBrush = this.chipEdge(bottomCapBrush, this.capRadius, this.capThickness);
+        
+        const bottomCap = new THREE.Mesh(bottomCapBrush.geometry, this.material);
+        group.add(bottomCap);
+
+        // hex cap
+        const hexBottomCapGeo = new THREE.CylinderGeometry(this.hexCapRadius, this.hexCapRadius, this.hexCapThicknessBottom, this.hexCapSegments);
+        let hexBottomBrush = new Brush(hexBottomCapGeo);
+        hexBottomBrush.position.set(0, this.capThickness / 2, 0);
+        hexBottomBrush.updateMatrixWorld();
+        
+        hexBottomBrush = this.chipEdge(hexBottomBrush, this.hexCapRadius, this.hexCapThicknessBottom);
+        
+        const hexBottomCap = new THREE.Mesh(hexBottomBrush.geometry, this.material);
+        group.add(hexBottomCap);
+
+        return group;
+    }
+
+    /** Returns the final calculated height of the built object. */
+    getHeight() {
+        return this.finalHeight;
+    }
+}
+
+
+export { Pillar };
+

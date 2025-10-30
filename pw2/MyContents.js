@@ -6,6 +6,7 @@ import { BrainCoral } from './objects/corals/BrainCoral.js';
 import { MyTerrain } from './objects/terrain/MyTerrain.js';
 import { MyRock } from './objects/terrain/MyRock.js';
 import { LSystemCoral } from './objects/corals/LSystemCoral.js';
+import { MyTemple } from './objects/temple/MyTemple.js';
 import { MyFishLOD } from './objects/fish/MyFishLOD.js';
 import { FishFlock } from './objects/fish/FishFlock.js';
 import { MySubmarine } from './objects/submarine/MySubmarine.js';
@@ -24,7 +25,6 @@ class MyContents  {
         this.app = app
 
         this.axis = null;
-        this.wireframeMode = false;
 
         // seafloor related attributes
         this.seafloorGroup = null;
@@ -55,6 +55,7 @@ class MyContents  {
 
         const terrain = new MyTerrain(this.app);
         this.seafloorGroup.add(terrain);
+        this.terrain = terrain;
 
         this.rocks = new THREE.Group();
         this.rocks.name = "rocks";
@@ -204,27 +205,46 @@ class MyContents  {
             // create and attach the axis to the scene
             this.axis = new MyAxis(this)
             this.app.scene.add(this.axis)
-        }
+        }       
 
-        // add a point light on top of the model
-        const pointLight = new THREE.PointLight( 0xffffff, 1000, 0 );
-        pointLight.position.set( 0, 20, 0 );
-        this.app.scene.add( pointLight );
+        // Balanced lighting: hemisphere (ambient-ish), directional key, and a soft fill
+        // Hemisphere light gives a sky/ground color balance
+        const hemi = new THREE.HemisphereLight(0x88aaff, 0x444422, 0.6);
+        this.app.scene.add(hemi);
 
-        // add a point light helper for the previous point light
-        const sphereSize = 0.5;
-        const pointLightHelper = new THREE.PointLightHelper( pointLight, sphereSize );
-        this.app.scene.add( pointLightHelper );
+        // Directional light as the main (sun/key) light — casts stronger shading without blowing out details
+        const dir = new THREE.DirectionalLight(0xffffff, 3);
+        dir.position.set(5, 10, 5);
+        dir.castShadow = true;
+        dir.shadow.mapSize.set(1024, 1024);
+        dir.shadow.camera.near = 0.5;
+        dir.shadow.camera.far = 50;
+        this.app.scene.add(dir);
 
-        // add an ambient light
-        const ambientLight = new THREE.AmbientLight( 0xffffff );
-        this.app.scene.add( ambientLight );
+        // soft fill point light to lift shadowed areas slightly
+        const fill = new THREE.PointLight(0xffffff, 0.25, 30, 2); // intensity, distance, decay
+        fill.position.set(-5, 3, -5);
+        this.app.scene.add(fill);
+
+        // low ambient to preserve overall visibility but keep contrast
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+        this.app.scene.add(ambientLight);
+
 
         this.buildSeafloor();
         this.buildSubmarine();
         this.buildFishGroups(3, 100, 200);
 
         this._lastUpdateTime = Date.now() * 0.001;
+        this.app.scene.add(this.fishGroup);
+
+
+
+        this.temple = new MyTemple();
+        this.temple.position.set(0, 0, 0);
+        const templeScale = 0.75;
+        this.temple.scale.setScalar(templeScale);
+        this.app.scene.add(this.temple);
     }
 
     /**
