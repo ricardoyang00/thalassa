@@ -51,51 +51,49 @@ class MyTemple extends THREE.Object3D {
 
 
 
-        // roof
+// roof
         const roofGroup = new THREE.Group();
         roofGroup.name = "RoofGroup";
         const size = gridSize * spacing;
-
 
         const slabThickness = 2;
         const largeStoneGeo = new THREE.BoxGeometry(size * 0.95, slabThickness, size * 0.95);
         const largeStoneMat = new THREE.MeshPhongMaterial({ color: '#979797' });
 
-
-
         const evaluator = new Evaluator();
 
-
-
-        let mainSlabBrush = new Brush(largeStoneGeo); 
+        let mainSlabBrush = new Brush(largeStoneGeo);
         const gGeo = new THREE.BoxGeometry(size * 0.75, slabThickness, size * 0.75);
         const cuttingBrush = new Brush(gGeo);
 
         mainSlabBrush = evaluator.evaluate(mainSlabBrush, cuttingBrush, SUBTRACTION);
 
 
-        const largeStone = new THREE.Mesh(mainSlabBrush.geometry, largeStoneMat);
+        let combinedRoofBrush = null;
 
-        largeStone.position.set(0, slabThickness / 2, 0);
-        roofGroup.add(largeStone);
+        // largeStone (base slab)
+        let brush1 = mainSlabBrush.clone();
+        brush1.position.set(0, slabThickness / 2, 0);
+        brush1.updateMatrixWorld();
+        combinedRoofBrush = brush1;
 
-        const stoneRing = largeStone.clone();
-        stoneRing.scale.set(1.01, 0.1, 1.01);
-        stoneRing.position.set(0, slabThickness, 0);
-        roofGroup.add(stoneRing);
+        // stoneRing
+        let brush2 = mainSlabBrush.clone();
+        brush2.scale.set(1.01, 0.1, 1.01);
+        brush2.position.set(0, slabThickness, 0);
+        brush2.updateMatrixWorld();
+        combinedRoofBrush = evaluator.evaluate(combinedRoofBrush, brush2, ADDITION);
 
-
-        const largeStone2 = largeStone.clone();
+        // largeStone2
+        let brush3 = mainSlabBrush.clone();
         const largeStone2ScaleY = 1.25;
-        largeStone2.scale.set(0.96, largeStone2ScaleY, 0.96);
-
-        largeStone2.position.set(0, slabThickness + (slabThickness * largeStone2ScaleY) / 2, 0);
-        roofGroup.add(largeStone2);
-
+        brush3.scale.set(0.96, largeStone2ScaleY, 0.96);
+        brush3.position.set(0, slabThickness + (slabThickness * largeStone2ScaleY) / 2, 0);
+        brush3.updateMatrixWorld();
+        combinedRoofBrush = evaluator.evaluate(combinedRoofBrush, brush3, ADDITION);
 
 
         // details
-
         const detailWidth = 1.5;
         const detailDepth = 1;
         const detailHeight = slabThickness * largeStone2ScaleY - 0.1;
@@ -118,18 +116,14 @@ class MyTemple extends THREE.Object3D {
         cut.updateMatrixWorld();
         detailBrush = evaluator.evaluate(detailBrush, cut, SUBTRACTION);
 
-        
-
-
 
         // details around stone ring
-        const ringSideLength = (size * 0.95) * stoneRing.scale.x;
+        const ringSideLength = (size * 0.95) * 1.01;
         const halfRingSide = ringSideLength / 2;
 
-        const detailY = stoneRing.position.y + (slabThickness * stoneRing.scale.y) / 2 + (detailHeight / 2);
+        const detailY = slabThickness + (slabThickness * 0.1) / 2 + (detailHeight / 2);
         const spacingBetweenDetails = detailWidth + 1.8;
         let numDetailsPerSide = Math.floor(ringSideLength / spacingBetweenDetails);
-
 
         if (numDetailsPerSide < 1 && ringSideLength > detailWidth) {
             numDetailsPerSide = 1;
@@ -144,17 +138,13 @@ class MyTemple extends THREE.Object3D {
         ];
 
         sides.forEach(side => {
-            
             const totalDetailsWidth = (numDetailsPerSide * detailWidth) + ((numDetailsPerSide - 1) * (spacingBetweenDetails - detailWidth));
             const startPositionOffset = (ringSideLength - totalDetailsWidth) / 2;
 
             for (let i = 0; i < numDetailsPerSide; i++) {
-                const detailInstance = new THREE.Mesh(detailBrush.geometry, largeStoneMat); 
-
+                const detailInstanceBrush = new Brush(detailBrush.geometry, largeStoneMat);
                 let currentX, currentZ;
-
                 const varyingCoord = -halfRingSide + startPositionOffset + (i * spacingBetweenDetails) + (detailWidth / 2);
-
 
                 if (side.fixedCoordAxis === 'z') {
                     currentX = varyingCoord;
@@ -164,36 +154,39 @@ class MyTemple extends THREE.Object3D {
                     currentZ = varyingCoord;
                 }
 
-                detailInstance.position.set(currentX, detailY, currentZ);
-                detailInstance.rotation.y = side.rotationY;
-                detailInstance.scale.set(1, 1, 1);
+                detailInstanceBrush.position.set(currentX, detailY, currentZ);
+                detailInstanceBrush.rotation.y = side.rotationY;
+                detailInstanceBrush.updateMatrixWorld();
 
-                roofGroup.add(detailInstance);
+                combinedRoofBrush = evaluator.evaluate(combinedRoofBrush, detailInstanceBrush, ADDITION);
             }
         });
 
-        const stoneRing2 = stoneRing.clone();
-        stoneRing2.position.set(0, detailY + detailHeight/2, 0);
-        roofGroup.add(stoneRing2);
+        // stoneRing2
+        let brush4 = mainSlabBrush.clone();
+        brush4.scale.set(1.01, 0.1, 1.01); // same as stoneRing
+        brush4.position.set(0, detailY + detailHeight / 2, 0);
+        brush4.updateMatrixWorld();
+        combinedRoofBrush = evaluator.evaluate(combinedRoofBrush, brush4, ADDITION);
 
-        const largeStone3 = largeStone.clone();
+        // largeStone3
+        let brush5 = mainSlabBrush.clone();
         let stone3Scale = 0.4;
-        largeStone3.scale.set(1, stone3Scale, 1);
-        largeStone3.position.set(0, detailY + detailHeight/2 + (slabThickness * stone3Scale) / 2, 0);
-        roofGroup.add(largeStone3);
+        brush5.scale.set(1, stone3Scale, 1);
+        brush5.position.set(0, detailY + detailHeight / 2 + (slabThickness * stone3Scale) / 2, 0);
+        brush5.updateMatrixWorld();
+        combinedRoofBrush = evaluator.evaluate(combinedRoofBrush, brush5, ADDITION);
 
 
-
-        
         // triangular prism roof
-        const mainTriPrismGeo = new THREE.CylinderGeometry(1,1,1,3);
+        const mainTriPrismGeo = new THREE.CylinderGeometry(1, 1, 1, 3);
         let mainTriPrismBrush = new Brush(mainTriPrismGeo);
         mainTriPrismBrush.position.set(0, 0, 0);
         mainTriPrismBrush.updateMatrixWorld();
 
         const cutterRadius = 0.8;
         const cutterHeight = 0.05;
-        const cutterGeo = new THREE.CylinderGeometry(cutterRadius,cutterRadius,cutterHeight,3);
+        const cutterGeo = new THREE.CylinderGeometry(cutterRadius, cutterRadius, cutterHeight, 3);
 
         let cutterBrush = new Brush(cutterGeo);
         cutterBrush.position.set(0, 0.5 - cutterHeight / 2, 0);
@@ -203,19 +196,44 @@ class MyTemple extends THREE.Object3D {
         cutterBrush.updateMatrixWorld();
         mainTriPrismBrush = evaluator.evaluate(mainTriPrismBrush, cutterBrush, SUBTRACTION);
 
-        const roof = new THREE.Mesh(mainTriPrismBrush.geometry, largeStoneMat);
-        //roofGroup.add(roof);
         const roofHeight = 4;
+        const roofScaleX = (ringSideLength / 2) * 1.1;
+        const roofScaleY = ringSideLength;
+        const roofScaleZ = roofHeight;
+        const roofPosY = detailY + detailHeight / 2 + (slabThickness * stone3Scale) + roofHeight / 2;
 
-        roof.scale.set((ringSideLength / 2)*1.1, ringSideLength, roofHeight);
-        roof.position.set(0, detailY + detailHeight/2 + (slabThickness * stone3Scale) + roofHeight / 2, 0);
-        roof.rotateX(-Math.PI / 2);
-        roof.rotateZ(Math.PI / 2);
-        roofGroup.add(roof);
+
+        let prismBrush = mainTriPrismBrush.clone();
+        
+        prismBrush.scale.set(roofScaleX, roofScaleY, roofScaleZ);
+        prismBrush.position.set(0, roofPosY, 0);
+        prismBrush.rotation.set(-Math.PI / 2, 0, Math.PI / 2);
+        prismBrush.updateMatrixWorld();
+
+        combinedRoofBrush = evaluator.evaluate(combinedRoofBrush, prismBrush, ADDITION);
+
+
+        // roof destruction cut
+        const largeCutterGeo = new THREE.IcosahedronGeometry(roofScaleY * 0.62, 0);
+        let largeCutterBrush = new Brush(largeCutterGeo);
+
+        largeCutterBrush.position.set(
+            -2.4833478927970667, 3.65, 8.191346841708041
+        );
+
+        largeCutterBrush.rotation.set(
+            0.17190979866464334, 0.10249676695641013, 0.026383030320124057
+        );
+
+        largeCutterBrush.updateMatrixWorld();
+        
+        combinedRoofBrush = evaluator.evaluate(combinedRoofBrush, largeCutterBrush, SUBTRACTION);
+
+        const finalRoofMesh = new THREE.Mesh(combinedRoofBrush.geometry, largeStoneMat);
+        roofGroup.add(finalRoofMesh);
 
 
         
-
         // base, stairs
         const baseGroup = new THREE.Group();
         baseGroup.name = "BaseGroup";
