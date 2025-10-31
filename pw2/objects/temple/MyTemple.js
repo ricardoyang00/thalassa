@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Pillar } from './pillar.js';
+import { Pillar } from './Pillar.js';
 import { SUBTRACTION, ADDITION, Brush, Evaluator } from 'https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.17/+esm';
 
 class MyTemple extends THREE.Object3D {
