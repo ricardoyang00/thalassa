@@ -133,20 +133,47 @@ export class LSystemCoral extends THREE.LOD {
             }
         }
 
-        const branchMat = new THREE.MeshStandardMaterial({ 
+        const staticBranchMat = new THREE.MeshStandardMaterial({
             color, metalness: 0.1, 
             roughness: 0.8, 
-            map: new THREE.TextureLoader().load('textures/tube-coral.png') });
-        const branchMeshGen = (radialSegments) => new THREE.InstancedMesh(
+            map: new THREE.TextureLoader().load('textures/tube-coral.png')
+        });
+
+        const swayingBranchMat = staticBranchMat.clone();
+
+        swayingBranchMat.onBeforeCompile = (shader) => {
+            shader.uniforms.time = { value: 0 };
+
+            shader.vertexShader =
+                `
+                uniform float time;
+                const vec2 windDir = vec2(0.5, 1.0);
+                const float windStrength = 0.1;
+                `
+                + shader.vertexShader.replace(
+                '#include <begin_vertex>',
+                `
+                #include <begin_vertex>
+
+                float wave = sin(dot(position.xz, windDir) * 2.0 + time * 2.0);
+                transformed.x += wave * windDir.x * windStrength;
+                transformed.z += wave * windDir.y * windStrength;
+                `
+            );
+
+            swayingBranchMat.userData.shader = shader;
+        }
+
+        const branchMeshGen = (radialSegments, material) => new THREE.InstancedMesh(
             new THREE.CylinderGeometry(0.15, 0.15, 1, radialSegments, 1).translate(0, 0.5, 0),
-            branchMat,
+            material,
             branchMatrices.length,
         );
 
         const detailLevels = [
-            branchMeshGen(16),
-            branchMeshGen(5),
-            branchMeshGen(3),
+            branchMeshGen(16, swayingBranchMat),
+            branchMeshGen(5, swayingBranchMat),
+            branchMeshGen(3, staticBranchMat),
         ];
         detailLevels.forEach((level) => branchMatrices.forEach((matrix, i) => level.setMatrixAt(i, matrix)));
 

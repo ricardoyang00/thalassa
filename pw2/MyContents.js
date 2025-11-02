@@ -196,7 +196,19 @@ class MyContents  {
         this.fishGroup.scale.setScalar(s);
     }
 
-    update() {}
+    update() {
+        const now = Date.now() * 0.001; // Convert to seconds
+        const dt = this._lastUpdateTime ? Math.min(0.1, now - this._lastUpdateTime) : 0;
+        this._lastUpdateTime = now;
+
+        this.corals?.children.forEach((coral) => {
+            if (coral instanceof LSystemCoral) {
+                const time = coral.levels[coral.getCurrentLevel()].object.material.userData?.shader?.uniforms.time;
+                if (time)
+                    time.value = now % (2*Math.PI);
+            }
+        });
+    }
 }
 
 export { MyContents };
