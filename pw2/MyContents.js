@@ -215,11 +215,11 @@ class MyContents  {
 
         // Balanced lighting: hemisphere (ambient-ish), directional key, and a soft fill
         // Hemisphere light gives a sky/ground color balance
-        const hemi = new THREE.HemisphereLight(0x88aaff, 0x444422, 0.6);
+        const hemi = new THREE.HemisphereLight(0x88aaff, 0x444422, 0.2);
         this.app.scene.add(hemi);
 
         // Directional light as the main (sun/key) light — casts stronger shading without blowing out details
-        const dir = new THREE.DirectionalLight(0xffffff, 3);
+        const dir = new THREE.DirectionalLight(0xffffff, 0.1);
         dir.position.set(5, 10, 5);
         dir.castShadow = true;
         dir.shadow.mapSize.set(1024, 1024);
@@ -227,10 +227,38 @@ class MyContents  {
         dir.shadow.camera.far = 50;
         this.app.scene.add(dir);
 
-        // soft fill point light to lift shadowed areas slightly
-        const fill = new THREE.PointLight(0xffffff, 0.25, 30, 2); // intensity, distance, decay
-        fill.position.set(-5, 3, -5);
-        this.app.scene.add(fill);
+        // // soft fill point light to lift shadowed areas slightly
+        // const fill = new THREE.PointLight(0xffffff, 0, 30, 2); // intensity, distance, decay
+        // fill.position.set(-5, 3, -5);
+        // this.app.scene.add(fill);
+
+        const spot1 = new THREE.SpotLight(0xffffff, 7500);
+        spot1.position.set(30, 50, -30);
+        spot1.target.position.set(0, 0, 0);
+        spot1.angle = Math.PI / 6;
+        spot1.penumbra = 0.2;
+        spot1.decay = 2;
+        spot1.distance = 100;
+        spot1.castShadow = true;
+        this.app.scene.add(spot1);
+
+        const spotLightHelper1 = new THREE.SpotLightHelper(spot1);
+        //this.app.scene.add(spotLightHelper1);
+
+        const spot2 = new THREE.SpotLight(0xffffff, 7500);
+        spot2.position.set(-30, 50, 30);
+        spot2.target.position.set(0, 0, 0);
+        spot2.angle = Math.PI / 6;
+        spot2.penumbra = 0.2;
+        spot2.decay = 2;
+        spot2.distance = 100;
+        spot2.castShadow = true;
+        this.app.scene.add(spot2);
+        
+        const spotLightHelper2 = new THREE.SpotLightHelper(spot2);
+        //this.app.scene.add(spotLightHelper2);
+
+
 
         // low ambient to preserve overall visibility but keep contrast
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
