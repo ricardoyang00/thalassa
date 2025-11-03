@@ -133,47 +133,43 @@ export class LSystemCoral extends THREE.LOD {
             }
         }
 
-        const staticBranchMat = new THREE.MeshStandardMaterial({
+        const branchMat = new THREE.MeshStandardMaterial({
             color, metalness: 0.1, 
             roughness: 0.8, 
             map: new THREE.TextureLoader().load('textures/tube-coral.png')
         });
 
-        const swayingBranchMat = staticBranchMat.clone();
-
-        swayingBranchMat.onBeforeCompile = (shader) => {
+        branchMat.onBeforeCompile = (shader) => {
             shader.uniforms.time = { value: 0 };
 
-            shader.vertexShader =
+            // Manual vertex projection, might not work on different/future versions
+            shader.vertexShader = 'uniform float time;\n' + shader.vertexShader.replace(
+                '#include <project_vertex>',
                 `
-                uniform float time;
-                const vec2 windDir = vec2(0.5, 1.0);
-                const float windStrength = 0.1;
-                `
-                + shader.vertexShader.replace(
-                '#include <begin_vertex>',
-                `
-                #include <begin_vertex>
+                vec4 mvPosition = vec4( transformed, 1.0 );
+                mvPosition = instanceMatrix * mvPosition;
 
-                float wave = sin(dot(position.xz, windDir) * 2.0 + time * 2.0);
-                transformed.x += wave * windDir.x * windStrength;
-                transformed.z += wave * windDir.y * windStrength;
+                float sway = 1.0 + 0.5 * (sin(2.0 * time) + cos(time));
+                mvPosition.x += 0.2 * mvPosition.y * sway;
+
+                mvPosition = modelViewMatrix * mvPosition;
+                gl_Position = projectionMatrix * mvPosition;
                 `
             );
 
-            swayingBranchMat.userData.shader = shader;
+            branchMat.userData.shader = shader;
         }
 
-        const branchMeshGen = (radialSegments, material) => new THREE.InstancedMesh(
+        const branchMeshGen = (radialSegments) => new THREE.InstancedMesh(
             new THREE.CylinderGeometry(0.15, 0.15, 1, radialSegments, 1).translate(0, 0.5, 0),
-            material,
+            branchMat,
             branchMatrices.length,
         );
 
         const detailLevels = [
-            branchMeshGen(16, swayingBranchMat),
-            branchMeshGen(5, swayingBranchMat),
-            branchMeshGen(3, staticBranchMat),
+            branchMeshGen(16),
+            branchMeshGen(5),
+            branchMeshGen(3),
         ];
         detailLevels.forEach((level) => branchMatrices.forEach((matrix, i) => level.setMatrixAt(i, matrix)));
 
