@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { SgiUtils } from '../../SgiUtils.js';
 
 export class LSystemCoral extends THREE.LOD {
+    static #idCounter = 0;
+
     constructor(color = 0xffffff, size = 1) {
         super();
         this.size = size;
@@ -141,16 +143,27 @@ export class LSystemCoral extends THREE.LOD {
 
         branchMat.onBeforeCompile = (shader) => {
             shader.uniforms.time = { value: 0 };
+            shader.uniforms.timeBias = { value: LSystemCoral.#idCounter++ };
 
             // Manual vertex projection, might not work on different/future versions
-            shader.vertexShader = 'uniform float time;\n' + shader.vertexShader.replace(
+            shader.vertexShader =
+                `
+                uniform float time;
+                uniform float timeBias;
+                `
+                + shader.vertexShader.replace(
                 '#include <project_vertex>',
                 `
                 vec4 mvPosition = vec4( transformed, 1.0 );
                 mvPosition = instanceMatrix * mvPosition;
 
-                float sway = 1.0 + 0.5 * (sin(2.0 * time) + cos(time));
-                mvPosition.x += 0.2 * mvPosition.y * sway;
+                float coralAlpha = time + timeBias;
+                float sway = 0.2 + 0.1 * (
+                    sin(2.0 * mod(coralAlpha, PI))
+                    +
+                    cos(mod(coralAlpha, 2.0 * PI))
+                );
+                mvPosition.x += mvPosition.y * sway;
 
                 mvPosition = modelViewMatrix * mvPosition;
                 gl_Position = projectionMatrix * mvPosition;
