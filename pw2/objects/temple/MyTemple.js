@@ -63,6 +63,9 @@ class MyTemple extends THREE.Object3D {
         const individualStairHeight = 1;
         const baseHeight = steps * individualStairHeight;
 
+        const clock = new THREE.Clock(true);
+        clock.start();
+
         let isFirstMissing = true;
         let firstMissingCoords = null;
         for (let ix = 0; ix < gridSize; ix++) {
@@ -156,6 +159,7 @@ class MyTemple extends THREE.Object3D {
             }
         }
 
+        console.info(`Temple Pillars took ${clock.getDelta()}s to build`);
 
 
         // roof
@@ -365,6 +369,7 @@ class MyTemple extends THREE.Object3D {
         finalPrismMesh.geometry.computeVertexNormals();
         roofGroup.add(finalPrismMesh);
 
+        console.info(`Temple Roof took ${clock.getDelta()}s to build`);
 
         
         // base, stairs
@@ -461,6 +466,8 @@ class MyTemple extends THREE.Object3D {
             baseMesh.geometry.computeVertexNormals();
             baseGroup.add(baseMesh);
         }
+
+        console.info(`Temple Base took ${clock.getDelta()}s to build`);
         
         baseGroup.position.set(0, baseHeight, 0);
 

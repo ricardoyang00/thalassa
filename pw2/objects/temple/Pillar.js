@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { SUBTRACTION, Brush, Evaluator } from 'https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.17/+esm';
 
 class Pillar extends THREE.Object3D {
+    static #groovedColumnGeometry;
+
     /**
      * Creates a Pillar, which can be in various states of disrepair.
      * @param {object} options
@@ -127,28 +129,43 @@ class Pillar extends THREE.Object3D {
 
 
     buildGroovedColumn(height) {
-        // base pillar brush (y=0)
-        const baseGeo = new THREE.CylinderGeometry(this.radius, this.radius, height, this.radialSegments);
-        let currentBrush = new Brush(baseGeo);
-        currentBrush.position.set(0, height / 2, 0);
-        currentBrush.updateMatrixWorld();
+        // only build clean geometry once to greatly speed up generation
+        if (Pillar.#groovedColumnGeometry === undefined) {
+            const height = 1;
 
-        // Groove cutters
-        const grooveHeight = height + 2;
+            // base pillar brush (y=0)
+            const baseGeo = new THREE.CylinderGeometry(this.radius, this.radius, height, this.radialSegments);
+            let bruh = new Brush(baseGeo);
+            bruh.position.set(0, height / 2, 0);
+            bruh.updateMatrixWorld();
 
-        for (let i = 0; i < this.grooveCount; i++) {
-            const angle = (i / this.grooveCount) * Math.PI * 2;
-            const gGeo = new THREE.CylinderGeometry(this.grooveRadius, this.grooveRadius, grooveHeight, 16);
-            const grooveBrush = new Brush(gGeo);
-            
-            grooveBrush.position.set(
-                Math.cos(angle) * this.grooveOffset,
-                height / 2,
-                Math.sin(angle) * this.grooveOffset
-            );
-            grooveBrush.updateMatrixWorld();
-            currentBrush = this.evaluator.evaluate(currentBrush, grooveBrush, SUBTRACTION);
+            // Groove cutters
+            const grooveHeight = height + 2;
+
+            for (let i = 0; i < this.grooveCount; i++) {
+                const angle = (i / this.grooveCount) * Math.PI * 2;
+                const gGeo = new THREE.CylinderGeometry(this.grooveRadius, this.grooveRadius, grooveHeight, 6);
+                const grooveBrush = new Brush(gGeo);
+
+                grooveBrush.position.set(
+                    Math.cos(angle) * this.grooveOffset,
+                    height / 2,
+                    Math.sin(angle) * this.grooveOffset
+                );
+                grooveBrush.updateMatrixWorld();
+                bruh = this.evaluator.evaluate(bruh, grooveBrush, SUBTRACTION);
+
+                Pillar.#groovedColumnGeometry = bruh.geometry;
+                Pillar.#groovedColumnGeometry.parameters = {
+                    height: height,
+                };
+            }
         }
+
+        let currentBrush = new Brush(
+            Pillar.#groovedColumnGeometry.clone()
+            .scale(1, height, 1)
+        );
 
         const damageCount = 2 + Math.floor(this.random() * 4);
         for (let i = 0; i < damageCount; i++) {
