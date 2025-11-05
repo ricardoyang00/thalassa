@@ -3,6 +3,7 @@ import { SUBTRACTION, Brush, Evaluator } from 'https://cdn.jsdelivr.net/npm/thre
 
 class Pillar extends THREE.Object3D {
     static #groovedColumnGeometry;
+    static #bumpTexture = new THREE.TextureLoader().load("textures/pillar.png");
 
     /**
      * Creates a Pillar, which can be in various states of disrepair.
@@ -49,11 +50,9 @@ class Pillar extends THREE.Object3D {
     }
 
     buildPerfectPillar() {
-        let columnBrush = this.buildGroovedColumn(this.pillarShaftHeight);
+        const columnBrushes = this.buildGroovedColumn(this.pillarShaftHeight);
 
-        const mesh = new THREE.Mesh(columnBrush.geometry, this.material);
-        this.add(mesh);
-
+        this.add(this.buildColumnLOD(columnBrushes));
         this.add(this.buildTopCaps());
         this.add(this.buildBottomCaps());
         
@@ -62,7 +61,7 @@ class Pillar extends THREE.Object3D {
 
     buildBrokenPillar() {
         const brokenHeight = this.pillarShaftHeight * (0.3 + this.random() * 0.6);
-        let columnBrush = this.buildGroovedColumn(brokenHeight);
+        let columnBrushes = this.buildGroovedColumn(brokenHeight);
 
         const cutterRadius = this.radius * 2.5;
         const breakCutterGeo = this.random() > 0.5 
@@ -82,14 +81,33 @@ class Pillar extends THREE.Object3D {
         );
         breakCutter.updateMatrixWorld();
 
-        columnBrush = this.evaluator.evaluate(columnBrush, breakCutter, SUBTRACTION);
-        
-        const mesh = new THREE.Mesh(columnBrush.geometry, this.material);
-        this.add(mesh);
+        columnBrushes = columnBrushes.map((brush) => this.evaluator.evaluate(brush, breakCutter, SUBTRACTION));
+
+        this.add(this.buildColumnLOD(columnBrushes));
 
         this.add(this.buildBottomCaps());
         
         this.finalHeight = brokenHeight;
+    }
+
+    buildColumnLOD(brushes) {
+        const lod = new THREE.LOD();
+        const highDetail = new THREE.Mesh(
+            brushes[0].geometry,
+            this.material,
+        );
+        const mediumDetail = new THREE.Mesh(
+            brushes[1].geometry,
+            new THREE.MeshPhongMaterial({
+                color: this.material?.color,
+                map: this.material?.map, // if I don't apply texture, the color is notably different
+                bumpMap: Pillar.#bumpTexture,
+                bumpScale: 2,
+            }),
+        );
+        lod.addLevel(highDetail, 0);
+        lod.addLevel(mediumDetail, 50);
+        return lod;
     }
 
     /**
@@ -100,6 +118,17 @@ class Pillar extends THREE.Object3D {
      * @returns {Brush} The resulting damaged brush.
      */
     chipEdge(targetBrush, radius, height) {
+        return this.chipEdgeMulti([targetBrush], radius, height)[0];
+    }
+
+    /**
+     * Subtracts the same small, random, irregular shape from multiple brushes' edges.
+     * @param {Brush[]} targetBrushes - The brushes to be damaged (must be positioned).
+     * @param {number} radius - The radius of the brush, for positioning the chip.
+     * @param {number} height - The height of the brush, for positioning.
+     * @returns {Brush[]} The resulting damaged brushes.
+     */
+    chipEdgeMulti(targetBrushes, radius, height) {
         const cutterSize = radius * (0.4 + this.random() * 0.4);
         const cutterGeo = new THREE.IcosahedronGeometry(cutterSize, 0);
         
@@ -111,7 +140,7 @@ class Pillar extends THREE.Object3D {
         const angle = this.random() * Math.PI * 2;
         const offset = radius * (0.8 + this.random() * 0.2);
 
-        const brushPos = targetBrush.position;
+        const brushPos = targetBrushes[0].position;
         cutterBrush.position.set(
             brushPos.x + Math.cos(angle) * offset,
             brushPos.y + (this.random() - 0.5) * height,
@@ -124,7 +153,7 @@ class Pillar extends THREE.Object3D {
         );
         cutterBrush.updateMatrixWorld();
 
-        return this.evaluator.evaluate(targetBrush, cutterBrush, SUBTRACTION);
+        return targetBrushes.map((brush) => this.evaluator.evaluate(brush, cutterBrush, SUBTRACTION));
     }
 
 
@@ -162,17 +191,21 @@ class Pillar extends THREE.Object3D {
             }
         }
 
-        let currentBrush = new Brush(
-            Pillar.#groovedColumnGeometry.clone()
-            .scale(1, height, 1)
-        );
+        let brushes = [
+            // high detail
+            new Brush(
+                Pillar.#groovedColumnGeometry.clone()
+                .scale(1, height, 1)
+            ),
+            // medium detail
+            new Brush(new THREE.CylinderGeometry(this.radius, this.radius, height, 8).translate(0, height / 2, 0))
+        ];
 
         const damageCount = 2 + Math.floor(this.random() * 4);
-        for (let i = 0; i < damageCount; i++) {
-            currentBrush = this.chipEdge(currentBrush, this.radius, height);
-        }
+        for (let i = 0; i < damageCount; ++i)
+            brushes = this.chipEdgeMulti(brushes, this.radius, height);
 
-        return currentBrush;
+        return brushes;
     }
 
     buildTopCaps() {
