@@ -306,11 +306,12 @@ class MyContents  {
             this.submarine.update(dt);
         }
 
+        const alpha = now % (2 * Math.PI);
         this.corals?.children.forEach((coral) => {
             if (coral instanceof LSystemCoral) {
                 const time = coral.levels[coral.getCurrentLevel()].object.material.userData?.shader?.uniforms.time;
                 if (time)
-                    time.value = now;
+                    time.value = alpha;
             }
         });
     }
