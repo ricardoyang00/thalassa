@@ -8,13 +8,11 @@ class BrainCoral extends THREE.LOD {
         return texture;
     })();
 
-    constructor(color = 0xffffff, diameter = 1) {
+    constructor(color = 0xffffff, size = 1) {
         super();
         const texture = BrainCoral.#texture.clone();
 
-        const radius = diameter / 2;
-        const sphereGen = (segments) => new THREE.Mesh(new THREE.SphereGeometry(radius, segments, segments, -0.1 * Math.PI, 1.1 * Math.PI));
-
+        const radius = size / 2;
         const highMaterial = new THREE.MeshPhongMaterial({
                 color,
                 map: texture,
@@ -22,30 +20,26 @@ class BrainCoral extends THREE.LOD {
                 bumpScale: 5,
                 displacementMap: texture,
                 displacementScale: 0.2 * radius,
-        })
-
-        const highDetailObj = sphereGen(128);
-        highDetailObj.rotateX(-Math.PI / 2);
-        highDetailObj.material = highMaterial;
-
-        const mediumDetailObj = sphereGen(16);
-        mediumDetailObj.rotateX(-Math.PI / 2);
-        mediumDetailObj.material = highMaterial;
-
-        const lowMaterial = new THREE.MeshPhongMaterial({
-            color
         });
-        
-        const lowDetailObj = sphereGen(4);
-        const lowerDetailScale = (1 + highMaterial.displacementScale / diameter);
-        lowDetailObj.scale.set(lowerDetailScale, lowerDetailScale, lowerDetailScale);
-        lowDetailObj.rotateX(-Math.PI / 2);
-        lowDetailObj.material = lowMaterial;
 
+        const mediumMaterial = highMaterial;
 
-        this.addLevel(highDetailObj, 0);
-        this.addLevel(mediumDetailObj, 30);
-        this.addLevel(lowDetailObj, 200);
+        const lowMaterial = mediumMaterial.clone();
+        lowMaterial.bumpMap = null;
+        lowMaterial.displacementMap = null;
+
+        const sphereGen = (segments, material) => new THREE.Mesh(
+            new THREE.SphereGeometry(radius, segments, segments),
+            material,
+        ).rotateZ(Math.PI / 2);
+
+        this.addLevel(sphereGen(128, highMaterial), 0);
+        this.addLevel(sphereGen(16, mediumMaterial), size * 20);
+
+        const lowObj = sphereGen(4, lowMaterial);
+        const lowScale = (1 + highMaterial.displacementScale);
+        lowObj.scale.set(lowScale, lowScale, lowScale);
+        this.addLevel(lowObj, size * 75);
     }
 }
 

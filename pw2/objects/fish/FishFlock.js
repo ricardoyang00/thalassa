@@ -108,6 +108,7 @@ class FishFlock {
     }
 
     update(dt) {
+        console.log(dt);
         if (dt <= 0) return;
         const {
             maxSpeed, maxForce, neighborRadius, separationRadius,

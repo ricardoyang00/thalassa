@@ -295,16 +295,20 @@ class MyContents  {
         this.fishGroup.scale.setScalar(s);
     }
 
-    update() {
-        // Animate all fish
-        const now = Date.now() * 0.001; // Convert to seconds
-        const dt = this._lastUpdateTime ? Math.min(0.1, now - this._lastUpdateTime) : 0;
-        this._lastUpdateTime = now;
-        
+    update(now, dt) {
         this.flocks.forEach(f => f.update(dt));
+
         if (this.submarine && typeof this.submarine.update === 'function') {
             this.submarine.update(dt);
         }
+
+        this.corals?.children.forEach((coral) => {
+            if (coral instanceof LSystemCoral) {
+                const time = coral.levels[coral.getCurrentLevel()].object.material.userData?.shader?.uniforms.time;
+                if (time)
+                    time.value = now;
+            }
+        });
     }
 
     generateRandomSpawnPos(templeRadius, maxRadius) {

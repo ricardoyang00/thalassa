@@ -246,10 +246,11 @@ class MyApp  {
         this.updateCameraIfRequired()
 
         const delta = this.clock.getDelta();
+        const elapsed = this.clock.getElapsedTime();
 
         // update the animation if contents were provided
         if (this.activeCamera !== undefined && this.activeCamera !== null) {
-            this.contents.update()
+            this.contents.update(elapsed, delta)
         }
 
         // Update fly camera if active

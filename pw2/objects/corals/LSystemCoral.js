@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { SgiUtils } from '../../SgiUtils.js';
 
 export class LSystemCoral extends THREE.LOD {
+    static #idCounter = 0;
+
     constructor(color = 0xffffff, size = 1) {
         super();
         this.size = size;
@@ -133,10 +135,44 @@ export class LSystemCoral extends THREE.LOD {
             }
         }
 
-        const branchMat = new THREE.MeshStandardMaterial({ 
+        const branchMat = new THREE.MeshStandardMaterial({
             color, metalness: 0.1, 
             roughness: 0.8, 
-            map: new THREE.TextureLoader().load('textures/tube-coral.png') });
+            map: new THREE.TextureLoader().load('textures/tube-coral.png')
+        });
+
+        branchMat.onBeforeCompile = (shader) => {
+            shader.uniforms.time = { value: 0 };
+            shader.uniforms.timeBias = { value: LSystemCoral.#idCounter++ };
+
+            // Manual vertex projection, might not work on different/future versions
+            shader.vertexShader =
+                `
+                uniform float time;
+                uniform float timeBias;
+                `
+                + shader.vertexShader.replace(
+                '#include <project_vertex>',
+                `
+                vec4 mvPosition = vec4( transformed, 1.0 );
+                mvPosition = instanceMatrix * mvPosition;
+
+                float coralAlpha = time + timeBias;
+                float sway = 0.2 + 0.1 * (
+                    sin(2.0 * mod(coralAlpha, PI))
+                    +
+                    cos(mod(coralAlpha, 2.0 * PI))
+                );
+                mvPosition.x += mvPosition.y * sway;
+
+                mvPosition = modelViewMatrix * mvPosition;
+                gl_Position = projectionMatrix * mvPosition;
+                `
+            );
+
+            branchMat.userData.shader = shader;
+        }
+
         const branchMeshGen = (radialSegments) => new THREE.InstancedMesh(
             new THREE.CylinderGeometry(0.15, 0.15, 1, radialSegments, 1).translate(0, 0.5, 0),
             branchMat,
@@ -151,8 +187,8 @@ export class LSystemCoral extends THREE.LOD {
         detailLevels.forEach((level) => branchMatrices.forEach((matrix, i) => level.setMatrixAt(i, matrix)));
 
         this.addLevel(detailLevels[0], 0);
-        this.addLevel(detailLevels[1], 20);
-        this.addLevel(detailLevels[2], 50);
+        this.addLevel(detailLevels[1], size * 10);
+        this.addLevel(detailLevels[2], size * 25);
 
         // if (leafMatrices.length > 0) {
         //     const leafGeo = new THREE.IcosahedronGeometry(0.2, 0);
