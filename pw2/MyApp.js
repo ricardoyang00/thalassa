@@ -250,7 +250,7 @@ class MyApp  {
 
         // update the animation if contents were provided
         if (this.activeCamera !== undefined && this.activeCamera !== null) {
-            this.contents.update(elapsed, delta)
+            this.contents.update(/* elapsed, delta */)
         }
 
         // Update fly camera if active

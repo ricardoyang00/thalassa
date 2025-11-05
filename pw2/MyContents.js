@@ -295,7 +295,11 @@ class MyContents  {
         this.fishGroup.scale.setScalar(s);
     }
 
-    update(now, dt) {
+    update(/* now, dt */) {
+        const now = Date.now() * 0.001; // Convert to seconds
+        const dt = this._lastUpdateTime ? Math.min(0.1, now - this._lastUpdateTime) : 0;
+        this._lastUpdateTime = now;
+
         this.flocks.forEach(f => f.update(dt));
 
         if (this.submarine && typeof this.submarine.update === 'function') {
