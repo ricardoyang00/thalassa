@@ -1,14 +1,36 @@
 import * as THREE from 'three';
-import { Tube } from '../primitives/Tube.js';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import { SgiUtils } from '../../SgiUtils.js';
+
+function tubeGeoGen(radialSegments) {
+    const size = 1;
+    const radiusTop = size / 8;
+    const radiusBottom = radiusTop / 2;
+    const height = size;
+    const thickness = 0.25;
+
+    const outerCylinderGeo = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, radialSegments, 1, true);
+
+    const innerScale = 1.0 - thickness;
+    const innerCylinderGeo = outerCylinderGeo.clone().scale(innerScale, 1, innerScale);
+    innerCylinderGeo.getIndex().array.reverse();
+
+    const ringGeo = new THREE.RingGeometry(innerScale * radiusTop, radiusTop, radialSegments)
+        .rotateX(-Math.PI / 2)
+        .translate(0, height / 2, 0);
+
+    return BufferGeometryUtils.mergeGeometries([outerCylinderGeo, innerCylinderGeo, ringGeo]).translate(0, height / 2, 0);
+};
 
 class TubeCoral extends THREE.LOD {
     static #texture = new THREE.TextureLoader().load('textures/tube-coral.png');
+    static #tubeGeo = tubeGeoGen(16);
 
     constructor(color = 0xffffff, size = 1) {
         super();
         const layers = 3;
         let n = 4;
+        let nTubes = 0;
 
         const material = new THREE.MeshPhongMaterial({
             color,
@@ -21,20 +43,13 @@ class TubeCoral extends THREE.LOD {
         let angle = 0;
         let alphaAng = 2 * Math.PI / n;
         for (let layer = 1; layer <= layers; ++layer, n *= 2, alphaAng /= 2) {
+            nTubes += n;
             for (let j = 0; j < n; ++j, angle += alphaAng) {
                 const ang = angle + SgiUtils.rand(-alphaAng / 3, alphaAng / 3);
-                const topRadius = SgiUtils.rand(size / 10, size / 7);
-                const height = SgiUtils.rand(size / 2, size);
-                const thickness = SgiUtils.rand(0.2, 0.3);
+                const height = SgiUtils.rand(0.5, 1.0);
 
                 attributes.push({
-                    attr: [
-                        material,
-                        topRadius,
-                        topRadius / 2,
-                        height,
-                        thickness,
-                    ],
+                    height: height,
                     rot: {
                         y: angle + SgiUtils.rand(-alphaAng / 3, alphaAng / 3),
                         x: layer * SgiUtils.rand(Math.PI / 20, Math.PI / 10),
@@ -48,26 +63,18 @@ class TubeCoral extends THREE.LOD {
             }
         }
 
-        const detailLevelGen = (segments) => {
-            const group = new THREE.Group();
-            attributes.forEach((attr) => {
-                const tube = new Tube(...attr.attr, segments);
-                tube.position.y = tube.height / 2;
+        const mesh = new THREE.InstancedMesh(TubeCoral.#tubeGeo, material, nTubes);
+        attributes.forEach((attr, i) => {
+            mesh.setMatrixAt(i, new THREE.Matrix4()
+                .multiply(new THREE.Matrix4().makeTranslation(attr.pos))
+                .multiply(new THREE.Matrix4().makeRotationY(attr.rot.y))
+                .multiply(new THREE.Matrix4().makeRotationX(attr.rot.x))
+                .multiply(new THREE.Matrix4().makeScale(size, attr.height * size, size))
+            );
+        });
 
-                // rotate tube around base
-                const container = new THREE.Object3D();
-                container.add(tube);
-                container.rotateY(attr.rot.y);
-                container.rotateX(attr.rot.x);
-                container.position.copy(attr.pos);
-                group.add(container);
-            });
-            return group;
-        }
-
-        this.addLevel(detailLevelGen(32), 0);
-        this.addLevel(detailLevelGen(8), size * 20);
-        this.addLevel(detailLevelGen(3), size * 50);
+        // TODO: LOD
+        this.addLevel(mesh, 0);
     }
 }
 

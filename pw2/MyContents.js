@@ -93,8 +93,8 @@ class MyContents  {
 
         const coralTypes = [
             TubeCoral,
-            LSystemCoral,
-            BrainCoral,
+            // LSystemCoral,
+            // BrainCoral,
         ]
 
         for (let i = 0; i < 50; ++i) {
@@ -274,11 +274,11 @@ class MyContents  {
 
 
 
-        this.temple = new MyTemple();
-        this.temple.position.set(0, 1, 0);
-        const templeScale = 0.75;
-        this.temple.scale.setScalar(templeScale);
-        this.app.scene.add(this.temple);
+        // this.temple = new MyTemple();
+        // this.temple.position.set(0, 1, 0);
+        // const templeScale = 0.75;
+        // this.temple.scale.setScalar(templeScale);
+        // this.app.scene.add(this.temple);
     }
 
     /**

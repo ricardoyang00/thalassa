@@ -62,16 +62,20 @@ class MyGuiInterface  {
         flyCameraFolder.add({ info3: 'RF - Up/Down' }, 'info3').name('').disable();
         flyCameraFolder.add({ info4: 'Drag Mouse - Look around' }, 'info4').name('').disable();
 
-        cameraFolder.open()
+        cameraFolder.close()
 
 
         const renderFolder = this.datgui.addFolder('Rendering')
         renderFolder.add(this.app, 'wireframeMode', false).name("Wireframe Mode").onChange( (value) => { this.app.setWireframeMode(value) } );
-        renderFolder.open()
+        renderFolder.close()
 
         const rocksFolder = this.datgui.addFolder('Rocks');
         rocksFolder.add(this.contents.rocks, 'visible').name("Show Rocks");
-        rocksFolder.open();
+        rocksFolder.close();
+
+        const coralsFolder = this.datgui.addFolder('Corals');
+        coralsFolder.add(this.contents.corals, 'visible').name('Show Corals');
+        coralsFolder.close();
 
         const fishesFolder = this.datgui.addFolder('Fishes');
         fishesFolder.add(this.contents, 'showFish', true).name("Show Fishes").onChange((value) => {
@@ -82,7 +86,7 @@ class MyGuiInterface  {
         fishesFolder.add(fishParams, 'scale', 0.1, 3, 0.01).name('Scale').onChange((value) => {
             if (this.contents) this.contents.setFishesScale(value);
         });
-        fishesFolder.open();
+        fishesFolder.close();
 
         if (this.contents.flocks && this.contents.flocks.length > 0) {
             const defaultOpts = this.contents.flocks[0].opt;
@@ -120,9 +124,9 @@ class MyGuiInterface  {
             const avoidanceFolder = flockFolder.addFolder('Danger Avoidance');
             avoidanceFolder.add(flockParams, 'avoidanceRadius', 1.0, 30.0).name('Avoid Radius').onChange(v => updateAllFlocks('avoidanceRadius', v));
             avoidanceFolder.add(flockParams, 'avoidanceWeight', 0.0, 10.0).name('Avoid Force').onChange(v => updateAllFlocks('avoidanceWeight', v));
-            avoidanceFolder.open();
+            avoidanceFolder.close();
 
-            flockFolder.open();
+            flockFolder.close();
         }
     }
 }
