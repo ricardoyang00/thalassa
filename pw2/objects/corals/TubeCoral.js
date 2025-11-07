@@ -25,18 +25,30 @@ function tubeGeoGen(radialSegments) {
 
 // Mesh that groups all tube corals for performance reasons
 export class TubeCoralsContainer extends InstancedMesh2 {
-    static #tubeGeo = tubeGeoGen(32);
+    static #tubeGeo = [
+        tubeGeoGen(32),
+        tubeGeoGen(8),
+        tubeGeoGen(4),
+    ];
     static #texture = new THREE.TextureLoader().load('textures/tube-coral.png');
-    static #material = new THREE.MeshPhongMaterial({
+    static #highDetailMat = new THREE.MeshPhongMaterial({
         color: 0xffffff,
         map: this.#texture,
         bumpMap: this.#texture,
         bumpScale: 5,
     });
+    static #mediumDetailMat = (() => {
+        const mat = TubeCoralsContainer.#highDetailMat.clone();
+        mat.bumpMap = null;
+        return mat;
+    })();
 
     constructor() {
+        const tubeGeo = TubeCoralsContainer.#tubeGeo;
         // createEntities needed for updateInstances()
-        super(TubeCoralsContainer.#tubeGeo, TubeCoralsContainer.#material, {createEntities: true});
+        super(tubeGeo[0], TubeCoralsContainer.#highDetailMat, {createEntities: true});
+        this.addLOD(tubeGeo[1], TubeCoralsContainer.#mediumDetailMat, 30);
+        this.addLOD(tubeGeo[2], TubeCoralsContainer.#mediumDetailMat, 60);
     }
 }
 
