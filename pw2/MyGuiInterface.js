@@ -74,7 +74,7 @@ class MyGuiInterface  {
         rocksFolder.close();
 
         const coralsFolder = this.datgui.addFolder('Corals');
-        coralsFolder.add(this.contents.corals, 'visible').name('Show Corals');
+        coralsFolder.add(this.contents.coralMeshes, 'visible').name('Show Corals');
         coralsFolder.close();
 
         const fishesFolder = this.datgui.addFolder('Fishes');

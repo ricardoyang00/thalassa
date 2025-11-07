@@ -1,13 +1,15 @@
 import * as THREE from 'three';
+import { TubeCoral } from '../corals/TubeCoral.js';
 
 class MyTerrain extends THREE.Object3D {
     #width;
     #length;
     #canvas;
 
-    constructor(app) {
+    constructor(contents) {
         super();
-        this.app = app;
+        this.contents = contents;
+        this.app = contents.app;
         this.buildTerrain();
     }
 
@@ -19,7 +21,7 @@ class MyTerrain extends THREE.Object3D {
 
         let terrainMap = new THREE.TextureLoader().load('images/heightmap.jpg', () => {
             const seafloorGroup = this.app.scene.getObjectByName("seafloorGroup");
-            seafloorGroup.getObjectByName("corals").children.forEach((coral) => {
+            this.contents.corals.forEach((coral) => {
                 const x = coral.position.x;
                 const y = coral.position.z;
 
@@ -28,6 +30,7 @@ class MyTerrain extends THREE.Object3D {
                 coral.rotateX(rotation[1]);
                 coral.rotateZ(-rotation[0]);
             });
+            TubeCoral.defaultContainer.updateInstances(() => {});
             seafloorGroup.getObjectByName("rocks").children.forEach((rock) => rock.position.y += this.displacementAtXY(rock.position.x, rock.position.z));
             this.#canvas = undefined;
         });

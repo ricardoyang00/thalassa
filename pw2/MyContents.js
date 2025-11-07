@@ -30,7 +30,7 @@ class MyContents  {
         this.seafloorGroup = null;
         this.terrain = null;
         this.rocks = null;
-        this.corals = null;
+        this.coralMeshes = null;
 
         // fish related attributes
         this.fishGroup = new THREE.Group(); // parent container
@@ -55,7 +55,7 @@ class MyContents  {
         this.seafloorGroup = new THREE.Group();
         this.seafloorGroup.name = "seafloorGroup";
 
-        const terrain = new MyTerrain(this.app);
+        const terrain = new MyTerrain(this);
         this.seafloorGroup.add(terrain);
         this.terrain = terrain;
 
@@ -88,8 +88,10 @@ class MyContents  {
         this.seafloorGroup.add(this.rocks);
 
         // Add Corals
-        this.corals = new THREE.Group();
-        this.corals.name = "corals";
+        this.coralMeshes = new THREE.Group();
+        this.coralMeshes.name = "corals";
+
+        this.corals = [];
 
         const coralTypes = [
             TubeCoral,
@@ -106,15 +108,16 @@ class MyContents  {
 
                 // Now we only need to check for rock/coral distances
                 if (this.rocks.children.every((rock) => rock.position.distanceTo(pos) > rock.size + 0.75)
-                    && this.corals.children.every((coral) => coral.position.distanceTo(pos) > 4)
+                    && this.corals.every((coral) => coral.position.distanceTo(pos) > 4)
                 ) {
                     coral.position.copy(pos);
                     break;
                 }
             }
-            this.corals.add(coral);
+            this.corals.push(coral);
         }
-        this.seafloorGroup.add(this.corals);
+        this.coralMeshes.add(TubeCoral.defaultContainer);
+        this.seafloorGroup.add(this.coralMeshes);
 
         this.app.scene.add(this.seafloorGroup);
     }
@@ -307,7 +310,7 @@ class MyContents  {
         }
 
         const alpha = now % (2 * Math.PI);
-        this.corals?.children.forEach((coral) => {
+        this.corals?.forEach((coral) => {
             if (coral instanceof LSystemCoral) {
                 const time = coral.levels[coral.getCurrentLevel()].object.material.userData?.shader?.uniforms.time;
                 if (time)

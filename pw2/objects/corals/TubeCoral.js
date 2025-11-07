@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
+import { InstancedMesh2 } from '@three.ez/instanced-mesh';
 import { SgiUtils } from '../../SgiUtils.js';
 
 function tubeGeoGen(radialSegments) {
@@ -22,28 +23,69 @@ function tubeGeoGen(radialSegments) {
     return BufferGeometryUtils.mergeGeometries([outerCylinderGeo, innerCylinderGeo, ringGeo]).translate(0, height / 2, 0);
 };
 
-class TubeCoral extends THREE.LOD {
+// Mesh that groups all tube corals for performance reasons
+export class TubeCoralsContainer extends InstancedMesh2 {
+    static #tubeGeo = tubeGeoGen(32);
     static #texture = new THREE.TextureLoader().load('textures/tube-coral.png');
-    static #tubeGeo = tubeGeoGen(16);
+    static #material = new THREE.MeshPhongMaterial({
+        color: 0xffffff,
+        map: this.#texture,
+        bumpMap: this.#texture,
+        bumpScale: 5,
+    });
 
-    constructor(color = 0xffffff, size = 1) {
-        super();
+    constructor() {
+        // createEntities needed for updateInstances()
+        super(TubeCoralsContainer.#tubeGeo, TubeCoralsContainer.#material, {createEntities: true});
+    }
+}
+
+export class TubeCoral {
+    static defaultContainer = new TubeCoralsContainer();
+    _instances = []; // array of matrices for tubes stored in TubeCoralsContainer
+
+    static #Position = class extends THREE.Vector3 {
+        constructor(coral, x = 0, y = 0, z = 0) {
+            super(x, y, z);
+            this.coral = coral;
+        }
+
+        set x(val) {
+            this.coral?._instances.forEach((obj) => obj.position.x += val - this._x);
+            this._x = val;
+        }
+
+        set y(val) {
+            this.coral?._instances.forEach((obj) => obj.position.y += val - this._y);
+            this._y = val;
+        }
+
+        set z(val) {
+            this.coral?._instances.forEach((obj) => obj.position.z += val - this._z);
+            this._z = val;
+        }
+
+        get x() {
+            return this._x;
+        }
+
+        get y() {
+            return this._y;
+        }
+
+        get z() {
+            return this._z;
+        }
+    }
+
+    constructor(color = 0xffffff, size = 1, container = TubeCoral.defaultContainer) {
         const layers = 3;
         let n = 4;
-        let nTubes = 0;
-
-        const material = new THREE.MeshPhongMaterial({
-            color,
-            map: TubeCoral.#texture,
-            bumpMap: TubeCoral.#texture,
-            bumpScale: 5,
-        });
 
         const attributes = [];
         let angle = 0;
         let alphaAng = 2 * Math.PI / n;
         for (let layer = 1; layer <= layers; ++layer, n *= 2, alphaAng /= 2) {
-            nTubes += n;
             for (let j = 0; j < n; ++j, angle += alphaAng) {
                 const ang = angle + SgiUtils.rand(-alphaAng / 3, alphaAng / 3);
                 const height = SgiUtils.rand(0.5, 1.0);
@@ -63,19 +105,30 @@ class TubeCoral extends THREE.LOD {
             }
         }
 
-        const mesh = new THREE.InstancedMesh(TubeCoral.#tubeGeo, material, nTubes);
-        attributes.forEach((attr, i) => {
-            mesh.setMatrixAt(i, new THREE.Matrix4()
-                .multiply(new THREE.Matrix4().makeTranslation(attr.pos))
-                .multiply(new THREE.Matrix4().makeRotationY(attr.rot.y))
-                .multiply(new THREE.Matrix4().makeRotationX(attr.rot.x))
-                .multiply(new THREE.Matrix4().makeScale(size, attr.height * size, size))
-            );
-        });
+        this.position = new TubeCoral.#Position(this);
 
-        // TODO: LOD
-        this.addLevel(mesh, 0);
+        let i = 0;
+        container.addInstances(attributes.length, (obj, j) => {
+            const attr = attributes[i];
+            obj.position.copy(attr.pos);
+            obj.rotateY(attr.rot.y);
+            obj.rotateX(attr.rot.x);
+            obj.scale.set(size, attr.height * size, size);
+            container.setColorAt(j, color); // Using "obj.color" throws an error
+            this._instances.push(obj);
+            i++;
+        });
+    }
+
+    rotateX(angle) {
+        this._instances.forEach((obj) => obj.rotateX(angle));
+    }
+
+    rotateY(angle) {
+        this._instances.forEach((obj) => obj.rotateY(angle));
+    }
+
+    rotateZ(angle) {
+        this._instances.forEach((obj) => obj.rotateZ(angle));
     }
 }
-
-export { TubeCoral };
