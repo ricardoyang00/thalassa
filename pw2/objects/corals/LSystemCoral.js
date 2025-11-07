@@ -1,8 +1,22 @@
 import * as THREE from 'three';
 import { SgiUtils } from '../../SgiUtils.js';
 
+function branchGeoGen(radialSegments) {
+    return new THREE.CylinderGeometry(0.15, 0.15, 1, radialSegments, 1).translate(0, 0.5, 0);
+}
+
 export class LSystemCoral extends THREE.LOD {
     static #idCounter = 0;
+    static #mat = new THREE.MeshStandardMaterial({
+        metalness: 0.1,
+        roughness: 0.8,
+        map: new THREE.TextureLoader().load('textures/tube-coral.png')
+    });
+    static #geo = [
+        branchGeoGen(16),
+        branchGeoGen(5),
+        branchGeoGen(3),
+    ];
 
     constructor(color = 0xffffff, size = 1) {
         super();
@@ -135,11 +149,8 @@ export class LSystemCoral extends THREE.LOD {
             }
         }
 
-        const branchMat = new THREE.MeshStandardMaterial({
-            color, metalness: 0.1, 
-            roughness: 0.8, 
-            map: new THREE.TextureLoader().load('textures/tube-coral.png')
-        });
+        const branchMat = LSystemCoral.#mat.clone();
+        branchMat.color.set(color);
 
         branchMat.onBeforeCompile = (shader) => {
             shader.uniforms.time = { value: 0 };
@@ -173,16 +184,17 @@ export class LSystemCoral extends THREE.LOD {
             branchMat.userData.shader = shader;
         }
 
-        const branchMeshGen = (radialSegments) => new THREE.InstancedMesh(
-            new THREE.CylinderGeometry(0.15, 0.15, 1, radialSegments, 1).translate(0, 0.5, 0),
+        const branchMeshGen = (geo) => new THREE.InstancedMesh(
+            geo,
             branchMat,
             branchMatrices.length,
         );
 
+        const geo = LSystemCoral.#geo;
         const detailLevels = [
-            branchMeshGen(16),
-            branchMeshGen(5),
-            branchMeshGen(3),
+            branchMeshGen(geo[0]),
+            branchMeshGen(geo[1]),
+            branchMeshGen(geo[2]),
         ];
         detailLevels.forEach((level) => branchMatrices.forEach((matrix, i) => level.setMatrixAt(i, matrix)));
 
