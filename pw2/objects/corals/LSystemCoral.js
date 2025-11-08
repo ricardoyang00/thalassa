@@ -1,25 +1,74 @@
 import * as THREE from 'three';
 import { SgiUtils } from '../../SgiUtils.js';
+import { InstancedMesh2 } from '@three.ez/instanced-mesh';
 
 function branchGeoGen(radialSegments) {
     return new THREE.CylinderGeometry(0.15, 0.15, 1, radialSegments, 1).translate(0, 0.5, 0);
 }
 
-export class LSystemCoral extends THREE.LOD {
-    static #idCounter = 0;
-    static #mat = new THREE.MeshStandardMaterial({
+function matGen() {
+    const mat = new THREE.MeshStandardMaterial({
         metalness: 0.1,
         roughness: 0.8,
         map: new THREE.TextureLoader().load('textures/tube-coral.png')
     });
+
+    mat.onBeforeCompile = (shader) => {
+        shader.uniforms.time = { value: 0 };
+        shader.uniforms.timeBias = { value: 0 };
+        // shader.uniforms.timeBias = { value: LSystemCoral.#idCounter++ };
+
+        // Manual vertex projection, might not work on different/future versions
+        shader.vertexShader =
+            `
+            uniform float time;
+            uniform float timeBias;
+            `
+            + shader.vertexShader.replace(
+            '#include <project_vertex>',
+            `
+            vec4 mvPosition = vec4( transformed, 1.0 );
+            mvPosition = instanceMatrix * mvPosition;
+
+            float coralAlpha = time + timeBias;
+            float sway = 0.2 + 0.1 * (
+                sin(2.0 * mod(coralAlpha, PI))
+                +
+                cos(mod(coralAlpha, 2.0 * PI))
+            );
+            mvPosition.x += mvPosition.y * sway;
+
+            mvPosition = modelViewMatrix * mvPosition;
+            gl_Position = projectionMatrix * mvPosition;
+            `
+        );
+
+        mat.userData.shader = shader;
+    }
+
+    return mat;
+}
+
+export class LSystemCoralsContainer extends InstancedMesh2 {
     static #geo = [
         branchGeoGen(16),
         branchGeoGen(5),
         branchGeoGen(3),
     ];
 
-    constructor(color = 0xffffff, size = 1) {
-        super();
+    constructor() {
+        const geo = LSystemCoralsContainer.#geo;
+        super(geo[0], matGen(), {createEntities: true});
+        this.addLOD(geo[1], matGen(), 20);
+        this.addLOD(geo[2], matGen(), 50);
+    }
+}
+
+export class LSystemCoral {
+    static defaultContainer = new LSystemCoralsContainer();
+    _instances = [];
+
+    constructor(color = 0xffffff, size = 1, container = LSystemCoral.defaultContainer) {
         this.size = size;
         const iterations = 3;
 
@@ -79,8 +128,9 @@ export class LSystemCoral extends THREE.LOD {
             quaternion: new THREE.Quaternion(),
         };
 
-        let branchLength = 2;
+        let branchLength = 0.5;
         const branchMatrices = [];
+        const transformations = [];
         const leafMatrices = [];
 
         const axisX = new THREE.Vector3(1, 0, 0);
@@ -104,6 +154,11 @@ export class LSystemCoral extends THREE.LOD {
                     const scale = new THREE.Vector3(branchLength, branchLength, branchLength);
                     instanceMatrix.compose(startPosition, orientation, scale);
                     branchMatrices.push(instanceMatrix);
+                    transformations.push({
+                        position: startPosition,
+                        quaternion: orientation,
+                        scale: scale,
+                    });
                     break;
                 }
                 case 'X': {
@@ -149,58 +204,20 @@ export class LSystemCoral extends THREE.LOD {
             }
         }
 
-        const branchMat = LSystemCoral.#mat.clone();
-        branchMat.color.set(color);
+        this.position = new LSystemCoral.#Position(this);
 
-        branchMat.onBeforeCompile = (shader) => {
-            shader.uniforms.time = { value: 0 };
-            shader.uniforms.timeBias = { value: LSystemCoral.#idCounter++ };
+        let i = 0;
+        container.addInstances(branchMatrices.length, (obj, j) => {
+            // obj.applyMatrix4(branchMatrices[i]);
+            const t = transformations[i];
+            obj.scale = t.scale;
+            obj.quaternion = t.quaternion;
+            obj.position = t.position;
 
-            // Manual vertex projection, might not work on different/future versions
-            shader.vertexShader =
-                `
-                uniform float time;
-                uniform float timeBias;
-                `
-                + shader.vertexShader.replace(
-                '#include <project_vertex>',
-                `
-                vec4 mvPosition = vec4( transformed, 1.0 );
-                mvPosition = instanceMatrix * mvPosition;
-
-                float coralAlpha = time + timeBias;
-                float sway = 0.2 + 0.1 * (
-                    sin(2.0 * mod(coralAlpha, PI))
-                    +
-                    cos(mod(coralAlpha, 2.0 * PI))
-                );
-                mvPosition.x += mvPosition.y * sway;
-
-                mvPosition = modelViewMatrix * mvPosition;
-                gl_Position = projectionMatrix * mvPosition;
-                `
-            );
-
-            branchMat.userData.shader = shader;
-        }
-
-        const branchMeshGen = (geo) => new THREE.InstancedMesh(
-            geo,
-            branchMat,
-            branchMatrices.length,
-        );
-
-        const geo = LSystemCoral.#geo;
-        const detailLevels = [
-            branchMeshGen(geo[0]),
-            branchMeshGen(geo[1]),
-            branchMeshGen(geo[2]),
-        ];
-        detailLevels.forEach((level) => branchMatrices.forEach((matrix, i) => level.setMatrixAt(i, matrix)));
-
-        this.addLevel(detailLevels[0], 0);
-        this.addLevel(detailLevels[1], size * 10);
-        this.addLevel(detailLevels[2], size * 25);
+            container.setColorAt(j, color); // Using "obj.color" throws an error
+            this._instances.push(obj);
+            i++;
+        });
 
         // if (leafMatrices.length > 0) {
         //     const leafGeo = new THREE.IcosahedronGeometry(0.2, 0);
@@ -212,11 +229,6 @@ export class LSystemCoral extends THREE.LOD {
         //     }
         //     group.add(leafMesh);
         // }
-
-        this.scale.setScalar(0.4);
-        this.position.y = -4;
-
-        this.scale.set(.25, .25, .25);
     }
 
     #chooseNextRule(options) {
@@ -242,6 +254,62 @@ export class LSystemCoral extends THREE.LOD {
             if (child.geometry) child.geometry.dispose();
             if (child.material) child.material.dispose();
         });
+    }
+
+    rotateX(angle) {
+        this.applyQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), angle));
+    }
+
+    rotateY(angle) {
+        this.applyQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle));
+    }
+
+    rotateZ(angle) {
+        this.applyQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), angle));
+    }
+
+    applyQuaternion(q) {
+        this._instances.forEach(obj => {
+            obj.position.sub(this.position)
+                .applyQuaternion(q)
+                .add(this.position);
+
+            obj.quaternion.premultiply(q);
+        });
+    }
+
+    static #Position = class extends THREE.Vector3 {
+        constructor(coral, x = 0, y = 0, z = 0) {
+            super(x, y, z);
+            this.coral = coral;
+        }
+
+        set x(val) {
+            this.coral?._instances.forEach((obj) => obj.position.x += val - this._x);
+            this._x = val;
+        }
+
+        set y(val) {
+            this.coral?._instances.forEach((obj) => obj.position.y += val - this._y);
+            this._y = val;
+        }
+
+        set z(val) {
+            this.coral?._instances.forEach((obj) => obj.position.z += val - this._z);
+            this._z = val;
+        }
+
+        get x() {
+            return this._x;
+        }
+
+        get y() {
+            return this._y;
+        }
+
+        get z() {
+            return this._z;
+        }
     }
 }
 

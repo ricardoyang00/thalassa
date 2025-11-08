@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { TubeCoral } from '../corals/TubeCoral.js';
 import { BrainCoral } from '../corals/BrainCoral.js';
+import { LSystemCoral } from '../corals/LSystemCoral.js';
 
 class MyTerrain extends THREE.Object3D {
     #width;
@@ -33,6 +34,7 @@ class MyTerrain extends THREE.Object3D {
             });
             TubeCoral.defaultContainer.updateInstances(() => {});
             BrainCoral.defaultContainer.updateInstances(() => {});
+            LSystemCoral.defaultContainer.updateInstances(() => {});
             seafloorGroup.getObjectByName("rocks").children.forEach((rock) => rock.position.y += this.displacementAtXY(rock.position.x, rock.position.z));
             this.#canvas = undefined;
         });
