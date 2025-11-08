@@ -32,9 +32,9 @@ class MyTerrain extends THREE.Object3D {
                 coral.rotateX(rotation[1]);
                 coral.rotateZ(-rotation[0]);
             });
-            TubeCoral.defaultContainer.updateInstances(() => {});
-            BrainCoral.defaultContainer.updateInstances(() => {});
-            LSystemCoral.defaultContainer.updateInstances(() => {});
+            TubeCoral.defaultOwner.updateInstances(() => {});
+            BrainCoral.defaultOwner.updateInstances(() => {});
+            LSystemCoral.defaultOwner.updateInstances(() => {});
             seafloorGroup.getObjectByName("rocks").children.forEach((rock) => rock.position.y += this.displacementAtXY(rock.position.x, rock.position.z));
             this.#canvas = undefined;
         });

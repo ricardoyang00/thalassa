@@ -118,9 +118,9 @@ class MyContents  {
             }
             this.corals.push(coral);
         }
-        this.coralMeshes.add(TubeCoral.defaultContainer);
-        this.coralMeshes.add(BrainCoral.defaultContainer);
-        this.coralMeshes.add(LSystemCoral.defaultContainer);
+        this.coralMeshes.add(TubeCoral.defaultOwner);
+        this.coralMeshes.add(BrainCoral.defaultOwner);
+        this.coralMeshes.add(LSystemCoral.defaultOwner);
         this.seafloorGroup.add(this.coralMeshes);
 
         this.app.scene.add(this.seafloorGroup);
@@ -314,7 +314,7 @@ class MyContents  {
         }
 
         const alpha = now % (2 * Math.PI);
-        LSystemCoral.defaultContainer.LODinfo.objects.forEach((lod) => {
+        LSystemCoral.defaultOwner.LODinfo.objects.forEach((lod) => {
             const time = lod.material.userData?.shader?.uniforms.time;
             if (time)
                 time.value = alpha;

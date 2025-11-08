@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { InstancedMesh2 } from '@three.ez/instanced-mesh';
+import { MultiInstancedEntity } from '../MultiInstancedEntity.js';
 
-export class BrainCoralsContainer extends InstancedMesh2 {
+export class BrainCoralsOwner extends InstancedMesh2 {
     static #texture = (() => {
         const texture = new THREE.TextureLoader().load('textures/brain-coral.png');
         texture.repeat = new THREE.Vector2(1.2, 1.2);
@@ -19,7 +20,7 @@ export class BrainCoralsContainer extends InstancedMesh2 {
     });
 
     static #lowDetailMat = (() => {
-        const mat = BrainCoralsContainer.#highDetailMat.clone();
+        const mat = BrainCoralsOwner.#highDetailMat.clone();
         mat.displacementMap = null;
         mat.bumpMap = null;
         return mat;
@@ -29,77 +30,28 @@ export class BrainCoralsContainer extends InstancedMesh2 {
         new THREE.SphereGeometry(1, 128, 128).rotateZ(Math.PI / 2),
         new THREE.SphereGeometry(1, 16, 16).rotateZ(Math.PI / 2),
         ((geo) => {
-            const scale = 1 + BrainCoralsContainer.#highDetailMat.displacementScale;
+            const scale = 1 + BrainCoralsOwner.#highDetailMat.displacementScale;
             return geo.scale(scale, scale, scale);
         })(new THREE.SphereGeometry(1, 4, 4).rotateZ(Math.PI / 2)),
     ];
 
     constructor() {
-        const geo = BrainCoralsContainer.#geo;
-        super(geo[0], BrainCoralsContainer.#highDetailMat, {createEntities: true});
-        this.addLOD(geo[1], BrainCoralsContainer.#highDetailMat, 40);
-        this.addLOD(geo[2], BrainCoralsContainer.#lowDetailMat, 150);
+        const geo = BrainCoralsOwner.#geo;
+        super(geo[0], BrainCoralsOwner.#highDetailMat, {createEntities: true});
+        this.addLOD(geo[1], BrainCoralsOwner.#highDetailMat, 40);
+        this.addLOD(geo[2], BrainCoralsOwner.#lowDetailMat, 150);
     }
 }
 
-export class BrainCoral {
-    static defaultContainer = new BrainCoralsContainer();
-    _instances = [];
+export class BrainCoral extends MultiInstancedEntity {
+    static defaultOwner = new BrainCoralsOwner();
 
-    static #Position = class extends THREE.Vector3 {
-        constructor(coral, x = 0, y = 0, z = 0) {
-            super(x, y, z);
-            this.coral = coral;
-        }
-
-        set x(val) {
-            this.coral?._instances.forEach((obj) => obj.position.x += val - this._x);
-            this._x = val;
-        }
-
-        set y(val) {
-            this.coral?._instances.forEach((obj) => obj.position.y += val - this._y);
-            this._y = val;
-        }
-
-        set z(val) {
-            this.coral?._instances.forEach((obj) => obj.position.z += val - this._z);
-            this._z = val;
-        }
-
-        get x() {
-            return this._x;
-        }
-
-        get y() {
-            return this._y;
-        }
-
-        get z() {
-            return this._z;
-        }
-    }
-
-    constructor(color = 0xffffff, size = 1, container = BrainCoral.defaultContainer) {
+    constructor(color = 0xffffff, size = 1, owner = BrainCoral.defaultOwner) {
+        super(owner);
         const radius = size / 2;
-        this.position = new BrainCoral.#Position(this);
-        // TODO: create instances in batches if this starts affecting generation time
-        container.addInstances(1, (obj, i) => {
-            obj.scale.set(radius, radius, radius);
-            container.setColorAt(i, color);
-            this._instances.push(obj);
+        this.addInstances(1, (obj, i) => {
+            obj.scale.setScalar(radius);
+            owner.setColorAt(i, color);
         });
-    }
-
-    rotateX(angle) {
-        this._instances.forEach((obj) => obj.rotateX(angle));
-    }
-
-    rotateY(angle) {
-        this._instances.forEach((obj) => obj.rotateY(angle));
-    }
-
-    rotateZ(angle) {
-        this._instances.forEach((obj) => obj.rotateZ(angle));
     }
 }

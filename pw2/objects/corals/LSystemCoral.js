@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { SgiUtils } from '../../SgiUtils.js';
 import { InstancedMesh2 } from '@three.ez/instanced-mesh';
+import { MultiInstancedEntity } from '../MultiInstancedEntity.js';
 
 function branchGeoGen(radialSegments) {
     return new THREE.CylinderGeometry(0.15, 0.15, 1, radialSegments, 1).translate(0, 0.5, 0);
@@ -49,7 +50,7 @@ function matGen() {
     return mat;
 }
 
-export class LSystemCoralsContainer extends InstancedMesh2 {
+export class LSystemCoralsOwner extends InstancedMesh2 {
     static #geo = [
         branchGeoGen(16),
         branchGeoGen(5),
@@ -57,7 +58,7 @@ export class LSystemCoralsContainer extends InstancedMesh2 {
     ];
 
     constructor() {
-        const geo = LSystemCoralsContainer.#geo;
+        const geo = LSystemCoralsOwner.#geo;
         super(geo[0], matGen(), {createEntities: true});
         this.addLOD(geo[1], matGen(), 20);
         this.addLOD(geo[2], matGen(), 50);
@@ -70,11 +71,12 @@ export class LSystemCoralsContainer extends InstancedMesh2 {
     }
 }
 
-export class LSystemCoral {
-    static defaultContainer = new LSystemCoralsContainer();
-    _instances = [];
+export class LSystemCoral extends MultiInstancedEntity {
+    static defaultOwner = new LSystemCoralsOwner();
 
-    constructor(color = 0xffffff, size = 1, container = LSystemCoral.defaultContainer) {
+    constructor(color = 0xffffff, size = 1, owner = LSystemCoral.defaultOwner) {
+        super(owner);
+        this.position = new LSystemCoral.Position(this);
         this.size = size;
         const iterations = 3;
 
@@ -210,11 +212,9 @@ export class LSystemCoral {
             }
         }
 
-        this.position = new LSystemCoral.#Position(this);
-
         let i = 0;
         const timeBias = SgiUtils.rand(0, 69420);
-        container.addInstances(branchMatrices.length, (obj, j) => {
+        this.addInstances(branchMatrices.length, (obj, j) => {
             // obj.applyMatrix4(branchMatrices[i]);
             const t = transformations[i];
             obj.scale = t.scale;
@@ -222,8 +222,7 @@ export class LSystemCoral {
             obj.position = t.position;
             obj.setUniform("timeBias", timeBias);
 
-            container.setColorAt(j, color); // Using "obj.color" throws an error
-            this._instances.push(obj);
+            owner.setColorAt(j, color); // Using "obj.color" throws an error
             i++;
         });
 
@@ -264,41 +263,20 @@ export class LSystemCoral {
         });
     }
 
-    rotateX(angle) {
-        this.applyQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), angle));
-    }
-
-    rotateY(angle) {
-        this.applyQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle));
-    }
-
-    rotateZ(angle) {
-        this.applyQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), angle));
-    }
-
-    applyQuaternion(q) {
-        this._instances.forEach(obj => {
-            obj.position.sub(this.position)
-                .applyQuaternion(q)
-                .add(this.position);
-
-            obj.quaternion.premultiply(q);
-        });
-    }
-
-    static #Position = class extends THREE.Vector3 {
-        constructor(coral, x = 0, y = 0, z = 0) {
+    // JS seems to shit itself if I try to override the Y setter so I'm just reimplementing the class here
+    static Position = class extends THREE.Vector3 {
+        constructor(entity, x = 0, y = 0, z = 0) {
             super(x, y, z);
-            this.coral = coral;
+            this.entity = entity;
         }
 
         set x(val) {
-            this.coral?._instances.forEach((obj) => obj.position.x += val - this._x);
+            this.entity?._instances.forEach((obj) => obj.position.x += val - this._x);
             this._x = val;
         }
 
         set y(val) {
-            this.coral?._instances.forEach((obj) => {
+            this.entity?._instances.forEach((obj) => {
                 obj.position.y += val - this._y;
                 obj.setUniform("baseY", val);
             });
@@ -306,7 +284,7 @@ export class LSystemCoral {
         }
 
         set z(val) {
-            this.coral?._instances.forEach((obj) => obj.position.z += val - this._z);
+            this.entity?._instances.forEach((obj) => obj.position.z += val - this._z);
             this._z = val;
         }
 

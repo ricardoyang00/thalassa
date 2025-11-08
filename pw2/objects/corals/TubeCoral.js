@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import { InstancedMesh2 } from '@three.ez/instanced-mesh';
 import { SgiUtils } from '../../SgiUtils.js';
+import { MultiInstancedEntity } from '../MultiInstancedEntity.js';
 
 function tubeGeoGen(radialSegments) {
     const size = 1;
@@ -24,7 +25,7 @@ function tubeGeoGen(radialSegments) {
 };
 
 // Mesh that groups all tube corals for performance reasons
-export class TubeCoralsContainer extends InstancedMesh2 {
+export class TubeCoralsOwner extends InstancedMesh2 {
     static #tubeGeo = [
         tubeGeoGen(32),
         tubeGeoGen(8),
@@ -38,59 +39,25 @@ export class TubeCoralsContainer extends InstancedMesh2 {
         bumpScale: 5,
     });
     static #mediumDetailMat = (() => {
-        const mat = TubeCoralsContainer.#highDetailMat.clone();
+        const mat = TubeCoralsOwner.#highDetailMat.clone();
         mat.bumpMap = null;
         return mat;
     })();
 
     constructor() {
-        const tubeGeo = TubeCoralsContainer.#tubeGeo;
+        const tubeGeo = TubeCoralsOwner.#tubeGeo;
         // createEntities needed for updateInstances()
-        super(tubeGeo[0], TubeCoralsContainer.#highDetailMat, {createEntities: true});
-        this.addLOD(tubeGeo[1], TubeCoralsContainer.#mediumDetailMat, 30);
-        this.addLOD(tubeGeo[2], TubeCoralsContainer.#mediumDetailMat, 60);
+        super(tubeGeo[0], TubeCoralsOwner.#highDetailMat, {createEntities: true});
+        this.addLOD(tubeGeo[1], TubeCoralsOwner.#mediumDetailMat, 30);
+        this.addLOD(tubeGeo[2], TubeCoralsOwner.#mediumDetailMat, 60);
     }
 }
 
-export class TubeCoral {
-    static defaultContainer = new TubeCoralsContainer();
-    _instances = []; // array of matrices for tubes stored in TubeCoralsContainer
+export class TubeCoral extends MultiInstancedEntity {
+    static defaultOwner = new TubeCoralsOwner();
 
-    static #Position = class extends THREE.Vector3 {
-        constructor(coral, x = 0, y = 0, z = 0) {
-            super(x, y, z);
-            this.coral = coral;
-        }
-
-        set x(val) {
-            this.coral?._instances.forEach((obj) => obj.position.x += val - this._x);
-            this._x = val;
-        }
-
-        set y(val) {
-            this.coral?._instances.forEach((obj) => obj.position.y += val - this._y);
-            this._y = val;
-        }
-
-        set z(val) {
-            this.coral?._instances.forEach((obj) => obj.position.z += val - this._z);
-            this._z = val;
-        }
-
-        get x() {
-            return this._x;
-        }
-
-        get y() {
-            return this._y;
-        }
-
-        get z() {
-            return this._z;
-        }
-    }
-
-    constructor(color = 0xffffff, size = 1, container = TubeCoral.defaultContainer) {
+    constructor(color = 0xffffff, size = 1, owner = TubeCoral.defaultOwner) {
+        super(owner);
         const layers = 3;
         let n = 4;
 
@@ -117,30 +84,15 @@ export class TubeCoral {
             }
         }
 
-        this.position = new TubeCoral.#Position(this);
-
         let i = 0;
-        container.addInstances(attributes.length, (obj, j) => {
+        this.addInstances(attributes.length, (obj, j) => {
             const attr = attributes[i];
             obj.position.copy(attr.pos);
             obj.rotateY(attr.rot.y);
             obj.rotateX(attr.rot.x);
             obj.scale.set(size, attr.height * size, size);
-            container.setColorAt(j, color); // Using "obj.color" throws an error
-            this._instances.push(obj);
+            owner.setColorAt(j, color); // Using "obj.color" throws an error
             i++;
         });
-    }
-
-    rotateX(angle) {
-        this._instances.forEach((obj) => obj.rotateX(angle));
-    }
-
-    rotateY(angle) {
-        this._instances.forEach((obj) => obj.rotateY(angle));
-    }
-
-    rotateZ(angle) {
-        this._instances.forEach((obj) => obj.rotateZ(angle));
     }
 }
