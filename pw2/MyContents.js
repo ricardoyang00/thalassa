@@ -94,31 +94,29 @@ class MyContents  {
         this.corals = [];
 
         const coralTypes = [
-            // TubeCoral,
+            TubeCoral,
             LSystemCoral,
-            // BrainCoral,
+            BrainCoral,
         ]
 
-        for (let i = 0; i < 2000; ++i) {
+        for (let i = 0; i < 100; ++i) {
             const coralType = coralTypes[SgiUtils.randInt(coralTypes.length)];
             const coral = new coralType(SgiUtils.rand(0, 0xffffff), 2);
 
             coral.position.copy(new THREE.Vector3(SgiUtils.rand(-maxRadius, maxRadius), 0, SgiUtils.rand(-maxRadius, maxRadius)));
-            // while (true) {
-            //     // Use the new spawn function to get a valid position
-            //     const pos = this.generateRandomSpawnPos(templeRadius, maxRadius);
+            while (true) {
+                // Use the new spawn function to get a valid position
+                const pos = this.generateRandomSpawnPos(templeRadius, maxRadius);
 
-            //     // Now we only need to check for rock/coral distances
-            //     if (this.rocks.children.every((rock) => rock.position.distanceTo(pos) > rock.size + 0.75)
-            //         && this.corals.every((coral) => coral.position.distanceTo(pos) > 4)
-            //     ) {
-            //         coral.position.copy(pos);
-            //         break;
-            //     }
-            // }
+                // Now we only need to check for rock/coral distances
+                if (this.rocks.children.every((rock) => rock.position.distanceTo(pos) > rock.size + 0.75)
+                    && this.corals.every((coral) => coral.position.distanceTo(pos) > 4)
+                ) {
+                    coral.position.copy(pos);
+                    break;
+                }
+            }
             this.corals.push(coral);
-            if (coralType == LSystemCoral)
-                this.coralMeshes.add(coral);
         }
         this.coralMeshes.add(TubeCoral.defaultContainer);
         this.coralMeshes.add(BrainCoral.defaultContainer);
@@ -197,7 +195,6 @@ class MyContents  {
             this.fishGroups.push(group);
             this.fishByGroup.push(groupFishes);
             this.fishGroup.add(group);
-            this.fishGroup.visible = false;
 
             // create a FishFlock to govern the boids for this group
             const flock = new FishFlock(groupFishes);
@@ -214,7 +211,7 @@ class MyContents  {
      */
     init() {
         // (un)comment for fixed/random seeds
-        // SgiUtils.setSeed(Math.floor(Math.random() * 4294967296));
+        SgiUtils.setSeed(Math.floor(Math.random() * 4294967296));
 
         // create once 
         if (this.axis === null) {
@@ -284,11 +281,11 @@ class MyContents  {
 
 
 
-        // this.temple = new MyTemple();
-        // this.temple.position.set(0, 1, 0);
-        // const templeScale = 0.75;
-        // this.temple.scale.setScalar(templeScale);
-        // this.app.scene.add(this.temple);
+        this.temple = new MyTemple();
+        this.temple.position.set(0, 1, 0);
+        const templeScale = 0.75;
+        this.temple.scale.setScalar(templeScale);
+        this.app.scene.add(this.temple);
     }
 
     /**
@@ -322,17 +319,6 @@ class MyContents  {
             if (time)
                 time.value = alpha;
         });
-        // const time = LSystemCoral.defaultContainer.material.userData?.shader?.uniforms.time;
-        // if (time)
-        //     time.value = alpha;
-        // const alpha = now % (2 * Math.PI);
-        // this.corals?.forEach((coral) => {
-        //     if (coral instanceof LSystemCoral) {
-        //         const time = coral.levels[coral.getCurrentLevel()].object.material.userData?.shader?.uniforms.time;
-        //         if (time)
-        //             time.value = alpha;
-        //     }
-        // });
     }
 
     generateRandomSpawnPos(templeRadius, maxRadius) {

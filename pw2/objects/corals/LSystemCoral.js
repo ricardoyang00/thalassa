@@ -16,13 +16,13 @@ function matGen() {
     mat.onBeforeCompile = (shader) => {
         shader.uniforms.time = { value: 0 };
         shader.uniforms.timeBias = { value: 0 };
-        // shader.uniforms.timeBias = { value: LSystemCoral.#idCounter++ };
 
         // Manual vertex projection, might not work on different/future versions
         shader.vertexShader =
             `
             uniform float time;
             uniform float timeBias;
+            uniform float baseY;
             `
             + shader.vertexShader.replace(
             '#include <project_vertex>',
@@ -36,7 +36,7 @@ function matGen() {
                 +
                 cos(mod(coralAlpha, 2.0 * PI))
             );
-            mvPosition.x += mvPosition.y * sway;
+            mvPosition.x += (mvPosition.y - baseY) * sway;
 
             mvPosition = modelViewMatrix * mvPosition;
             gl_Position = projectionMatrix * mvPosition;
@@ -61,6 +61,12 @@ export class LSystemCoralsContainer extends InstancedMesh2 {
         super(geo[0], matGen(), {createEntities: true});
         this.addLOD(geo[1], matGen(), 20);
         this.addLOD(geo[2], matGen(), 50);
+        this.initUniformsPerInstance({
+            vertex: {
+                timeBias: 'float',
+                baseY: 'float',
+            },
+        });
     }
 }
 
@@ -207,12 +213,14 @@ export class LSystemCoral {
         this.position = new LSystemCoral.#Position(this);
 
         let i = 0;
+        const timeBias = SgiUtils.rand(0, 69420);
         container.addInstances(branchMatrices.length, (obj, j) => {
             // obj.applyMatrix4(branchMatrices[i]);
             const t = transformations[i];
             obj.scale = t.scale;
             obj.quaternion = t.quaternion;
             obj.position = t.position;
+            obj.setUniform("timeBias", timeBias);
 
             container.setColorAt(j, color); // Using "obj.color" throws an error
             this._instances.push(obj);
@@ -290,7 +298,10 @@ export class LSystemCoral {
         }
 
         set y(val) {
-            this.coral?._instances.forEach((obj) => obj.position.y += val - this._y);
+            this.coral?._instances.forEach((obj) => {
+                obj.position.y += val - this._y;
+                obj.setUniform("baseY", val);
+            });
             this._y = val;
         }
 
