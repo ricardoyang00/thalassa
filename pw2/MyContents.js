@@ -10,6 +10,7 @@ import { MyTemple } from './objects/temple/MyTemple.js';
 import { MyFishLOD } from './objects/fish/MyFishLOD.js';
 import { FishFlock } from './objects/fish/FishFlock.js';
 import { MySubmarine } from './objects/submarine/MySubmarine.js';
+import { MyShark } from './objects/shark/MyShark.js';
 
 
 /**
@@ -279,7 +280,9 @@ class MyContents  {
         this._lastUpdateTime = Date.now() * 0.001;
         this.app.scene.add(this.fishGroup);
 
-
+        this.shark = new MyShark();
+        this.shark.position.set(0, 10, 0);
+        this.app.scene.add(this.shark);
 
         this.temple = new MyTemple();
         this.temple.position.set(0, 1, 0);
