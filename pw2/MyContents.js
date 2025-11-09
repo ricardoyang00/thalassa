@@ -7,7 +7,6 @@ import { MyTerrain } from './objects/terrain/MyTerrain.js';
 import { MyRock } from './objects/terrain/MyRock.js';
 import { LSystemCoral } from './objects/corals/LSystemCoral.js';
 import { MyTemple } from './objects/temple/MyTemple.js';
-import { MyFishLOD } from './objects/fish/MyFishLOD.js';
 import { FishFlock } from './objects/fish/FishFlock.js';
 import { MySubmarine } from './objects/submarine/MySubmarine.js';
 import { Fish } from './objects/fish/Fish.js';
@@ -34,7 +33,6 @@ class MyContents  {
         this.coralMeshes = null;
 
         // fish related attributes
-        // this.fishGroups = [];               // array of THREE.Group (one per group)
         this.fishByGroup = [];              // array of arrays with fish references per group
         this.fish = [];                     // flat list of all fish
         this.showFish = true;
@@ -138,8 +136,6 @@ class MyContents  {
      */
     buildFishGroups(numGroups = 3, minPer = 20, maxPer = 30, palette = [0xff6b6b, 0x4ecdc4, 0xffd166]) {
         this.fish = [];
-        // this.fishGroups.forEach(g => this.fishGroup.remove(g));
-        // this.fishGroups = [];
         this.fishByGroup = [];
     
         const rawPalette = Array.isArray(palette) && palette.length ? palette : [0xff9933];
@@ -168,16 +164,6 @@ class MyContents  {
         
             for (let i = 0; i < count; ++i) {
                 const color = colors[Math.floor(Math.random() * colors.length)];
-                // const fishLOD = new MyFishLOD({
-                //     scale: 0.08 + SgiUtils.rand(0, 0.08),
-                //     color: color,
-                //     texturePath: '../pw2/textures/fish.jpg'
-                // });
-            
-                // const fish = new THREE.Group(); // new 'fish' object for the flock
-                // fish.add(fishLOD);
-
-                // fishLOD.rotation.y = -Math.PI / 2;
 
                 const fish = new Fish({
                     scale: SgiUtils.rand(0.08, 0.16),
@@ -201,7 +187,6 @@ class MyContents  {
             }
             this.flocks.push(flock);
         }
-        // this.app.scene.add(this.fishGroup);
         this.app.scene.add(Fish.defaultOwner);
         this.allFishMesh = Fish.defaultOwner.updateInstances(() => {});
     }
@@ -280,11 +265,11 @@ class MyContents  {
 
 
 
-        // this.temple = new MyTemple();
-        // this.temple.position.set(0, 1, 0);
-        // const templeScale = 0.75;
-        // this.temple.scale.setScalar(templeScale);
-        // this.app.scene.add(this.temple);
+        this.temple = new MyTemple();
+        this.temple.position.set(0, 1, 0);
+        const templeScale = 0.75;
+        this.temple.scale.setScalar(templeScale);
+        this.app.scene.add(this.temple);
     }
 
     setFishesScale(s) {

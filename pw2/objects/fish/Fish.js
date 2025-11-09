@@ -55,29 +55,6 @@ export class FishOwner extends InstancedMesh2 {
 
         this.dummy = dummy;
         this.initSkeleton(dummy.skeleton);
-
-        // // high detail - use MyFishModel directly
-        // this.highDetailModel = new MyFishModel({
-        //     scale: 1,
-        //     color: this.color,
-        //     texturePath: this.texturePath,
-        //     numBones: this.numBones
-        // });
-
-        // // medium detail - body only, no texture, no fins
-        // const completeFishGeometry = FishGeometry.createBodyGeometry();
-        // const lowDetailMaterial = FishGeometry.getSharedMaterial(this.color);
-
-        // const mediumDetailGroup = new THREE.Group();
-        // const bodyMeshMedium = new THREE.Mesh(completeFishGeometry, lowDetailMaterial);
-        // mediumDetailGroup.add(bodyMeshMedium);
-
-        // // low detail - simple triangle
-        // const simpleFishGeometry = FishGeometry.createSimpleGeometry();
-
-        // const lowDetailGroup = new THREE.Group();
-        // const bodyMeshLow = new THREE.Mesh(simpleFishGeometry, lowDetailMaterial);
-        // lowDetailGroup.add(bodyMeshLow);
     }
 }
 

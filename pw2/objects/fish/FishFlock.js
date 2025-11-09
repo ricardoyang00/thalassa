@@ -28,7 +28,6 @@ class FishFlock extends MultiInstancedEntityContainer {
     constructor(fishArray = [], options = {}) {
         super(fishArray.slice());
         this.fish = this._instances;
-        // this.fish = fishArray.slice(); // references to fish objects
         this.boids = []; // internal state per fish
         this.dangers = [];
 
@@ -203,17 +202,11 @@ class FishFlock extends MultiInstancedEntityContainer {
             );
             steer.add(wander);
 
-            // const parent = bi.fish.parent;
             if (this.dangers.length > 0) {
                 let avoidance = new THREE.Vector3(); // Accumulator for this fish
                 let totalAvoidance = 0;
 
-                // bi.fish.getWorldPosition(this._fishWorldPos);
                 this._fishWorldPos.copy(bi.fish.position);
-                
-                // Get parent's inverted matrix (to convert world-space vector to local-space)
-                // parent.updateWorldMatrix(true, false);
-                // this._worldToLocalMatrix.copy(parent.matrixWorld).invert();
 
                 for (const danger of this.dangers) {
                     danger.getWorldPosition(this._dangerWorldPos);
@@ -224,9 +217,6 @@ class FishFlock extends MultiInstancedEntityContainer {
                         this._worldAvoidSteer.subVectors(this._fishWorldPos, this._dangerWorldPos);
                         this._worldAvoidSteer.normalize();
                         this._worldAvoidSteer.divideScalar(d); // Weight by inverse distance
-
-                        // Transform this WORLD direction into the fish's LOCAL direction
-                        // this._localAvoidSteer.copy(this._worldAvoidSteer).transformDirection(this._worldToLocalMatrix);
 
                         avoidance.add(this._worldAvoidSteer);
                         totalAvoidance++;
@@ -284,32 +274,9 @@ class FishFlock extends MultiInstancedEntityContainer {
             
             // orient fish to movement direction
             if (bi.velocity.lengthSq() > 1e-6) {
-                // calculate the target point in LOCAL space
                 this._vec.copy(bi.position).add(bi.velocity);
                 bi.fish.lookAt(this._vec);
-
-                // const parent = bi.fish.parent;
-
-                // if (parent) {
-                //     parent.updateWorldMatrix(true, false);
-
-                //     // convert the local target (this._vec) to a WORLD target (this._vec2)
-                //     this._vec2.copy(this._vec).applyMatrix4(parent.matrixWorld);
-
-                //     // make the fish look at the WORLD-space target
-                //     bi.fish.lookAt(this._vec2);
-                // } else {
-                //     // fallback if no parent: just look at local target
-                //     bi.fish.lookAt(this._vec);
-                // }
             }
-
-            // bi.fish is the wrapper Group, children[0] is the MyFishLOD
-            // const fishLOD = bi.fish.children[0]; 
-            // if (fishLOD && fishLOD.animate) {
-            //     const speedFactor = bi.velocity.length() / this.opt.maxSpeed;
-            //     fishLOD.animate(dt, speedFactor);
-            // }
 
             const dummy = Fish.defaultOwner.dummy;
             const speedFactor = bi.velocity.length() / this.opt.maxSpeed;
