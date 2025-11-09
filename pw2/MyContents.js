@@ -274,7 +274,7 @@ class MyContents  {
 
         this.buildSeafloor();
         this.buildSubmarine();
-        this.buildFishGroups(3, 100, 200);
+        this.buildFishGroups(5, 100, 200);
 
         this._lastUpdateTime = Date.now() * 0.001;
 

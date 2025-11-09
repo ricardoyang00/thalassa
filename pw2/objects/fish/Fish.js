@@ -16,16 +16,34 @@ export class FishOwner extends InstancedMesh2 {
         const geo = FishGeometry.geometry.map(geo => {
             const bodyGeo = geo.clone();
             const finGroupGeo = FishGeometry.finGroupGeometry.clone();
-            [bodyGeo, finGroupGeo].forEach(geo => {
-                geo.setAttribute(
-                    'skinIndex',
-                    new THREE.Uint16BufferAttribute(dummy.skinIndices, 4),
-                );
-                geo.setAttribute(
-                    'skinWeight',
-                    new THREE.Float32BufferAttribute(dummy.skinWeights, 4),
-                );
-            });
+
+            // Build skinIndex and skinWeight for fins
+            const boneIdx = 2; // hard-coded :p
+            const vertexCount = geo.attributes.position.count;
+            const skinIndices = new Uint16Array(vertexCount * 4);
+            const skinWeights = new Float32Array(vertexCount * 4);
+            for (let i = 0; i < vertexCount; ++i) {
+                skinIndices[4*i] = boneIdx;
+                skinWeights[4*i] = 1.0;
+            }
+
+            finGroupGeo.setAttribute(
+                'skinIndex',
+                new THREE.Uint16BufferAttribute(skinIndices, 4),
+            );
+            finGroupGeo.setAttribute(
+                'skinWeight',
+                new THREE.Float32BufferAttribute(skinWeights, 4),
+            );
+
+            bodyGeo.setAttribute(
+                'skinIndex',
+                new THREE.Uint16BufferAttribute(dummy.skinIndices, 4),
+            );
+            bodyGeo.setAttribute(
+                'skinWeight',
+                new THREE.Float32BufferAttribute(dummy.skinWeights, 4),
+            );
             return BufferGeometryUtils.mergeGeometries([bodyGeo, finGroupGeo]);
         });
         super(geo[0], FishOwner.#highDetailMat, {
