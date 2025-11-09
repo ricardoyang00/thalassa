@@ -278,6 +278,7 @@ class FishFlock extends MultiInstancedEntityContainer {
                 bi.fish.lookAt(this._vec);
             }
 
+            // update dummy's bones and save changes
             const dummy = Fish.defaultOwner.dummy;
             const speedFactor = bi.velocity.length() / this.opt.maxSpeed;
             dummy.animate(bi.fish, dt, speedFactor);

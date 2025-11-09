@@ -5,6 +5,9 @@ import { MultiInstancedEntity } from '../MultiInstancedEntity.js';
 import { FishGeometry } from './FishGeometry.js';
 import { MyFishModel } from './MyFishModel.js';
 
+/**
+ * @brief Stores all instances related to fish.
+ */
 export class FishOwner extends InstancedMesh2 {
     static #highDetailMat = new THREE.MeshPhongMaterial({
         map: new THREE.TextureLoader().load('textures/fish.jpg'),
@@ -12,12 +15,13 @@ export class FishOwner extends InstancedMesh2 {
     static #lowDetailMat = new THREE.MeshPhongMaterial();
 
     constructor() {
+        // Dummy mesh will be used to update bones
         const dummy = new MyFishModel();
         const geo = FishGeometry.geometry.map(geo => {
             const bodyGeo = geo.clone();
             const finGroupGeo = FishGeometry.finGroupGeometry.clone();
 
-            // Build skinIndex and skinWeight for fins
+            // Build skinIndex and skinWeight for fins (use only the middle bone, index = 2)
             const boneIdx = 2; // hard-coded :p
             const vertexCount = geo.attributes.position.count;
             const skinIndices = new Uint16Array(vertexCount * 4);
@@ -44,7 +48,7 @@ export class FishOwner extends InstancedMesh2 {
                 'skinWeight',
                 new THREE.Float32BufferAttribute(dummy.skinWeights, 4),
             );
-            return BufferGeometryUtils.mergeGeometries([bodyGeo, finGroupGeo]);
+            return BufferGeometryUtils.mergeGeometries([bodyGeo, finGroupGeo]).rotateY(-Math.PI/2);
         });
         super(geo[0], FishOwner.#highDetailMat, {
             createEntities: true,
@@ -54,7 +58,7 @@ export class FishOwner extends InstancedMesh2 {
         this.addLOD(geo[2], FishOwner.#lowDetailMat, 100);
 
         this.dummy = dummy;
-        this.initSkeleton(dummy.skeleton);
+        this.initSkeleton(dummy.skeleton); // skeleton is updated when calling animate() on the dummy
     }
 }
 

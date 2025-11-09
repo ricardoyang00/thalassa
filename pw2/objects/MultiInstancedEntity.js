@@ -1,5 +1,11 @@
 import * as THREE from 'three';
 
+/**
+ * @brief Class to represent scene objects that are composed of one or more InstancedEntities
+ * @warn Do not expect this class to keep variables consistent if you wander away from simple operations.
+ *       It is also inconsistent in terms of parent-child relationship (setting a child's position to an absolute value will definitely break this)
+ * @see https://agargaro.github.io/instanced-mesh/api/classes/instancedentity/
+ */
 export class MultiInstancedEntity {
     _instances = [];
 
@@ -44,10 +50,6 @@ export class MultiInstancedEntity {
         });
     }
 
-    /**
-     * @param {THREE.Vector3} target Position to look at
-     * @note It assumes that the forward direction is (1, 0, 0) (towards X positive)
-     */
     lookAt(target) {
         const dir = new THREE.Vector3();
         dir.subVectors(target, this.position).normalize();
@@ -59,10 +61,6 @@ export class MultiInstancedEntity {
 
         const m = new THREE.Matrix4();
         m.makeBasis(right, up, dir);
-
-        // Fix rotation since fish are pointed towards +X
-        const correction = new THREE.Matrix4().makeRotationY(-Math.PI / 2);
-        m.multiply(correction);
 
         // this.quaternion.setFromRotationMatrix(m);
         const m1 = m.elements;
@@ -247,6 +245,12 @@ class DummyOwner {
     addInstances(n, fn) {}
 }
 
+/**
+ * @brief Class to represent scene objects that are not actually Object3D (basically a wrapper/abstraction)
+ *        It is called MultiInstancedEntityContainer because, in practice, it just stores MultiInstancedEntity objects
+ * @warn Do not expect this class to keep variables consistent if you wander away from simple operations.
+ *       It is also inconsistent in terms of parent-child relationship (setting a child's position to an absolute value will definitely break this)
+ */
 export class MultiInstancedEntityContainer extends MultiInstancedEntity {
     static #owner = new DummyOwner();
     constructor(instances) {
