@@ -183,25 +183,15 @@ class MyContents  {
                     scale: SgiUtils.rand(0.08, 0.16),
                     color: color,
                 });
-                fish.rotateY(-Math.PI / 2);
 
                 // local position inside group (clustered)
                 fish.position.set(SgiUtils.rand(-4, 4), SgiUtils.rand(-1, 3), SgiUtils.rand(-4, 4));
-                // fish.rotateY(SgiUtils.rand(-Math.PI, Math.PI))
-                // fish.rotation.y = SgiUtils.rand(-Math.PI, Math.PI);
 
-                // group.add(fish);
                 groupFishes.push(fish);
                 this.fish.push(fish);
             }
-            // const group = new ProxiedMultiInstancedEntity(groupFishes);
-            // group.name = `fishGroup_${g}`;
-            // console.log(group.owner);
-            // group.position.set((col - cx) * spacing, SgiUtils.rand(1, 6), (row - rz) * spacing);
-        
-            // this.fishGroups.push(group);
+
             this.fishByGroup.push(groupFishes);
-            // this.fishGroup.add(group);
 
             // create a FishFlock to govern the boids for this group
             const flock = new FishFlock(groupFishes);

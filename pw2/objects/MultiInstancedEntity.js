@@ -10,8 +10,8 @@ export class MultiInstancedEntity {
         this.quaternion = new MultiInstancedEntity.Quaternion(this);
         this.scale = new MultiInstancedEntity.Scale(this);
 
-        this.rotation._onChange(() => this.quaternion.setFromEuler(this.rotation, false));
-        this.quaternion._onChange(() => this.rotation.setFromQuaternion(this.quaternion, undefined, false));
+        // this.rotation._onChange(() => this.quaternion.setFromEuler(this.rotation, false));
+        // this.quaternion._onChange(() => this.rotation.setFromQuaternion(this.quaternion, undefined, false));
     }
 
     addInstances(n, fn) {
@@ -44,33 +44,36 @@ export class MultiInstancedEntity {
         });
     }
 
+    /**
+     * @param {THREE.Vector3} target Position to look at
+     * @note It assumes that the forward direction is (1, 0, 0) (towards X positive)
+     */
     lookAt(target) {
-        // 1. Compute direction vector from object to target
         const dir = new THREE.Vector3();
-
         dir.subVectors(target, this.position).normalize();
-
-        // If direction is near zero vector, skip
         if (dir.lengthSq() === 0) return;
 
-        // 2. Define an up vector (usually +Y)
         const up = new THREE.Vector3(0, 1, 0);
-
-        // 3. Compute the right vector
         const right = new THREE.Vector3().crossVectors(up, dir).normalize();
-
-        // 4. Recompute the true up vector (orthogonalize)
         up.crossVectors(dir, right).normalize();
 
-        // 5. Build a rotation matrix
         const m = new THREE.Matrix4();
-        m.makeBasis(right, up, dir); // columns are the local axes of the object
+        m.makeBasis(right, up, dir);
 
-        // 6. Convert matrix to quaternion
-        this.quaternion.setFromRotationMatrix(m);
+        // Fix rotation since fish are pointed towards +X
+        const correction = new THREE.Matrix4().makeRotationY(-Math.PI / 2);
+        m.multiply(correction);
 
-        // Optionally, update rotation if needed:
-        // object.rotation.setFromQuaternion(object.quaternion);
+        // this.quaternion.setFromRotationMatrix(m);
+        const m1 = m.elements;
+        const w = Math.sqrt(1.0 + m1[0] + m1[5] + m1[10]) / 2.0;
+        const w4 = (4.0 * w);
+        this.quaternion.set(
+            (m1[6] - m1[9]) / w4,
+            (m1[8] - m1[2]) / w4,
+            (m1[1] - m1[4]) / w4,
+            w,
+        );
     }
 
     static Position = class extends THREE.Vector3 {
@@ -113,6 +116,14 @@ export class MultiInstancedEntity {
             this.entity = entity;
         }
 
+        set(x, y, z, order = undefined) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            if (order !== undefined)
+                this.order = order;
+        }
+
         set x(val) {
             this.entity.rotateX(val - this._x);
             this._x = val;
@@ -145,6 +156,13 @@ export class MultiInstancedEntity {
         constructor(entity, x = 0, y = 0, z = 0, w = 1) {
             super(x, y, z, w);
             this.entity = entity;
+        }
+
+        set(x, y, z, w) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
         }
 
         set x(val) {

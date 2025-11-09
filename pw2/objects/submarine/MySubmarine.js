@@ -51,7 +51,11 @@ class MySubmarine extends THREE.Object3D {
         const hullRadius = s * 0.5;
 
         const hullGeo = new THREE.CylinderGeometry(hullRadius, hullRadius, hullLength, 24, 1);
-        const hullMat = new THREE.MeshPhongMaterial({ color: 0xffcc00, shininess: 30 });
+        const hullMat = new THREE.MeshPhongMaterial({
+            color: 0xffdd77, // 0xffcc00,
+            shininess: 30,
+            map: new THREE.TextureLoader().load('textures/pringles.png'),
+        });
         const hull = new THREE.Mesh(hullGeo, hullMat);
         hull.rotation.z = Math.PI / 2;
         this.add(hull);
