@@ -46,7 +46,16 @@ class MyContents  {
         // submarine
         this.submarine = null;
 
-        this.sharkController = null;
+        this.shark = null;
+        this.sharkSwimSpeed = 4.0;  // Units per second
+        this.sharkTurnSpeed = 0.8;  // How fast it turns (0-1 range, multiplied by dt)
+        this.sharkPatrolCenter = new THREE.Vector3(0, 15, 0);
+        this.sharkPatrolRadius = 40;
+        this.sharkTarget = new THREE.Vector3(); // The point it's swimming towards
+
+        // Re-usable temp objects for smooth rotation
+        this._sharkTargetQuaternion = new THREE.Quaternion();
+        this._sharkLookAtMatrix = new THREE.Matrix4();
     }
 
     /**
@@ -216,12 +225,23 @@ class MyContents  {
      * Creates the shark, its wrapper, and its flock controller.
      */
     buildShark() {
-        this.sharkController = new SharkController(this.app, this.app.scene, {
+        this.shark = new MySharkLOD(this.app, {
             size: 1,
             assetsPath: 'models/shark/'
         });
-        this.sharkController.buildShark();
-        this.shark = this.sharkController.shark;
+
+        // Start at a random point in its patrol area
+        this.shark.position.copy(this.sharkPatrolCenter)
+            .add(new THREE.Vector3(
+                SgiUtils.rand(-this.sharkPatrolRadius, this.sharkPatrolRadius),
+                SgiUtils.rand(-5, 5), // Less vertical
+                SgiUtils.rand(-this.sharkPatrolRadius, this.sharkPatrolRadius)
+            ));
+        
+        this.app.scene.add(this.shark);
+
+        // Pick its first target
+        this.pickNewSharkTarget();
     }
 
     /**
@@ -324,8 +344,8 @@ class MyContents  {
         const dt = this._lastUpdateTime ? Math.min(0.1, now - this._lastUpdateTime) : 0;
         this._lastUpdateTime = now;
 
-        if (this.sharkController) {
-            this.sharkController.update(dt);
+        if (this.shark) {
+            this.updateShark(dt);
         }
 
         this.flocks.forEach(f => f.update(dt));
