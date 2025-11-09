@@ -124,10 +124,8 @@ class MyShark extends THREE.Object3D {
                         // traverse meshes: set shadows and apply material fallbacks
                         object.traverse((child) => {
                             if (!child.isMesh) return;
-
                             child.castShadow = true;
                             child.receiveShadow = true;
-
                             const mats = Array.isArray(child.material) ? child.material : [child.material];
 
                             mats.forEach((mat) => {
@@ -148,12 +146,9 @@ class MyShark extends THREE.Object3D {
                             });
                         });
 
-                        object.scale.set(this.size, this.size, this.size);
-                        object.rotation.y = Math.PI;
                         this.add(object);
-
-                        // --- DEBUG BLOCK REMOVED ---
-
+                        this.scale.set(this.size, this.size, this.size);
+                        
                         this._loaded = true;
                         if (typeof onLoad === 'function') onLoad(object);
                     },

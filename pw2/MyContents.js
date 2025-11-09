@@ -10,8 +10,7 @@ import { MyTemple } from './objects/temple/MyTemple.js';
 import { MyFishLOD } from './objects/fish/MyFishLOD.js';
 import { FishFlock } from './objects/fish/FishFlock.js';
 import { MySubmarine } from './objects/submarine/MySubmarine.js';
-import { MyShark } from './objects/shark/MyShark.js';
-
+import { MySharkLOD } from './objects/shark/MySharkLOD.js';
 
 /**
  *  This class contains the contents of out application
@@ -280,7 +279,11 @@ class MyContents  {
         this._lastUpdateTime = Date.now() * 0.001;
         this.app.scene.add(this.fishGroup);
 
-        this.shark = new MyShark();
+        this.shark = new MySharkLOD(this.app, {
+            size: 1, // You can adjust the default size here
+            assetsPath: 'models/shark/' 
+            // mtlFile and objFile use the defaults
+        });
         this.shark.position.set(0, 10, 0);
         this.app.scene.add(this.shark);
 
@@ -314,6 +317,10 @@ class MyContents  {
 
         if (this.submarine && typeof this.submarine.update === 'function') {
             this.submarine.update(dt);
+        }
+
+        if (this.shark && typeof this.shark.update === 'function') {
+            this.shark.animate(dt);
         }
 
         const alpha = now % (2 * Math.PI);
