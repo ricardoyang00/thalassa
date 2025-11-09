@@ -36,7 +36,7 @@ class MyFishModel extends THREE.Group {
         // Create skeleton with specified number of bones
         this.bones = this.#createSkeleton();
 
-        const bodyGeometry = FishGeometry.createBodyGeometry(this.numBones * 2);
+        const bodyGeometry = FishGeometry.geometry[0];
         this.#addSkinningData(bodyGeometry);
         
         const material = FishGeometry.getSharedMaterial(this.color, this.texturePath);
@@ -174,7 +174,7 @@ class MyFishModel extends THREE.Group {
     }
 
     #addFins(baseMaterial) {
-        const finGeom = FishGeometry.createFinGeometry(this.finSize);
+        const finGeom = FishGeometry.finGeometry;
         const finMaterial = baseMaterial.clone();
         finMaterial.side = THREE.DoubleSide;
 
@@ -206,6 +206,10 @@ class MyFishModel extends THREE.Group {
      * @param {number} [speedFactor=0] - Current speed as a factor (0.0 to 1.0).
      */
     animate(dt, speedFactor = 0) {
+        if (!this.pipipupu) {
+            console.log(this);
+            this.pipipupu = true;
+        }
         if (this.bones.length < 2 || dt <= 0) return;
 
         // Calculate an effective speed:
@@ -219,7 +223,7 @@ class MyFishModel extends THREE.Group {
         const head = this.bones[0];
         const headAmplitude = this.swimAmplitude * 0.3;
         // Use this.animationTime instead of 'time * this.swimSpeed'
-        head.rotation.y = -Math.sin(this.animationTime) * headAmplitude;
+        head.rotation.y = -Math.sin(this.animationTime / 10) * headAmplitude;
 
         const spineCount = this.bones.length - 1;
         for (let i = 1; i < this.bones.length; i++) {
@@ -229,7 +233,7 @@ class MyFishModel extends THREE.Group {
             const amplitude = this.swimAmplitude * amplitudeFactor;
 
             // Use this.animationTime instead of 'time * this.swimSpeed'
-            this.bones[i].rotation.y = Math.sin(this.animationTime + phase) * amplitude;
+            this.bones[i].rotation.y = Math.sin((this.animationTime + phase) / 10) * amplitude;
         }
     }
 

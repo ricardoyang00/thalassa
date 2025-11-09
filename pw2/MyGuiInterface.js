@@ -78,9 +78,7 @@ class MyGuiInterface  {
         coralsFolder.close();
 
         const fishesFolder = this.datgui.addFolder('Fishes');
-        fishesFolder.add(this.contents, 'showFish', true).name("Show Fishes").onChange((value) => {
-            this.contents.toggleFish(value);
-        });
+        fishesFolder.add(this.contents.allFishMesh, 'visible').name('Show Fishes');
         const initialScale = (this.contents && this.contents.fishGroup) ? this.contents.fishGroup.scale.x : 1;
         const fishParams = { scale: initialScale };
         fishesFolder.add(fishParams, 'scale', 0.1, 3, 0.01).name('Scale').onChange((value) => {
@@ -88,7 +86,7 @@ class MyGuiInterface  {
         });
         fishesFolder.close();
 
-        if (this.contents.flocks && this.contents.flocks.length > 0) {
+        if (this.contents.flocks && this.contents.flocks[0]?.opt) {
             const defaultOpts = this.contents.flocks[0].opt;
             const flockParams = {
                 alignmentWeight: defaultOpts.alignmentWeight,

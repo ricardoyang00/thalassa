@@ -40,7 +40,7 @@ class MyFishLOD extends THREE.LOD {
         });
 
         // medium detail - body only, no texture, no fins
-        const completeFishGeometry = FishGeometry.createBodyGeometry();
+        const completeFishGeometry = FishGeometry.geometry[1];
         const lowDetailMaterial = FishGeometry.getSharedMaterial(this.color);
 
         const mediumDetailGroup = new THREE.Group();
@@ -48,7 +48,7 @@ class MyFishLOD extends THREE.LOD {
         mediumDetailGroup.add(bodyMeshMedium);
 
         // low detail - simple triangle
-        const simpleFishGeometry = FishGeometry.createSimpleGeometry();
+        const simpleFishGeometry = FishGeometry.geometry[2];
 
         const lowDetailGroup = new THREE.Group();
         const bodyMeshLow = new THREE.Mesh(simpleFishGeometry, lowDetailMaterial);

@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { SgiUtils } from '../../SgiUtils.js';
+import { MultiInstancedEntityContainer } from '../MultiInstancedEntity.js';
 
-class FishFlock {
+class FishFlock extends MultiInstancedEntityContainer {
     /**
      * Creates a FishFlock simulation.
      * @param {THREE.Object3D[]} fishArray - Array of fish objects to control.
@@ -24,7 +25,9 @@ class FishFlock {
      * @param {number} [options.avoidanceWeight=5] - How strongly fish flee dangers (higher = more panic).
     */
     constructor(fishArray = [], options = {}) {
-        this.fish = fishArray.slice(); // references to fish objects
+        super(fishArray.slice());
+        this.fish = this._instances;
+        // this.fish = fishArray.slice(); // references to fish objects
         this.boids = []; // internal state per fish
         this.dangers = [];
 
@@ -299,11 +302,11 @@ class FishFlock {
             }
 
             // bi.fish is the wrapper Group, children[0] is the MyFishLOD
-            const fishLOD = bi.fish.children[0]; 
-            if (fishLOD && fishLOD.animate) {
-                const speedFactor = bi.velocity.length() / this.opt.maxSpeed;
-                fishLOD.animate(dt, speedFactor);
-            }
+            // const fishLOD = bi.fish.children[0]; 
+            // if (fishLOD && fishLOD.animate) {
+            //     const speedFactor = bi.velocity.length() / this.opt.maxSpeed;
+            //     fishLOD.animate(dt, speedFactor);
+            // }
         }
     }
 }

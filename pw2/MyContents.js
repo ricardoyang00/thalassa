@@ -10,6 +10,7 @@ import { MyTemple } from './objects/temple/MyTemple.js';
 import { MyFishLOD } from './objects/fish/MyFishLOD.js';
 import { FishFlock } from './objects/fish/FishFlock.js';
 import { MySubmarine } from './objects/submarine/MySubmarine.js';
+import { Fish } from './objects/fish/Fish.js';
 
 
 /**
@@ -33,8 +34,7 @@ class MyContents  {
         this.coralMeshes = null;
 
         // fish related attributes
-        this.fishGroup = new THREE.Group(); // parent container
-        this.fishGroups = [];               // array of THREE.Group (one per group)
+        // this.fishGroups = [];               // array of THREE.Group (one per group)
         this.fishByGroup = [];              // array of arrays with fish references per group
         this.fish = [];                     // flat list of all fish
         this.showFish = true;
@@ -138,8 +138,8 @@ class MyContents  {
      */
     buildFishGroups(numGroups = 3, minPer = 20, maxPer = 30, palette = [0xff6b6b, 0x4ecdc4, 0xffd166]) {
         this.fish = [];
-        this.fishGroups.forEach(g => this.fishGroup.remove(g));
-        this.fishGroups = [];
+        // this.fishGroups.forEach(g => this.fishGroup.remove(g));
+        // this.fishGroups = [];
         this.fishByGroup = [];
     
         const rawPalette = Array.isArray(palette) && palette.length ? palette : [0xff9933];
@@ -155,9 +155,6 @@ class MyContents  {
         });
     
         for (let g = 0; g < numGroups; ++g) {
-            const group = new THREE.Group();
-            group.name = `fishGroup_${g}`;
-        
             const cols = Math.ceil(Math.sqrt(numGroups));
             const rows = Math.ceil(numGroups / cols);
             const spacing = 20;
@@ -165,45 +162,58 @@ class MyContents  {
             const row = Math.floor(g / cols);
             const cx = (cols - 1) / 2;
             const rz = (rows - 1) / 2;
-            group.position.set((col - cx) * spacing, SgiUtils.rand(1, 6), (row - rz) * spacing);
 
             const count = Math.max(minPer, Math.floor(SgiUtils.rand(minPer, maxPer + 1)));
             const groupFishes = [];
         
             for (let i = 0; i < count; ++i) {
                 const color = colors[Math.floor(Math.random() * colors.length)];
-                const fishLOD = new MyFishLOD({
-                    scale: 0.08 + SgiUtils.rand(0, 0.08),
-                    color: color,
-                    texturePath: '../pw2/textures/fish.jpg'
-                });
+                // const fishLOD = new MyFishLOD({
+                //     scale: 0.08 + SgiUtils.rand(0, 0.08),
+                //     color: color,
+                //     texturePath: '../pw2/textures/fish.jpg'
+                // });
             
-                const fish = new THREE.Group(); // new 'fish' object for the flock
-                fish.add(fishLOD);
+                // const fish = new THREE.Group(); // new 'fish' object for the flock
+                // fish.add(fishLOD);
 
-                fishLOD.rotation.y = -Math.PI / 2;
+                // fishLOD.rotation.y = -Math.PI / 2;
+
+                const fish = new Fish({
+                    scale: SgiUtils.rand(0.08, 0.16),
+                    color: color,
+                });
+                fish.rotateY(-Math.PI / 2);
 
                 // local position inside group (clustered)
                 fish.position.set(SgiUtils.rand(-4, 4), SgiUtils.rand(-1, 3), SgiUtils.rand(-4, 4));
-                fish.rotation.y = SgiUtils.rand(-Math.PI, Math.PI);
+                // fish.rotateY(SgiUtils.rand(-Math.PI, Math.PI))
+                // fish.rotation.y = SgiUtils.rand(-Math.PI, Math.PI);
 
-                group.add(fish);
+                // group.add(fish);
                 groupFishes.push(fish);
                 this.fish.push(fish);
             }
+            // const group = new ProxiedMultiInstancedEntity(groupFishes);
+            // group.name = `fishGroup_${g}`;
+            // console.log(group.owner);
+            // group.position.set((col - cx) * spacing, SgiUtils.rand(1, 6), (row - rz) * spacing);
         
-            this.fishGroups.push(group);
+            // this.fishGroups.push(group);
             this.fishByGroup.push(groupFishes);
-            this.fishGroup.add(group);
+            // this.fishGroup.add(group);
 
             // create a FishFlock to govern the boids for this group
             const flock = new FishFlock(groupFishes);
+            flock.position.set((col - cx) * spacing, SgiUtils.rand(1, 6), (row - rz) * spacing);
             if (this.submarine) {
                 flock.addDanger(this.submarine);
             }
             this.flocks.push(flock);
         }
-        this.app.scene.add(this.fishGroup);
+        // this.app.scene.add(this.fishGroup);
+        this.app.scene.add(Fish.defaultOwner);
+        this.allFishMesh = Fish.defaultOwner.updateInstances(() => {});
     }
 
     /**
@@ -277,25 +287,14 @@ class MyContents  {
         this.buildFishGroups(3, 100, 200);
 
         this._lastUpdateTime = Date.now() * 0.001;
-        this.app.scene.add(this.fishGroup);
 
 
 
-        this.temple = new MyTemple();
-        this.temple.position.set(0, 1, 0);
-        const templeScale = 0.75;
-        this.temple.scale.setScalar(templeScale);
-        this.app.scene.add(this.temple);
-    }
-
-    /**
-     * toggles visibility of fish
-     * @param {boolean} visible
-     */
-    toggleFish(visible) {
-        this.showFish = visible;
-        this.fishGroup.visible = visible;
-        this.fish.forEach(f => f.visible = visible);
+        // this.temple = new MyTemple();
+        // this.temple.position.set(0, 1, 0);
+        // const templeScale = 0.75;
+        // this.temple.scale.setScalar(templeScale);
+        // this.app.scene.add(this.temple);
     }
 
     setFishesScale(s) {
@@ -308,6 +307,7 @@ class MyContents  {
         this._lastUpdateTime = now;
 
         this.flocks.forEach(f => f.update(dt));
+        this.allFishMesh.updateInstances(() => {});
 
         if (this.submarine && typeof this.submarine.update === 'function') {
             this.submarine.update(dt);

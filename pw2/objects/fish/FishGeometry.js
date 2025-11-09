@@ -4,12 +4,18 @@ import * as THREE from 'three';
  * Shared fish geometry builder
  */
 class FishGeometry {
+    static geometry = [
+        this.#createBodyGeometry(10), // this.numBones * 2, assuming this.numBones = 5
+        this.#createBodyGeometry(),
+        this.#createSimpleGeometry(),
+    ];
+    static finGeometry = this.#createFinGeometry();
     /**
      * Creates the complete fish body geometry with segments for smooth animation
      * @param {number} segments - number of segments along the body (default 8)
      * @returns {THREE.BufferGeometry}
      */
-    static createBodyGeometry(segments = 4) {
+    static #createBodyGeometry(segments = 4) {
         const vertices = [];
         const indices = [];
 
@@ -163,7 +169,7 @@ class FishGeometry {
      * Creates a simple low-detail fish geometry
      * @returns {THREE.BufferGeometry}
      */
-    static createSimpleGeometry() {
+    static #createSimpleGeometry() {
         const vertices = new Float32Array([
             -4, 0, 0, 
             1, 1, 0, 
@@ -183,7 +189,7 @@ class FishGeometry {
      * @param {number} finSize
      * @returns {THREE.BufferGeometry}
      */
-    static createFinGeometry(finSize = 0.8) {
+    static #createFinGeometry(finSize = 0.8) {
         const vertices = new Float32Array([
             0, 0, 0, 
             finSize, 0, 0, 
