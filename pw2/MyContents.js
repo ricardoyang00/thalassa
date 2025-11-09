@@ -99,7 +99,7 @@ class MyContents  {
             BrainCoral,
         ]
 
-        for (let i = 0; i < 100; ++i) {
+        for (let i = 0; i < 200; ++i) {
             const coralType = coralTypes[SgiUtils.randInt(coralTypes.length)];
             const coral = new coralType(SgiUtils.rand(0, 0xffffff), 2);
 

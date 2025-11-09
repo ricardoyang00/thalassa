@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { SgiUtils } from '../../SgiUtils.js';
 import { MultiInstancedEntityContainer } from '../MultiInstancedEntity.js';
+import { Fish } from './Fish.js';
 
 class FishFlock extends MultiInstancedEntityContainer {
     /**
@@ -309,6 +310,11 @@ class FishFlock extends MultiInstancedEntityContainer {
             //     const speedFactor = bi.velocity.length() / this.opt.maxSpeed;
             //     fishLOD.animate(dt, speedFactor);
             // }
+
+            const dummy = Fish.defaultOwner.dummy;
+            const speedFactor = bi.velocity.length() / this.opt.maxSpeed;
+            dummy.animate(bi.fish, dt, speedFactor);
+            Fish.defaultOwner.setBonesAt(bi.fish._instances[0].id);
         }
     }
 }

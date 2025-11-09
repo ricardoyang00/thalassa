@@ -1,7 +1,9 @@
 import * as THREE from 'three';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import { InstancedMesh2 } from '@three.ez/instanced-mesh';
 import { MultiInstancedEntity } from '../MultiInstancedEntity.js';
 import { FishGeometry } from './FishGeometry.js';
+import { MyFishModel } from './MyFishModel.js';
 
 export class FishOwner extends InstancedMesh2 {
     static #highDetailMat = new THREE.MeshPhongMaterial({
@@ -10,13 +12,31 @@ export class FishOwner extends InstancedMesh2 {
     static #lowDetailMat = new THREE.MeshPhongMaterial();
 
     constructor() {
-        const geo = FishGeometry.geometry;
+        const dummy = new MyFishModel();
+        const geo = FishGeometry.geometry.map(geo => {
+            const bodyGeo = geo.clone();
+            const finGroupGeo = FishGeometry.finGroupGeometry.clone();
+            [bodyGeo, finGroupGeo].forEach(geo => {
+                geo.setAttribute(
+                    'skinIndex',
+                    new THREE.Uint16BufferAttribute(dummy.skinIndices, 4),
+                );
+                geo.setAttribute(
+                    'skinWeight',
+                    new THREE.Float32BufferAttribute(dummy.skinWeights, 4),
+                );
+            });
+            return BufferGeometryUtils.mergeGeometries([bodyGeo, finGroupGeo]);
+        });
         super(geo[0], FishOwner.#highDetailMat, {
             createEntities: true,
             allowsEuler: true,
         });
         this.addLOD(geo[1], FishOwner.#highDetailMat, 30);
         this.addLOD(geo[2], FishOwner.#lowDetailMat, 100);
+
+        this.dummy = dummy;
+        this.initSkeleton(dummy.skeleton);
 
         // // high detail - use MyFishModel directly
         // this.highDetailModel = new MyFishModel({
@@ -56,5 +76,6 @@ export class Fish extends MultiInstancedEntity {
             owner.setColorAt(i, color);
         });
         this.scale.setScalar(scale);
+        this.animationTime = 0;
     }
 }

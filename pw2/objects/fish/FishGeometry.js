@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
+import { MyFishModel } from './MyFishModel.js';
 
 /**
  * Shared fish geometry builder
@@ -28,7 +29,7 @@ class FishGeometry {
         this.#createBodyGeometry(10), // this.numBones * 2, assuming this.numBones = 5
         this.#createBodyGeometry(),
         this.#createSimpleGeometry(),
-    ].map(geo => BufferGeometryUtils.mergeGeometries([geo, this.finGroupGeometry]));
+    ];
 
     /**
      * Creates the complete fish body geometry with segments for smooth animation
