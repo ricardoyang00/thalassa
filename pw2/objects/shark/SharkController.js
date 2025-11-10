@@ -70,6 +70,8 @@ class SharkController {
         // Stop if shark isn't loaded
         if (!this.shark || !this.shark.visible) return;
 
+        this.shark.animate(dt); 
+
         // Check if we've reached the target
         const distanceToTarget = this.shark.position.distanceTo(this.sharkTarget);
         if (distanceToTarget < 5.0) {
