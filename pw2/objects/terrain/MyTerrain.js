@@ -8,17 +8,16 @@ class MyTerrain extends THREE.Object3D {
     #length;
     #canvas;
 
-    constructor(contents) {
+    constructor(contents, size = 100) {
         super();
         this.contents = contents;
         this.app = contents.app;
+        this.#width = size;
+        this.#length = size;
         this.buildTerrain();
     }
 
     buildTerrain() {
-        this.#width = 100;
-        this.#length = 100;
-
         const terrainGeometry = new THREE.PlaneGeometry(this.#width, this.#length, 64, 64);
 
         let terrainMap = new THREE.TextureLoader().load('images/heightmap.jpg', () => {

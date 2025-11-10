@@ -1,18 +1,17 @@
 import * as THREE from 'three';
 import { MyAxis } from './MyAxis.js';
-import { TubeCoral } from './objects/corals/TubeCoral.js';
-import { SgiUtils } from './SgiUtils.js';
 import { BrainCoral } from './objects/corals/BrainCoral.js';
-import { MyTerrain } from './objects/terrain/MyTerrain.js';
-import { MyRock } from './objects/terrain/MyRock.js';
 import { LSystemCoral } from './objects/corals/LSystemCoral.js';
-import { MyTemple } from './objects/temple/MyTemple.js';
-import { FishFlock } from './objects/fish/FishFlock.js';
-import { MySubmarine } from './objects/submarine/MySubmarine.js';
+import { TubeCoral } from './objects/corals/TubeCoral.js';
 import { Fish } from './objects/fish/Fish.js';
-import { MyAquaman } from './objects/aquaman/MyAquaman.js';
+import { FishFlock } from './objects/fish/FishFlock.js';
 import { Apollo } from './objects/sculpture/Apollo.js';
 import { SharkController } from './objects/shark/SharkController.js';
+import { MySubmarine } from './objects/submarine/MySubmarine.js';
+import { MyTemple } from './objects/temple/MyTemple.js';
+import { MyRock } from './objects/terrain/MyRock.js';
+import { MyTerrain } from './objects/terrain/MyTerrain.js';
+import { SgiUtils } from './SgiUtils.js';
 
 /**
  *  This class contains the contents of out application
@@ -30,6 +29,7 @@ class MyContents  {
 
         // seafloor related attributes
         this.seafloorGroup = null;
+        this.terrainSize = 100;
         this.terrain = null;
         this.rocks = null;
         this.coralMeshes = null;
@@ -46,13 +46,17 @@ class MyContents  {
         // this.app.scene.add(this.aquaman);
         // this.aquaman.position.set(0, 0, 0);
         this.apollo = new Apollo(this.app);
+        this.apollo.name = "Apollo";
         this.app.scene.add(this.apollo);
     
         //this.apollo.rotation.set(-Math.PI/12, -Math.PI/7, Math.PI/3 + Math.PI/12);
         this.apollo.rotateOnAxis(new THREE.Vector3(1, 0, 0), -Math.PI/2 + 1 * Math.PI/12);
         this.apollo.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI/6 - Math.PI/12);
-        //this.apollo.position.set(50, -8, 10);
-        this.apollo.position.set(25, -3.5, 20);
+        //this.apollo.position.set(25, -3.5, 20);
+
+        this.apollo.position.set(15, -3.5, 20);
+
+        this._clippingApplied = false;
 
         // submarine
         this.submarine = null;
@@ -69,7 +73,7 @@ class MyContents  {
         this.seafloorGroup = new THREE.Group();
         this.seafloorGroup.name = "seafloorGroup";
 
-        const terrain = new MyTerrain(this);
+        const terrain = new MyTerrain(this, this.terrainSize);
         this.seafloorGroup.add(terrain);
         this.terrain = terrain;
 
@@ -257,7 +261,7 @@ class MyContents  {
 
         const spot1 = new THREE.SpotLight(0xffffff, 7500);
         spot1.position.set(30, 50, -30);
-        spot1.target.position.set(0, 0, 0);
+        spot1.target.position.set(-25, 0, -25);
         spot1.angle = Math.PI / 6;
         spot1.penumbra = 0.2;
         spot1.decay = 2;
@@ -270,7 +274,7 @@ class MyContents  {
 
         const spot2 = new THREE.SpotLight(0xffffff, 7500);
         spot2.position.set(-30, 50, 30);
-        spot2.target.position.set(0, 0, 0);
+        spot2.target.position.set(25, 0, 0);
         spot2.angle = Math.PI / 6;
         spot2.penumbra = 0.2;
         spot2.decay = 2;
@@ -309,10 +313,41 @@ class MyContents  {
         this._lastUpdateTime = Date.now() * 0.001;
 
         this.temple = new MyTemple();
-        this.temple.position.set(0, 1, 0);
+        this.temple.name = "Temple";
+        this.temple.rotateY(-Math.PI / 4);
+        this.temple.position.set(-25, 1, -25);
         const templeScale = 0.75;
         this.temple.scale.setScalar(templeScale);
         this.app.scene.add(this.temple);
+        
+        // // CLIPPING ///////////
+        // // clipping plane at y = 0
+        // const clippingPlanes = [
+        //     new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),                         // y = 0 (bottom)
+        //     new THREE.Plane(new THREE.Vector3(1, 0, 0), this.terrainSize / 2),      // x = 50 (right)
+        //     new THREE.Plane(new THREE.Vector3(-1, 0, 0), this.terrainSize / 2),     // x = -50 (left)
+        //     new THREE.Plane(new THREE.Vector3(0, 0, 1), this.terrainSize / 2),      // z = 50 (front)
+        //     new THREE.Plane(new THREE.Vector3(0, 0, -1), this.terrainSize / 2),     // z = -50 (back)
+        // ];
+
+        // this.app.renderer.localClippingEnabled = true;
+
+        // //clipping to all materials
+        // const clippingObjects = ["Apollo", "Temple"];
+        // this.app.scene.traverse((object) => {
+        //     if (object.isMesh && object.material) {
+        //         if (clippingObjects.includes(object.parent?.name) || clippingObjects.some(name => object.name.includes(name))) {
+        //             if (Array.isArray(object.material)) {
+        //                 object.material.forEach(m => {
+        //                     m.clippingPlanes = clippingPlanes;
+        //                 });
+        //             } else {
+        //                 object.material.clippingPlanes = clippingPlanes;
+        //             }
+        //         }
+        //     }
+        // });
+        // /////////////////////
     }
 
     setFishesScale(s) {
@@ -323,6 +358,11 @@ class MyContents  {
         const now = Date.now() * 0.001; // Convert to seconds
         const dt = this._lastUpdateTime ? Math.min(0.1, now - this._lastUpdateTime) : 0;
         this._lastUpdateTime = now;
+
+        if (!this._clippingApplied && this.apollo.isLoaded && this.apollo.isLoaded()) {
+            this.applyClipping();
+            this._clippingApplied = true;
+        }
 
         if (this.sharkController) {
             this.sharkController.update(dt);
@@ -410,6 +450,43 @@ class MyContents  {
         // Interpolate the shark's current rotation towards the target rotation
         this.shark.quaternion.slerp(this._sharkTargetQuaternion, this.sharkTurnSpeed * dt);
     }
+
+    applyClipping() {
+    const clippingPlanes = [
+        new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
+        new THREE.Plane(new THREE.Vector3(1, 0, 0), this.terrainSize / 2),
+        new THREE.Plane(new THREE.Vector3(-1, 0, 0), this.terrainSize / 2),
+        new THREE.Plane(new THREE.Vector3(0, 0, 1), this.terrainSize / 2),
+        new THREE.Plane(new THREE.Vector3(0, 0, -1), this.terrainSize / 2),
+    ];
+    
+    this.app.renderer.localClippingEnabled = true;
+
+    const clippingObjects = ["Apollo", "Temple"];
+
+    const isClippingObject = (obj) => {
+        let current = obj;
+        while (current) {
+            if (clippingObjects.includes(current.name)) {
+                return true;
+            }
+            current = current.parent;
+        }
+        return false;
+    };
+
+    this.app.scene.traverse((object) => {
+        if (object.isMesh && object.material && isClippingObject(object)) {
+            if (Array.isArray(object.material)) {
+                object.material.forEach(m => {
+                    m.clippingPlanes = clippingPlanes;
+                });
+            } else {
+                object.material.clippingPlanes = clippingPlanes;
+            }
+        }
+    });
+}
 }
 
 export { MyContents };
