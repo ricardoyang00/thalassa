@@ -10,7 +10,6 @@ import { MyTemple } from './objects/temple/MyTemple.js';
 import { FishFlock } from './objects/fish/FishFlock.js';
 import { MySubmarine } from './objects/submarine/MySubmarine.js';
 import { Fish } from './objects/fish/Fish.js';
-import { MyAquaman } from './objects/aquaman/MyAquaman.js';
 import { Apollo } from './objects/sculpture/Apollo.js';
 import { SharkController } from './objects/shark/SharkController.js';
 
