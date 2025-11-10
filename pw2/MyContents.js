@@ -10,7 +10,7 @@ import { MyTemple } from './objects/temple/MyTemple.js';
 import { FishFlock } from './objects/fish/FishFlock.js';
 import { MySubmarine } from './objects/submarine/MySubmarine.js';
 import { Fish } from './objects/fish/Fish.js';
-
+import { SharkController } from './objects/shark/SharkController.js';
 
 /**
  *  This class contains the contents of out application
@@ -18,8 +18,8 @@ import { Fish } from './objects/fish/Fish.js';
 class MyContents  {
 
     /**
-       constructs the object
-       @param {MyApp} app The application object
+        constructs the object
+        @param {MyApp} app The application object
     */ 
     constructor(app) {
         this.app = app
@@ -42,6 +42,8 @@ class MyContents  {
 
         // submarine
         this.submarine = null;
+
+        this.sharkController = null;
     }
 
     /**
@@ -185,10 +187,25 @@ class MyContents  {
             if (this.submarine) {
                 flock.addDanger(this.submarine);
             }
+            if (this.shark) {
+                flock.addDanger(this.shark);
+            }
             this.flocks.push(flock);
         }
         this.app.scene.add(Fish.defaultOwner);
         this.allFishMesh = Fish.defaultOwner.updateInstances(() => {});
+    }
+
+    /**
+     * Creates the shark, its wrapper, and its flock controller.
+     */
+    buildShark() {
+        this.sharkController = new SharkController(this.app, this.app.scene, {
+            size: 1,
+            assetsPath: 'models/shark/'
+        });
+        this.sharkController.buildShark();
+        this.shark = this.sharkController.shark;
     }
 
     /**
@@ -259,11 +276,10 @@ class MyContents  {
 
         this.buildSeafloor();
         this.buildSubmarine();
+        this.buildShark();
         this.buildFishGroups(5, 100, 200);
 
         this._lastUpdateTime = Date.now() * 0.001;
-
-
 
         this.temple = new MyTemple();
         this.temple.position.set(0, 1, 0);
@@ -280,6 +296,10 @@ class MyContents  {
         const now = Date.now() * 0.001; // Convert to seconds
         const dt = this._lastUpdateTime ? Math.min(0.1, now - this._lastUpdateTime) : 0;
         this._lastUpdateTime = now;
+
+        if (this.sharkController) {
+            this.sharkController.update(dt);
+        }
 
         this.flocks.forEach(f => f.update(dt));
         this.allFishMesh.updateInstances(() => {});
@@ -319,6 +339,49 @@ class MyContents  {
         }
 
         return new THREE.Vector3(x, 0, z);
+    }
+
+    /**
+     * Picks a new random patrol target for the shark within its territory.
+     */
+    pickNewSharkTarget() {
+        this.sharkTarget.copy(this.sharkPatrolCenter)
+            .add(new THREE.Vector3(
+                SgiUtils.rand(-this.sharkPatrolRadius, this.sharkPatrolRadius),
+                SgiUtils.rand(-5, 5), // Swims in a 10-unit vertical band
+                SgiUtils.rand(-this.sharkPatrolRadius, this.sharkPatrolRadius)
+            ));
+    }
+
+    /**
+     * Updates the shark's movement and rotation.
+     * @param {number} dt - delta time
+     */
+    updateShark(dt) {
+        // Stop if shark isn't loaded
+        if (!this.shark || !this.shark.visible) return;
+
+        // 1. Check if we've reached the target
+        const distanceToTarget = this.shark.position.distanceTo(this.sharkTarget);
+        if (distanceToTarget < 5.0) { // Close enough
+            this.pickNewSharkTarget();
+        }
+
+        // 2. Move the shark towards the target
+        const direction = new THREE.Vector3()
+            .subVectors(this.sharkTarget, this.shark.position)
+            .normalize();
+        this.shark.position.add(direction.multiplyScalar(this.sharkSwimSpeed * dt));
+
+        // 3. Smoothly rotate the shark to look at the target
+        // We use slerp (spherical linear interpolation) for smooth turning
+        
+        // Calculate the target rotation
+        this._sharkLookAtMatrix.lookAt(this.sharkTarget, this.shark.position, this.shark.up);
+        this._sharkTargetQuaternion.setFromRotationMatrix(this._sharkLookAtMatrix);
+        
+        // Interpolate the shark's current rotation towards the target rotation
+        this.shark.quaternion.slerp(this._sharkTargetQuaternion, this.sharkTurnSpeed * dt);
     }
 }
 

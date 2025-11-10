@@ -1,0 +1,71 @@
+newmtl MATERIAL_DEFAULTMAT
+illum 7
+Kd 1 1 1
+adobe_interior_color 1 1 1
+Ni 1.5
+adobe_density 0
+Tr 0
+d 1
+Ka 0 0 0
+Ke 0 0 0
+Pm 0
+adobe_translucence 0
+Pr 0.298039
+Ns 16
+Ks 0.05 0.05 0.05
+adobe_glow 0
+map_Kd Shark_1/MATERIAL_DEFAULTMAT_base_color.png
+
+newmtl MATERIAL_PM3D_SPHERE3D1_3
+illum 7
+Kd 1 1 1
+adobe_interior_color 1 1 1
+Ni 1.5
+adobe_density 0
+Tr 0
+d 1
+Ka 0 0 0
+Ke 0 0 0
+Pm 0
+adobe_translucence 0
+Pr 0.298039
+Ns 16
+Ks 0.05 0.05 0.05
+adobe_glow 0
+map_Kd Shark_1/MATERIAL_PM3D_SPHERE3D1_3_base_color.png
+
+newmtl MATERIAL_DEFAULTMATERIAL
+illum 7
+Kd 1 1 1
+adobe_interior_color 1 1 1
+Ni 1.5
+adobe_density 0
+Tr 0
+d 1
+Ka 0 0 0
+Ke 0 0 0
+Pm 0
+adobe_translucence 0
+Pr 0.258824
+Ns 16
+Ks 0.05 0.05 0.05
+adobe_glow 0
+
+newmtl MATERIAL_DEFAULTMATERIAL 2
+illum 7
+Kd 1 1 1
+adobe_interior_color 1 1 1
+Ni 1.5
+adobe_density 0
+Tr 0
+d 1
+Ka 0 0 0
+Ke 0 0 0
+Pm 0
+adobe_translucence 0
+map_Pr Shark_1/MATERIAL_DEFAULTMATERIAL 2_roughness.png
+Ns 16
+Ks 0.05 0.05 0.05
+adobe_glow 0
+map_Kd Shark_1/MATERIAL_DEFAULTMATERIAL 2_base_color.png
+norm Shark_1/MATERIAL_DEFAULTMATERIAL 2_normal.png
