@@ -68,6 +68,7 @@ export class LSystemCoralsOwner extends InstancedMesh2 {
                 baseY: 'float',
             },
         });
+        this.frustumCulled = false;
     }
 }
 

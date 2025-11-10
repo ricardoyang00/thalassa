@@ -59,6 +59,8 @@ export class FishOwner extends InstancedMesh2 {
 
         this.dummy = dummy;
         this.initSkeleton(dummy.skeleton); // skeleton is updated when calling animate() on the dummy
+
+        this.frustumCulled = false;
     }
 }
 
