@@ -10,6 +10,8 @@ import { MyTemple } from './objects/temple/MyTemple.js';
 import { FishFlock } from './objects/fish/FishFlock.js';
 import { MySubmarine } from './objects/submarine/MySubmarine.js';
 import { Fish } from './objects/fish/Fish.js';
+import { MyAquaman } from './objects/aquaman/MyAquaman.js';
+import { Apollo } from './objects/sculpture/Apollo.js';
 import { SharkController } from './objects/shark/SharkController.js';
 
 /**
@@ -39,6 +41,18 @@ class MyContents  {
 
         this.flocks = [];
         this._lastUpdateTime = null;
+
+        // this.aquaman = new MyAquaman(this.app);
+        // this.app.scene.add(this.aquaman);
+        // this.aquaman.position.set(0, 0, 0);
+        this.apollo = new Apollo(this.app);
+        this.app.scene.add(this.apollo);
+    
+        //this.apollo.rotation.set(-Math.PI/12, -Math.PI/7, Math.PI/3 + Math.PI/12);
+        this.apollo.rotateOnAxis(new THREE.Vector3(1, 0, 0), -Math.PI/2 + 1 * Math.PI/12);
+        this.apollo.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI/6 - Math.PI/12);
+        //this.apollo.position.set(50, -8, 10);
+        this.apollo.position.set(25, -3.5, 20);
 
         // submarine
         this.submarine = null;
@@ -267,6 +281,19 @@ class MyContents  {
         const spotLightHelper2 = new THREE.SpotLightHelper(spot2);
         //this.app.scene.add(spotLightHelper2);
 
+
+        const spot3 = new THREE.SpotLight(0xffffff, 3750);
+        spot3.position.set(30, 50, 30);
+        spot3.target.position.set(20, 0, 10);
+        spot3.angle = Math.PI / 6;
+        spot3.penumbra = 0.2;
+        spot3.decay = 2;
+        spot3.distance = 100;
+        spot3.castShadow = true;
+        this.app.scene.add(spot3);
+
+        const spotLightHelper3 = new THREE.SpotLightHelper(spot3);
+        //this.app.scene.add(spotLightHelper3);
 
 
         // low ambient to preserve overall visibility but keep contrast
