@@ -6,6 +6,7 @@ import { TubeCoral } from './objects/corals/TubeCoral.js';
 import { Fish } from './objects/fish/Fish.js';
 import { FishFlock } from './objects/fish/FishFlock.js';
 import { Apollo } from './objects/sculpture/Apollo.js';
+import { HorsePillar } from './objects/sculpture/HorsePillar.js';
 import { SharkController } from './objects/shark/SharkController.js';
 import { MySubmarine } from './objects/submarine/MySubmarine.js';
 import { MyTemple } from './objects/temple/MyTemple.js';
@@ -29,8 +30,8 @@ class MyContents  {
 
         // seafloor related attributes
         this.seafloorGroup = null;
-        this.terrainSize = 100;
-        this.terrain = null;
+        this.terrainSize = 150;
+        this.terrain = new MyTerrain(this, this.terrainSize);
         this.rocks = null;
         this.coralMeshes = null;
 
@@ -56,6 +57,35 @@ class MyContents  {
 
         this.apollo.position.set(15, -3.5, 20);
 
+
+        ///// horse
+        this.groupHorsePillars = new THREE.Group();
+
+        this.horse1 = new HorsePillar(this.app);
+        this.horse1.position.set(-25, 0, 15);
+        this.horse1.rotateY(Math.PI/2);
+        this.groupHorsePillars.add(this.horse1);
+
+        this.horse2 = new HorsePillar(this.app);
+        this.horse2.position.set(15, 0, -25);
+        this.horse2.rotateY(-Math.PI);
+        this.groupHorsePillars.add(this.horse2);
+
+        this.horse3 = new HorsePillar(this.app);
+        this.horse3.position.set(-25, 0, -64);
+        this.horse3.rotateY(-Math.PI/2);
+        this.groupHorsePillars.add(this.horse3);
+
+        this.horse4 = new HorsePillar(this.app);
+        this.horse4.position.set(-64, 0, -25);
+        this.groupHorsePillars.add(this.horse4);
+
+        this.app.scene.add(this.groupHorsePillars);
+
+        this._horsePositioned = false;
+
+        
+
         this._clippingApplied = false;
 
         // submarine
@@ -72,10 +102,7 @@ class MyContents  {
         /// temp function, only for visualization, still need to organize the scene and optimize the constructors
         this.seafloorGroup = new THREE.Group();
         this.seafloorGroup.name = "seafloorGroup";
-
-        const terrain = new MyTerrain(this, this.terrainSize);
-        this.seafloorGroup.add(terrain);
-        this.terrain = terrain;
+        this.seafloorGroup.add(this.terrain);   
 
         // --- Define the spawn boundaries ---
         const minArea = 50;
@@ -260,35 +287,33 @@ class MyContents  {
         // this.app.scene.add(fill);
 
         const spot1 = new THREE.SpotLight(0xffffff, 7500);
-        spot1.position.set(30, 50, -30);
+        spot1.position.set(25, 50, -25);
         spot1.target.position.set(-25, 0, -25);
-        spot1.angle = Math.PI / 6;
+        spot1.angle = Math.PI / 5;
         spot1.penumbra = 0.2;
         spot1.decay = 2;
         spot1.distance = 100;
         spot1.castShadow = true;
         this.app.scene.add(spot1);
-
         const spotLightHelper1 = new THREE.SpotLightHelper(spot1);
         //this.app.scene.add(spotLightHelper1);
 
         const spot2 = new THREE.SpotLight(0xffffff, 7500);
-        spot2.position.set(-30, 50, 30);
-        spot2.target.position.set(25, 0, 0);
-        spot2.angle = Math.PI / 6;
+        spot2.position.set(-75, 50, -25);
+        spot2.target.position.set(-25, 0, -25);
+        spot2.angle = Math.PI / 5;
         spot2.penumbra = 0.2;
         spot2.decay = 2;
         spot2.distance = 100;
         spot2.castShadow = true;
         this.app.scene.add(spot2);
-        
         const spotLightHelper2 = new THREE.SpotLightHelper(spot2);
         //this.app.scene.add(spotLightHelper2);
 
 
-        const spot3 = new THREE.SpotLight(0xffffff, 3750);
-        spot3.position.set(30, 50, 30);
-        spot3.target.position.set(20, 0, 10);
+        const spot3 = new THREE.SpotLight(0xffffff, 7500);
+        spot3.position.set(20, 50, 20);
+        spot3.target.position.set(10, 0, 10);
         spot3.angle = Math.PI / 6;
         spot3.penumbra = 0.2;
         spot3.decay = 2;
@@ -297,7 +322,7 @@ class MyContents  {
         this.app.scene.add(spot3);
 
         const spotLightHelper3 = new THREE.SpotLightHelper(spot3);
-        //this.app.scene.add(spotLightHelper3);
+        //his.app.scene.add(spotLightHelper3);
 
 
         // low ambient to preserve overall visibility but keep contrast
@@ -358,6 +383,25 @@ class MyContents  {
         const now = Date.now() * 0.001; // Convert to seconds
         const dt = this._lastUpdateTime ? Math.min(0.1, now - this._lastUpdateTime) : 0;
         this._lastUpdateTime = now;
+
+        if (!this._horsePositioned && 
+            this.terrain.mesh && 
+            this.terrain.mesh.material.displacementMap && 
+            this.terrain.mesh.material.displacementMap.image &&
+            this.terrain.mesh.material.displacementMap.image.width) {
+            
+            this.groupHorsePillars.children.forEach((horse) => {
+            const terrainHeight = this.terrain.displacementAtXY(horse.position.x, horse.position.z);
+            horse.position.y = terrainHeight;
+
+            // Apply terrain inclination to rotate horse with the terrain
+            const inclination = this.terrain.inclinationAtXY(horse.position.x, horse.position.z);
+                horse.rotateX(inclination[1]);
+                horse.rotateZ(-inclination[0]);
+            });
+            
+            this._horsePositioned = true;
+        }
 
         if (!this._clippingApplied && this.apollo.isLoaded && this.apollo.isLoaded()) {
             this.applyClipping();

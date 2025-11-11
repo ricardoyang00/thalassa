@@ -7,6 +7,7 @@ class MyTerrain extends THREE.Object3D {
     #width;
     #length;
     #canvas;
+    #canvasCtx;
 
     constructor(contents, size = 100) {
         super();
@@ -80,10 +81,14 @@ class MyTerrain extends THREE.Object3D {
             this.#canvas = document.createElement('canvas');
             this.#canvas.width = image.width;
             this.#canvas.height = image.height;
-            this.#canvas.getContext('2d').drawImage(image, 0, 0);;
+            const ctx = this.#canvas.getContext('2d', { willReadFrequently: true }); // Add this option
+            ctx.drawImage(image, 0, 0);
+            this.#canvasCtx = ctx; // Store context for reuse
         }
-        const ctx = this.#canvas.getContext('2d');
-
+        
+        // Use stored context
+        const ctx = this.#canvasCtx;
+        
         const u = (this.#width / 2 + x) / this.#width;
         const v = 1 - (this.#length / 2 + y) / this.#length;
         x = u * image.width;
