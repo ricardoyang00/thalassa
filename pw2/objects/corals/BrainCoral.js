@@ -40,6 +40,7 @@ export class BrainCoralsOwner extends InstancedMesh2 {
         super(geo[0], BrainCoralsOwner.#highDetailMat, {createEntities: true});
         this.addLOD(geo[1], BrainCoralsOwner.#highDetailMat, 40);
         this.addLOD(geo[2], BrainCoralsOwner.#lowDetailMat, 150);
+        this.frustumCulled = false;
     }
 }
 

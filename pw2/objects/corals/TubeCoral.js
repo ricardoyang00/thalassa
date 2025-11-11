@@ -50,6 +50,7 @@ export class TubeCoralsOwner extends InstancedMesh2 {
         super(tubeGeo[0], TubeCoralsOwner.#highDetailMat, {createEntities: true});
         this.addLOD(tubeGeo[1], TubeCoralsOwner.#mediumDetailMat, 30);
         this.addLOD(tubeGeo[2], TubeCoralsOwner.#mediumDetailMat, 60);
+        this.frustumCulled = false;
     }
 }
 
