@@ -7,6 +7,9 @@ import { Fish } from './objects/fish/Fish.js';
 import { FishFlock } from './objects/fish/FishFlock.js';
 import { Apollo } from './objects/sculpture/Apollo.js';
 import { HorsePillar } from './objects/sculpture/HorsePillar.js';
+import { Vase } from './objects/others/Vase.js';
+import { Chest } from './objects/others/Chest.js';
+import { Pillar } from './objects/temple/Pillar.js';
 import { SharkController } from './objects/shark/SharkController.js';
 import { MySubmarine } from './objects/submarine/MySubmarine.js';
 import { MyTemple } from './objects/temple/MyTemple.js';
@@ -71,7 +74,25 @@ class MyContents  {
         this.horse2.rotateY(-Math.PI);
         this.groupHorsePillars.add(this.horse2);
 
-        this.horse3 = new HorsePillar(this.app);
+        // this.horse3 = new HorsePillar(this.app);
+        // this.horse3.position.set(-25, 0, -64);
+        // this.horse3.rotateY(-Math.PI/2);
+        // this.groupHorsePillars.add(this.horse3);
+
+        const limestoneTexture = new THREE.TextureLoader().load('textures/limestone.jpg');
+        limestoneTexture.wrapS = THREE.RepeatWrapping;
+        limestoneTexture.wrapT = THREE.RepeatWrapping;
+        const repeatFactor = 5;
+        limestoneTexture.repeat.set(repeatFactor, repeatFactor);
+
+        const limestoneMaterial = new THREE.MeshPhongMaterial({
+            color: "#f9f6e3",
+            specular: 0x111111,
+            shininess: 10,
+            map: limestoneTexture,
+        });
+
+        this.horse3 = new Pillar({state: "broken"}, limestoneMaterial);
         this.horse3.position.set(-25, 0, -64);
         this.horse3.rotateY(-Math.PI/2);
         this.groupHorsePillars.add(this.horse3);
@@ -83,6 +104,17 @@ class MyContents  {
         this.app.scene.add(this.groupHorsePillars);
 
         this._horsePositioned = false;
+
+        this.vase = new Vase(this.app);
+        this.vase.position.set(10, 0, 10);
+        this.app.scene.add(this.vase);
+        this._vasePositioned = false;
+
+        this.chest = new Chest(this.app);
+        this.chest.position.set(1, 0, 18);
+        this.chest.rotateY(-Math.PI/4);
+        this.app.scene.add(this.chest);
+
 
         
 
@@ -408,6 +440,23 @@ class MyContents  {
             this._clippingApplied = true;
         }
 
+        if (!this._vasePositioned && 
+            this.terrain.mesh && 
+            this.terrain.mesh.material.displacementMap && 
+            this.terrain.mesh.material.displacementMap.image &&
+            this.terrain.mesh.material.displacementMap.image.width) {
+            
+            const terrainHeight = this.terrain.displacementAtXY(this.vase.position.x, this.vase.position.z);
+            this.vase.position.y = terrainHeight;
+
+            // Apply terrain inclination to rotate vase with the terrain
+            const inclination = this.terrain.inclinationAtXY(this.vase.position.x, this.vase.position.z);
+            this.vase.rotateX(inclination[1]);
+            this.vase.rotateZ(-inclination[0]);
+            
+            this._vasePositioned = true;
+        }
+                                                                            
         if (this.sharkController) {
             this.sharkController.update(dt);
         }
