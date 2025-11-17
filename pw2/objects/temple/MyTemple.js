@@ -15,7 +15,7 @@ class MyTemple extends THREE.Object3D {
         const cobbleTexture = new THREE.TextureLoader().load('textures/cobble3.jpg');
         cobbleTexture.wrapS = THREE.RepeatWrapping;
         cobbleTexture.wrapT = THREE.RepeatWrapping;
-        const cobbleRepeatFactor = 20;
+        const cobbleRepeatFactor = 15;
         cobbleTexture.repeat.set(cobbleRepeatFactor, cobbleRepeatFactor);
 
         const cobbleBumpTexture = new THREE.TextureLoader().load('images/cobble3-bump.jpg');
@@ -43,7 +43,7 @@ class MyTemple extends THREE.Object3D {
             shininess: 5,
             map: cobbleTexture,
             bumpMap: cobbleBumpTexture,
-            bumpScale: 1
+            bumpScale: 10
         });
 
         const goldMarbleMaterial = new THREE.MeshPhongMaterial({
