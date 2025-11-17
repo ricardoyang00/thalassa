@@ -8,7 +8,7 @@ import { MyRock } from './objects/terrain/MyRock.js';
 import { LSystemCoral } from './objects/corals/LSystemCoral.js';
 import { MyTemple } from './objects/temple/MyTemple.js';
 import { FishFlock } from './objects/fish/FishFlock.js';
-import { MySubmarine } from './objects/submarine/MySubmarine.js';
+import { MySubmarineLOD } from './objects/submarine/MySubmarineLOD.js';
 import { Fish } from './objects/fish/Fish.js';
 import { Apollo } from './objects/sculpture/Apollo.js';
 import { SharkController } from './objects/shark/SharkController.js';
@@ -140,9 +140,19 @@ class MyContents  {
     }
 
     buildSubmarine() {
-        this.submarine = new MySubmarine(this.app, 1);
-        this.submarine.position.set(0, 10, 0);
+        if (this.submarine) {
+            this.app.scene.remove(this.submarine);
+        }
+    
+        this.submarine = new MySubmarineLOD(this.app, {
+            size: 1,
+            assetsPath: 'models/submarine/',
+            gltfFile: 'scene.gltf'
+        });
+        
+        this.submarine.position.set(0, 15, 0);
         this.app.scene.add(this.submarine);
+        this.submarine.initControls();
     }
 
     /**
@@ -331,7 +341,7 @@ class MyContents  {
         this.allFishMesh.updateInstances(() => {});
 
         if (this.submarine && typeof this.submarine.update === 'function') {
-            this.submarine.update(dt);
+            this.submarine.updateSubmarine(dt);
         }
 
         const alpha = now % (2 * Math.PI);
