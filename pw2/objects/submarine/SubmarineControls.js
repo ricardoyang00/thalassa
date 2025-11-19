@@ -63,6 +63,28 @@ class SubmarineControls {
             Math.min(this.submarine.maxVerticalSpeed, this.submarine.verticalSpeed)
         );
 
+        const forwardBrake = this.submarine.forwardAccel;
+        if (!this._keys.w && !this._keys.s) {
+            if (Math.abs(this.submarine.forwardSpeed) < 0.01) {
+                this.submarine.forwardSpeed = 0;
+            } else if (this.submarine.forwardSpeed > 0) {
+                this.submarine.forwardSpeed = Math.max(0, this.submarine.forwardSpeed - forwardBrake * dt);
+            } else {
+                this.submarine.forwardSpeed = Math.min(0, this.submarine.forwardSpeed + forwardBrake * dt);
+            }
+        }
+
+        const verticalBrake = this.submarine.verticalAccel * 2.0;
+        if (!this._keys.p && !this._keys.l) {
+            if (Math.abs(this.submarine.verticalSpeed) < 0.01) {
+                this.submarine.verticalSpeed = 0;
+            } else if (this.submarine.verticalSpeed > 0) {
+                this.submarine.verticalSpeed = Math.max(0, this.submarine.verticalSpeed - verticalBrake * dt);
+            } else {
+                this.submarine.verticalSpeed = Math.min(0, this.submarine.verticalSpeed + verticalBrake * dt);
+            }
+        }
+
         if (this._keys.a) {
             this.submarine.rotation.y += this.submarine.yawRate * dt;
         }
@@ -82,6 +104,27 @@ class SubmarineControls {
         } else if (this.submarine.position.y > this.submarine.maxY) {
             this.submarine.position.y = this.submarine.maxY;
             if (this.submarine.verticalSpeed > 0) this.submarine.verticalSpeed = 0;
+        }
+
+                try {
+            const appContents = this.submarine.app && this.submarine.app.contents;
+            const terrain = appContents && appContents.terrain;
+            if (terrain) {
+                const box = new THREE.Box3().setFromObject(terrain);
+                if (!box.isEmpty()) {
+                    // keep submarine inside the terrain XZ extents (leave a small margin)
+                    const margin = 0.5;
+                    const minX = box.min.x + margin;
+                    const maxX = box.max.x - margin;
+                    const minZ = box.min.z + margin;
+                    const maxZ = box.max.z - margin;
+
+                    this.submarine.position.x = Math.max(minX, Math.min(maxX, this.submarine.position.x));
+                    this.submarine.position.z = Math.max(minZ, Math.min(maxZ, this.submarine.position.z));
+                }
+            }
+        } catch (e) {
+            // silent fail if terrain not available or calculation fails
         }
     }
 

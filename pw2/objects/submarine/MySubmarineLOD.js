@@ -22,10 +22,10 @@ class MySubmarineLOD extends THREE.LOD {
         this.verticalSpeed = 0;
         this.maxForwardSpeed = 10;
         this.maxVerticalSpeed = 5;
-        this.minY = 5;
+        this.minY = 7;
         this.maxY = 30;
-        this.forwardAccel = 6;
-        this.verticalAccel = 4;
+        this.forwardAccel = 4;
+        this.verticalAccel = 2;
         this.yawRate = Math.PI;
         this.controlsEnabled = false;
 
