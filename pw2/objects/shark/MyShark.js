@@ -42,7 +42,7 @@ class MyShark extends THREE.Object3D {
                     const clip = gltf.animations[0]; 
                     const action = this.mixer.clipAction(clip); 
                     action.play(); 
-                    action.timeScale = 1.5;
+                    action.timeScale = 1;
                 }
 
                 this._loaded = true;

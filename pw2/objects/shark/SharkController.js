@@ -31,6 +31,9 @@ class SharkController {
 
         this._sharkTargetQuaternion = new THREE.Quaternion();
         this._sharkLookAtMatrix = new THREE.Matrix4();
+        
+        // For smooth curved rotation
+        this._currentVelocity = new THREE.Vector3(1, 0, 0);
 
         this._built = false;
     }
@@ -78,16 +81,27 @@ class SharkController {
             this.pickNewSharkTarget();
         }
 
-        // Move the shark towards the target
-        const direction = new THREE.Vector3()
+        // Calculate desired direction
+        const desiredDirection = new THREE.Vector3()
             .subVectors(this.sharkTarget, this.shark.position)
             .normalize();
-        this.shark.position.add(direction.multiplyScalar(this.sharkSwimSpeed * dt));
 
-        // Smoothly rotate the shark to look at the target
-        this._sharkLookAtMatrix.lookAt(this.sharkTarget, this.shark.position, this.shark.up);
+        // Smoothly interpolate velocity towards desired direction (creates curve)
+        this._currentVelocity.lerp(desiredDirection, dt * 2.0);
+        this._currentVelocity.normalize();
+
+        // Move the shark using smoothed velocity
+        this.shark.position.add(this._currentVelocity.clone().multiplyScalar(this.sharkSwimSpeed * dt));
+
+        // Look ahead along the smoothed velocity for natural rotation
+        const lookAtPoint = new THREE.Vector3()
+            .copy(this.shark.position)
+            .add(this._currentVelocity.multiplyScalar(3));
+
+        this._sharkLookAtMatrix.lookAt(lookAtPoint, this.shark.position, this.shark.up);
         this._sharkTargetQuaternion.setFromRotationMatrix(this._sharkLookAtMatrix);
 
+        // Smooth rotation with reduced turn speed for gradual curves
         this.shark.quaternion.slerp(this._sharkTargetQuaternion, this.sharkTurnSpeed * dt);
     }
 }
