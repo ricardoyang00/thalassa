@@ -150,7 +150,7 @@ class MyContents  {
             gltfFile: 'scene.gltf'
         });
         
-        this.submarine.position.set(0, 15, 0);
+        this.submarine.position.set(0, 10, -4);
         this.app.scene.add(this.submarine);
         this.submarine.initControls();
     }

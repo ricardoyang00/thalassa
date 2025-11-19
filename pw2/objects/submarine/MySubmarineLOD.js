@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { MySubmarine } from './MySubmarine.js';
 import { SubmarineControls } from './SubmarineControls.js';
-
+import { createLowDetailSubmarine } from './SubmarineGeometry.js';
 class MySubmarineLOD extends THREE.LOD {
     constructor(app, {
         size = 1,
@@ -29,20 +29,7 @@ class MySubmarineLOD extends THREE.LOD {
         this.yawRate = Math.PI;
         this.controlsEnabled = false;
 
-        // Create low-detail LOD (cylinder)
-        const lowDetailGroup = new THREE.Group();
-        
-        const hullLength = 3.0;
-        const hullRadius = 0.5;
-        const hullGeo = new THREE.CylinderGeometry(hullRadius, hullRadius, hullLength, 24, 1);
-        const hullMat = new THREE.MeshPhongMaterial({
-            color: 0xffdd77,
-            shininess: 30,
-        });
-        const hull = new THREE.Mesh(hullGeo, hullMat);
-        hull.rotation.z = Math.PI / 2;
-        lowDetailGroup.add(hull);
-
+        const lowDetailGroup = createLowDetailSubmarine();
         this.lowDetailModelGroup = lowDetailGroup;
 
         // Build high-detail model
