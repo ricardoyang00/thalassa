@@ -12,6 +12,7 @@ import { MySubmarineLOD } from './objects/submarine/MySubmarineLOD.js';
 import { Fish } from './objects/fish/Fish.js';
 import { Apollo } from './objects/sculpture/Apollo.js';
 import { SharkController } from './objects/shark/SharkController.js';
+import { Bubble } from './objects/bubble/Bubble.js';
 
 /**
  *  This class contains the contents of out application
@@ -57,6 +58,8 @@ class MyContents  {
         this.submarine = null;
 
         this.sharkController = null;
+
+        this.bubble = new Bubble(this.app.scene);
     }
 
     /**
@@ -322,6 +325,10 @@ class MyContents  {
         const templeScale = 0.75;
         this.temple.scale.setScalar(templeScale);
         this.app.scene.add(this.temple);
+        
+        if (this.submarine) {
+            this.submarine.setBubbleSystem(this.bubble);
+        }
     }
 
     setFishesScale(s) {
@@ -339,6 +346,10 @@ class MyContents  {
 
         this.flocks.forEach(f => f.update(dt));
         this.allFishMesh.updateInstances(() => {});
+
+        if (this.bubble) {
+            this.bubble.update(dt); 
+        }
 
         if (this.submarine && typeof this.submarine.update === 'function') {
             this.submarine.updateSubmarine(dt);

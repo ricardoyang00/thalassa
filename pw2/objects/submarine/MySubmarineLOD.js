@@ -29,6 +29,13 @@ class MySubmarineLOD extends THREE.LOD {
         this.yawRate = Math.PI;
         this.controlsEnabled = false;
 
+        this.bubbleSystem = null;
+        this.emitters = [
+            { pos: new THREE.Vector3(1.1, 0, 0), sizeMult: 0.8, id: 'main' },      // Main Engine
+            { pos: new THREE.Vector3(0.8, -0.3, 0.75), sizeMult: 0.6, id: 'left' }, // Left Thruster
+            { pos: new THREE.Vector3(0.8, -0.3, -0.75), sizeMult: 0.6, id: 'right'} // Right Thruster
+        ];
+
         const lowDetailGroup = createLowDetailSubmarine();
         this.lowDetailModelGroup = lowDetailGroup;
 
@@ -109,6 +116,10 @@ class MySubmarineLOD extends THREE.LOD {
         }
     }
 
+    setBubbleSystem(bubbleSystem) {
+        this.bubbleSystem = bubbleSystem;
+    }
+
     updateSubmarine(dt) {
         if (!dt || dt <= 0 || typeof dt !== 'number') return;
 
@@ -118,6 +129,25 @@ class MySubmarineLOD extends THREE.LOD {
 
         if (this.highDetailModel && typeof this.highDetailModel.update === 'function') {
             this.highDetailModel.update(dt);
+        }
+
+        if (this.bubbleSystem) {
+            const speed = Math.abs(this.forwardSpeed);
+            this.emitters.forEach(emitter => {
+                // Uncomment to show debug helper
+                //this.bubbleSystem.updateSpawnHelper(this, emitter.pos, emitter.id);
+
+                if (speed > 0.5) {
+                    if (Math.random() > 0.7) { 
+                        let baseSize = 0.1 + (speed * 0.01);
+                    
+                        // Apply specific emitter multiplier (Main engine = bigger bubbles)
+                        let finalSize = baseSize * emitter.sizeMult; 
+                        
+                        this.bubbleSystem.spawnFromObject(this, emitter.pos, finalSize);
+                    }
+                }
+            });
         }
     }
 
