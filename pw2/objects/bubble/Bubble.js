@@ -19,28 +19,32 @@ class Bubble {
         this.lifeTime = 2.0;
     }
 
-    spawnBubble(position, scale = 0.2) {
+    spawnBubble(position, scale = 0.2, initVelY = 0) {
         const mesh = new THREE.Mesh(this.geometry, this.material);
         mesh.position.copy(position);
+
         const randomScale = scale * (0.8 + Math.random() * 0.5);
         mesh.scale.set(randomScale, randomScale, randomScale);
         mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+
         this.scene.add(mesh);
+
         this.bubbles.push({
             mesh: mesh,
             age: 0,
             wobbleSpeed: 2.0 + Math.random() * 2.0,
             wobbleOffset: Math.random() * Math.PI * 2,
             riseSpeed: 1.0 + Math.random() * 0.5,
-            drift: new THREE.Vector3((Math.random() - 0.5) * 0.5, 0, (Math.random() - 0.5) * 0.5)
+            drift: new THREE.Vector3((Math.random() - 0.5) * 0.5, 0, (Math.random() - 0.5) * 0.5),
+            externalVelY: initVelY
         });
     }
 
-    spawnFromObject(object, offset = new THREE.Vector3(0, 0, 0), scale = 0.2) {
+    spawnFromObject(object, offset = new THREE.Vector3(0, 0, 0), scale = 0.2, initVelY = 0) {
         const localOffset = offset.clone();
         localOffset.applyQuaternion(object.quaternion);
         const spawnPos = object.position.clone().add(localOffset);
-        this.spawnBubble(spawnPos, scale);
+        this.spawnBubble(spawnPos, scale, initVelY);
     }
 
     /**
@@ -69,9 +73,17 @@ class Bubble {
         for (let i = this.bubbles.length - 1; i >= 0; i--) {
             const b = this.bubbles[i];
             b.age += dt;
-            b.mesh.position.y += b.riseSpeed * dt;
+
+            const totalVerticalSpeed = b.riseSpeed + b.externalVelY;
+
+            b.mesh.position.y += totalVerticalSpeed * dt;
             b.mesh.position.x += b.drift.x * dt;
             b.mesh.position.z += b.drift.z * dt;
+
+            // Slowly reduce the external velocity so the bubble eventually floats up normally
+            // 0.9 is the drag factor (adjust between 0.8 and 0.99)
+            b.externalVelY *= 0.9;
+
             const wobble = Math.sin((b.age * b.wobbleSpeed) + b.wobbleOffset) * 0.02;
             b.mesh.position.x += wobble;
             const growth = 1 + (dt * 0.5);

@@ -133,18 +133,19 @@ class MySubmarineLOD extends THREE.LOD {
 
         if (this.bubbleSystem) {
             const speed = Math.abs(this.forwardSpeed);
+            const verticalPush = -this.verticalSpeed * 0.8;
             this.emitters.forEach(emitter => {
                 // Uncomment to show debug helper
                 //this.bubbleSystem.updateSpawnHelper(this, emitter.pos, emitter.id);
 
-                if (speed > 0.5) {
+                if (speed > 0.5 || Math.abs(this.verticalSpeed) > 0.5) {
                     if (Math.random() > 0.7) { 
                         let baseSize = 0.1 + (speed * 0.01);
                     
                         // Apply specific emitter multiplier (Main engine = bigger bubbles)
                         let finalSize = baseSize * emitter.sizeMult; 
                         
-                        this.bubbleSystem.spawnFromObject(this, emitter.pos, finalSize);
+                        this.bubbleSystem.spawnFromObject(this, emitter.pos, finalSize, verticalPush);                    
                     }
                 }
             });
