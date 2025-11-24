@@ -31,9 +31,9 @@ class MySubmarineLOD extends THREE.LOD {
 
         this.bubbleSystem = null;
         this.emitters = [
-            { pos: new THREE.Vector3(1.1, 0, 0), sizeMult: 0.8, id: 'main' },      // Main Engine
-            { pos: new THREE.Vector3(0.8, -0.3, 0.75), sizeMult: 0.6, id: 'left' }, // Left Thruster
-            { pos: new THREE.Vector3(0.8, -0.3, -0.75), sizeMult: 0.6, id: 'right'} // Right Thruster
+            { pos: new THREE.Vector3(1.1 * size, 0, 0), sizeMult: 0.8, id: 'main' },      // Main Engine
+            { pos: new THREE.Vector3(0.8 * size, -0.3 * size, 0.75 * size), sizeMult: 0.6, id: 'left' }, // Left Thruster
+            { pos: new THREE.Vector3(0.8 * size, -0.3 * size, -0.75 * size), sizeMult: 0.6, id: 'right'} // Right Thruster
         ];
 
         const lowDetailGroup = createLowDetailSubmarine();
@@ -140,7 +140,7 @@ class MySubmarineLOD extends THREE.LOD {
 
                 if (speed > 0.5 || Math.abs(this.verticalSpeed) > 0.5) {
                     if (Math.random() > 0.7) { 
-                        let baseSize = 0.1 + (speed * 0.01);
+                        let baseSize = 0.1 * this.scale.x + (speed * 0.01);
                     
                         // Apply specific emitter multiplier (Main engine = bigger bubbles)
                         let finalSize = baseSize * emitter.sizeMult; 
