@@ -320,7 +320,12 @@ class MyContents  {
 
         this._lastUpdateTime = Date.now() * 0.001;
 
-        this.temple = new MyTemple();
+        const maxAnisotropy = (this.app && this.app.renderer && this.app.renderer.capabilities)
+            ? this.app.renderer.capabilities.getMaxAnisotropy()
+            : 1;
+        console.log("Max Anisotropy: ", maxAnisotropy);
+        
+        this.temple = new MyTemple(maxAnisotropy);
         this.temple.position.set(0, 1, 0);
         const templeScale = 0.75;
         this.temple.scale.setScalar(templeScale);

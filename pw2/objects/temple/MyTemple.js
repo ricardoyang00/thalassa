@@ -3,7 +3,7 @@ import { Pillar } from './Pillar.js';
 import { SUBTRACTION, ADDITION, Brush, Evaluator } from 'https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.17/+esm';
 
 class MyTemple extends THREE.Object3D {
-    constructor() {
+    constructor(maxAnisotropy = 1) {
         super();
 
         const limestoneTexture = new THREE.TextureLoader().load('textures/limestone.jpg');
@@ -17,18 +17,13 @@ class MyTemple extends THREE.Object3D {
         cobbleTexture.wrapT = THREE.RepeatWrapping;
         const cobbleRepeatFactor = 20;
         cobbleTexture.repeat.set(cobbleRepeatFactor, cobbleRepeatFactor);
+        cobbleTexture.anisotropy = maxAnisotropy;
 
         const cobbleBumpTexture = new THREE.TextureLoader().load('images/cobble3-bump.jpg');
         cobbleBumpTexture.wrapS = THREE.RepeatWrapping;
         cobbleBumpTexture.wrapT = THREE.RepeatWrapping;
         cobbleBumpTexture.repeat.set(cobbleRepeatFactor, cobbleRepeatFactor);
-
-        const goldMarbleTexture = new THREE.TextureLoader().load('textures/gold-marble.jpg');
-        goldMarbleTexture.wrapS = THREE.RepeatWrapping;
-        goldMarbleTexture.wrapT = THREE.RepeatWrapping;
-        const goldMarbleRepeatFactor = 10;
-        goldMarbleTexture.repeat.set(goldMarbleRepeatFactor, goldMarbleRepeatFactor);
-
+        cobbleBumpTexture.anisotropy = maxAnisotropy;
 
         const limestoneMaterial = new THREE.MeshPhongMaterial({
             color: "#f9f6e3", //"#DCD5B4",
@@ -45,14 +40,7 @@ class MyTemple extends THREE.Object3D {
             bumpMap: cobbleBumpTexture,
             bumpScale: 1
         });
-
-        const goldMarbleMaterial = new THREE.MeshPhongMaterial({
-            color: "#d4c19c",
-            specular: 0x222222,
-            shininess: 30,
-            map: goldMarbleTexture,
-        });
-
+        
         const gridSize = 7;
         const spacing = 5;
         const half = Math.floor(gridSize / 2);
