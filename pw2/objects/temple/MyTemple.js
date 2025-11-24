@@ -43,7 +43,7 @@ class MyTemple extends THREE.Object3D {
             shininess: 5,
             map: cobbleTexture,
             bumpMap: cobbleBumpTexture,
-            bumpScale: 10
+            bumpScale: 5
         });
 
         const goldMarbleMaterial = new THREE.MeshPhongMaterial({
