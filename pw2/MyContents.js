@@ -33,7 +33,7 @@ class MyContents  {
 
         // seafloor related attributes
         this.seafloorGroup = null;
-        this.terrainSize = 150;
+        this.terrainSize = 100;
         this.terrain = new MyTerrain(this, this.terrainSize);
         this.rocks = null;
         this.coralMeshes = null;
@@ -58,19 +58,19 @@ class MyContents  {
         this.apollo.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI/6 - Math.PI/12);
         //this.apollo.position.set(25, -3.5, 20);
 
-        this.apollo.position.set(15, -3.5, 20);
+        this.apollo.position.set(12, -4.8, 30);
 
 
         ///// horse
         this.groupHorsePillars = new THREE.Group();
 
         this.horse1 = new HorsePillar(this.app);
-        this.horse1.position.set(-25, 0, 15);
+        this.horse1.position.set(-15, 0, 22);
         this.horse1.rotateY(Math.PI/2);
         this.groupHorsePillars.add(this.horse1);
 
         this.horse2 = new HorsePillar(this.app);
-        this.horse2.position.set(15, 0, -25);
+        this.horse2.position.set(22, 0, -15);
         this.horse2.rotateY(-Math.PI);
         this.groupHorsePillars.add(this.horse2);
 
@@ -92,14 +92,14 @@ class MyContents  {
             map: limestoneTexture,
         });
 
-        this.horse3 = new Pillar({state: "broken"}, limestoneMaterial);
-        this.horse3.position.set(-25, 0, -64);
-        this.horse3.rotateY(-Math.PI/2);
-        this.groupHorsePillars.add(this.horse3);
+        // this.horse3 = new Pillar({state: "broken"}, limestoneMaterial);
+        // this.horse3.position.set(-25, 0, -64);
+        // this.horse3.rotateY(-Math.PI/2);
+        // this.groupHorsePillars.add(this.horse3);
 
-        this.horse4 = new HorsePillar(this.app);
-        this.horse4.position.set(-64, 0, -25);
-        this.groupHorsePillars.add(this.horse4);
+        // this.horse4 = new HorsePillar(this.app);
+        // this.horse4.position.set(-64, 0, -25);
+        // this.groupHorsePillars.add(this.horse4);
 
         this.app.scene.add(this.groupHorsePillars);
 
@@ -372,7 +372,7 @@ class MyContents  {
         this.temple = new MyTemple();
         this.temple.name = "Temple";
         this.temple.rotateY(-Math.PI / 4);
-        this.temple.position.set(-25, 1, -25);
+        this.temple.position.set(-15, 1, -15);
         const templeScale = 0.75;
         this.temple.scale.setScalar(templeScale);
         this.app.scene.add(this.temple);

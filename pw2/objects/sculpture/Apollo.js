@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 class Apollo extends THREE.Object3D {
     constructor(app, {
-        size = 12,
+        size = 15,
         assetsPath = 'models/apollo/',
         gltfFile = 'scene.gltf',
         onLoad = null
