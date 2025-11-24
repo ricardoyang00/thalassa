@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Pillar } from './Pillar.js';
 import { SUBTRACTION, ADDITION, Brush, Evaluator } from 'https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.17/+esm';
+import { createMossMaterial } from '../../shaders/MossShader.js';
 
 class MyTemple extends THREE.Object3D {
     constructor(maxAnisotropy = 1) {
@@ -25,12 +26,13 @@ class MyTemple extends THREE.Object3D {
         cobbleBumpTexture.repeat.set(cobbleRepeatFactor, cobbleRepeatFactor);
         cobbleBumpTexture.anisotropy = maxAnisotropy;
 
-        const limestoneMaterial = new THREE.MeshPhongMaterial({
-            color: "#f9f6e3", //"#DCD5B4",
-            specular: 0x111111,
-            shininess: 10,
-            map: limestoneTexture,
-        });
+        // const limestoneMaterial = new THREE.MeshPhongMaterial({
+        //     color: "#f9f6e3", //"#DCD5B4",
+        //     specular: 0x111111,
+        //     shininess: 10,
+        //     map: limestoneTexture,
+        // });
+        const limestoneMaterial = createMossMaterial(limestoneTexture, new THREE.Color("#557e4e"));
 
         const cobbleMaterial = new THREE.MeshPhongMaterial({
             color: "#888888",
