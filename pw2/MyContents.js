@@ -1,18 +1,23 @@
 import * as THREE from 'three';
 import { MyAxis } from './MyAxis.js';
-import { TubeCoral } from './objects/corals/TubeCoral.js';
-import { SgiUtils } from './SgiUtils.js';
 import { BrainCoral } from './objects/corals/BrainCoral.js';
-import { MyTerrain } from './objects/terrain/MyTerrain.js';
-import { MyRock } from './objects/terrain/MyRock.js';
 import { LSystemCoral } from './objects/corals/LSystemCoral.js';
 import { MyTemple } from './objects/temple/MyTemple.js';
 import { FishFlock } from './objects/fish/FishFlock.js';
 import { MySubmarineLOD } from './objects/submarine/MySubmarineLOD.js';
+import { TubeCoral } from './objects/corals/TubeCoral.js';
 import { Fish } from './objects/fish/Fish.js';
 import { Apollo } from './objects/sculpture/Apollo.js';
+import { HorsePillar } from './objects/sculpture/HorsePillar.js';
+import { Vase } from './objects/others/Vase.js';
+import { Chest } from './objects/others/Chest.js';
+import { Pillar } from './objects/temple/Pillar.js';
 import { SharkController } from './objects/shark/SharkController.js';
 import { Bubble } from './objects/bubble/Bubble.js';
+import { MySubmarine } from './objects/submarine/MySubmarine.js';
+import { MyRock } from './objects/terrain/MyRock.js';
+import { MyTerrain } from './objects/terrain/MyTerrain.js';
+import { SgiUtils } from './SgiUtils.js';
 
 /**
  *  This class contains the contents of out application
@@ -30,7 +35,8 @@ class MyContents  {
 
         // seafloor related attributes
         this.seafloorGroup = null;
-        this.terrain = null;
+        this.terrainSize = 100;
+        this.terrain = new MyTerrain(this, this.terrainSize);
         this.rocks = null;
         this.coralMeshes = null;
 
@@ -46,13 +52,92 @@ class MyContents  {
         // this.app.scene.add(this.aquaman);
         // this.aquaman.position.set(0, 0, 0);
         this.apollo = new Apollo(this.app);
+        this.apollo.name = "Apollo";
+        this.apollo.castShadow = true;
+        this.apollo.receiveShadow = true;
+        this.apollo.traverse((child) => {
+            if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+            }
+        });
+
         this.app.scene.add(this.apollo);
     
         //this.apollo.rotation.set(-Math.PI/12, -Math.PI/7, Math.PI/3 + Math.PI/12);
         this.apollo.rotateOnAxis(new THREE.Vector3(1, 0, 0), -Math.PI/2 + 1 * Math.PI/12);
         this.apollo.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI/6 - Math.PI/12);
-        //this.apollo.position.set(50, -8, 10);
-        this.apollo.position.set(25, -3.5, 20);
+        //this.apollo.position.set(25, -3.5, 20);
+
+        this.apollo.position.set(12, -4.8, 30);
+
+
+        ///// horse
+        this.groupHorsePillars = new THREE.Group();
+
+        this.horse1 = new HorsePillar(this.app);
+        this.horse1.scale.setScalar(0.75);
+        this.horse1.position.set(-15, 0, 22);
+        this.horse1.rotateY(Math.PI/2);
+        this.groupHorsePillars.add(this.horse1);
+
+        this.horse2 = new HorsePillar(this.app);
+        this.horse2.scale.setScalar(0.75);
+        this.horse2.position.set(22, 0, -15);
+        this.horse2.rotateY(-Math.PI);
+        this.groupHorsePillars.add(this.horse2);
+
+        this.groupHorsePillars.traverse((child) => {
+            if (child.isMesh) {
+                child.castShadow = true;
+            }
+        });
+
+        // this.horse3 = new HorsePillar(this.app);
+        // this.horse3.position.set(-25, 0, -64);
+        // this.horse3.rotateY(-Math.PI/2);
+        // this.groupHorsePillars.add(this.horse3);
+
+        const limestoneTexture = new THREE.TextureLoader().load('textures/limestone.jpg');
+        limestoneTexture.wrapS = THREE.RepeatWrapping;
+        limestoneTexture.wrapT = THREE.RepeatWrapping;
+        const repeatFactor = 5;
+        limestoneTexture.repeat.set(repeatFactor, repeatFactor);
+
+        const limestoneMaterial = new THREE.MeshPhongMaterial({
+            color: "#f9f6e3",
+            specular: 0x111111,
+            shininess: 10,
+            map: limestoneTexture,
+        });
+
+        // this.horse3 = new Pillar({state: "broken"}, limestoneMaterial);
+        // this.horse3.position.set(-25, 0, -64);
+        // this.horse3.rotateY(-Math.PI/2);
+        // this.groupHorsePillars.add(this.horse3);
+
+        // this.horse4 = new HorsePillar(this.app);
+        // this.horse4.position.set(-64, 0, -25);
+        // this.groupHorsePillars.add(this.horse4);
+
+        this.app.scene.add(this.groupHorsePillars);
+
+        this._horsePositioned = false;
+
+        this.vase = new Vase(this.app);
+        this.vase.position.set(10, 0, 10);
+        this.app.scene.add(this.vase);
+        this._vasePositioned = false;
+
+        this.chest = new Chest(this.app);
+        this.chest.position.set(1, 0, 18);
+        this.chest.rotateY(-Math.PI/4);
+        this.app.scene.add(this.chest);
+
+
+        
+
+        this._clippingApplied = false;
 
         // submarine
         this.submarine = null;
@@ -70,10 +155,7 @@ class MyContents  {
         /// temp function, only for visualization, still need to organize the scene and optimize the constructors
         this.seafloorGroup = new THREE.Group();
         this.seafloorGroup.name = "seafloorGroup";
-
-        const terrain = new MyTerrain(this);
-        this.seafloorGroup.add(terrain);
-        this.terrain = terrain;
+        this.seafloorGroup.add(this.terrain);   
 
         // --- Define the spawn boundaries ---
         const minArea = 50;
@@ -137,6 +219,13 @@ class MyContents  {
         this.coralMeshes.add(TubeCoral.defaultOwner);
         this.coralMeshes.add(BrainCoral.defaultOwner);
         this.coralMeshes.add(LSystemCoral.defaultOwner);
+
+        this.coralMeshes.traverse((child) => {
+            if (child.isMesh) {
+                child.castShadow = true;
+            }
+        });
+
         this.seafloorGroup.add(this.coralMeshes);
 
         this.app.scene.add(this.seafloorGroup);
@@ -248,87 +337,172 @@ class MyContents  {
             this.app.scene.add(this.axis)
         }       
 
-        // Balanced lighting: hemisphere (ambient-ish), directional key, and a soft fill
-        // Hemisphere light gives a sky/ground color balance
-        const hemi = new THREE.HemisphereLight(0x88aaff, 0x444422, 0.2);
+        // shadows config
+        this.app.renderer.shadowMap.enabled = true;
+        this.app.renderer.shadowMap.type = THREE.PCFShadowMap;
+
+        // UNDERWATER LIGHTING SETUP
+        // Blue-tinted ambient light simulating water's natural color filtering
+        const underwaterAmbient = new THREE.AmbientLight("#6b9fb0", 0.3);
+        this.app.scene.add(underwaterAmbient);
+
+        // Main directional light: sun rays filtering through water (blueish)
+        const sunlight = new THREE.DirectionalLight("#7dd3d1", 0.55);
+        sunlight.position.set(40, 70, 40);
+        sunlight.castShadow = false;
+        sunlight.shadow.mapSize.set(2048, 2048);
+        sunlight.shadow.camera.near = 0.5;
+        sunlight.shadow.camera.far = 150;
+        sunlight.shadow.camera.left = -70;
+        sunlight.shadow.camera.right = 70;
+        sunlight.shadow.camera.top = 70;
+        sunlight.shadow.camera.bottom = -70;
+        this.app.scene.add(sunlight);
+
+        // Hemisphere light for natural color balance (sky: light blue, ground: darker blue-green)
+        const hemi = new THREE.HemisphereLight("#9dd9ff", "#1a4d5c", 0.4);
         this.app.scene.add(hemi);
 
-        // Directional light as the main (sun/key) light — casts stronger shading without blowing out details
-        const dir = new THREE.DirectionalLight(0xffffff, 0.1);
-        dir.position.set(5, 10, 5);
-        dir.castShadow = true;
-        dir.shadow.mapSize.set(1024, 1024);
-        dir.shadow.camera.near = 0.5;
-        dir.shadow.camera.far = 50;
-        this.app.scene.add(dir);
+        // Soft fill light from below to simulate light reflecting off the seafloor
+        const fillLight = new THREE.PointLight("#5a8fb3", 0.3, 120);
+        fillLight.position.set(-40, 1, 30);
+        this.app.scene.add(fillLight);
 
-        // // soft fill point light to lift shadowed areas slightly
-        // const fill = new THREE.PointLight(0xffffff, 0, 30, 2); // intensity, distance, decay
-        // fill.position.set(-5, 3, -5);
-        // this.app.scene.add(fill);
+        // Additional subtle point light for depth variation and atmosphere
+        const accentLight = new THREE.PointLight("#6bc4d0", 0.25, 100);
+        accentLight.position.set(35, 40, -40);
+        this.app.scene.add(accentLight);
 
-        const spot1 = new THREE.SpotLight(0xffffff, 7500);
-        spot1.position.set(30, 50, -30);
-        spot1.target.position.set(0, 0, 0);
-        spot1.angle = Math.PI / 6;
-        spot1.penumbra = 0.2;
+
+
+        // spotlights
+        const spot1 = new THREE.SpotLight(0xffffff, 5000);
+        spot1.position.set(50, 75, 10);
+        spot1.target.position.set(10, 0, 5);
+        spot1.angle = Math.PI / 12;
+        spot1.penumbra = 0.5;
         spot1.decay = 2;
-        spot1.distance = 100;
-        spot1.castShadow = true;
+        spot1.distance = 150;
+        spot1.castShadow = false;
+        spot1.shadow.mapSize.set(2048, 2048);
+        spot1.shadow.camera.near = 0.5;
+        spot1.shadow.camera.far = 200;
         this.app.scene.add(spot1);
-
         const spotLightHelper1 = new THREE.SpotLightHelper(spot1);
-        //this.app.scene.add(spotLightHelper1);
+        // this.app.scene.add(spotLightHelper1);
 
-        const spot2 = new THREE.SpotLight(0xffffff, 7500);
-        spot2.position.set(-30, 50, 30);
-        spot2.target.position.set(0, 0, 0);
-        spot2.angle = Math.PI / 6;
-        spot2.penumbra = 0.2;
+        // temple spots
+        const spot2 = new THREE.SpotLight(0xffffff, 2000);
+        spot2.position.set(-20, 75, -45);
+        spot2.target.position.set(-10, 0, -10);
+        spot2.angle = Math.PI / 8;
+        spot2.penumbra = 0.5;
         spot2.decay = 2;
-        spot2.distance = 100;
-        spot2.castShadow = true;
+        spot2.distance = 150;
+        spot2.castShadow = false;
+        spot2.shadow.mapSize.set(2048, 2048);
+        spot2.shadow.camera.near = 0.5;
+        spot2.shadow.camera.far = 200;
         this.app.scene.add(spot2);
-        
         const spotLightHelper2 = new THREE.SpotLightHelper(spot2);
-        //this.app.scene.add(spotLightHelper2);
+        // this.app.scene.add(spotLightHelper2);
 
 
-        const spot3 = new THREE.SpotLight(0xffffff, 3750);
-        spot3.position.set(30, 50, 30);
-        spot3.target.position.set(20, 0, 10);
-        spot3.angle = Math.PI / 6;
-        spot3.penumbra = 0.2;
+        const spot3 = new THREE.SpotLight(0xffffff, 1500);
+        spot3.position.set(-20, 50, 40);
+        spot3.target.position.set(-10, 0, -10);
+        spot3.angle = Math.PI / 8;
+        spot3.penumbra = 0.5;
         spot3.decay = 2;
-        spot3.distance = 100;
-        spot3.castShadow = true;
+        spot3.distance = 150;
+        spot3.castShadow = false;
+        spot3.shadow.mapSize.set(2048, 2048);
+        spot3.shadow.camera.near = 0.5;
+        spot3.shadow.camera.far = 200;
         this.app.scene.add(spot3);
-
         const spotLightHelper3 = new THREE.SpotLightHelper(spot3);
-        //this.app.scene.add(spotLightHelper3);
+        // this.app.scene.add(spotLightHelper3);
 
 
-        // low ambient to preserve overall visibility but keep contrast
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
-        this.app.scene.add(ambientLight);
+        // main spotlight
+        const spot4 = new THREE.SpotLight(0xffffff, 7500);
+        spot4.position.set(-5, 75, 40);
+        spot4.target.position.set(-5, 0, -5);
+        spot4.angle = Math.PI / 5;
+        spot4.penumbra = 0.5;
+        spot4.decay = 2;
+        spot4.distance = 150;
+        spot4.castShadow = true;
+        spot4.shadow.mapSize.set(2048, 2048);
+        spot4.shadow.camera.near = 0.5;
+        spot4.shadow.camera.far = 200;
+        this.app.scene.add(spot4);
+        const spotLightHelper4 = new THREE.SpotLightHelper(spot4);
+        // this.app.scene.add(spotLightHelper4);
+
 
 
         this.buildSeafloor();
         this.buildSubmarine();
         this.buildShark();
         this.buildFishGroups(5, 100, 200);
+        
+
+        this.seafloorGroup.traverse((child) => {
+            if (child.isMesh) {
+                child.receiveShadow = true;
+            }
+        });
 
         this._lastUpdateTime = Date.now() * 0.001;
 
         this.temple = new MyTemple();
-        this.temple.position.set(0, 1, 0);
+        this.temple.name = "Temple";
+        this.temple.rotateY(-Math.PI / 4);
+        this.temple.position.set(-15, 1, -15);
         const templeScale = 0.75;
         this.temple.scale.setScalar(templeScale);
+
+        this.temple.traverse((child) => {
+            if (child.isMesh) {
+                child.receiveShadow = true;
+                child.castShadow = true;
+            }
+        });
+
         this.app.scene.add(this.temple);
         
         if (this.submarine) {
             this.submarine.setBubbleSystem(this.bubble);
         }
+        // // CLIPPING ///////////
+        // // clipping plane at y = 0
+        // const clippingPlanes = [
+        //     new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),                         // y = 0 (bottom)
+        //     new THREE.Plane(new THREE.Vector3(1, 0, 0), this.terrainSize / 2),      // x = 50 (right)
+        //     new THREE.Plane(new THREE.Vector3(-1, 0, 0), this.terrainSize / 2),     // x = -50 (left)
+        //     new THREE.Plane(new THREE.Vector3(0, 0, 1), this.terrainSize / 2),      // z = 50 (front)
+        //     new THREE.Plane(new THREE.Vector3(0, 0, -1), this.terrainSize / 2),     // z = -50 (back)
+        // ];
+
+        // this.app.renderer.localClippingEnabled = true;
+
+        // //clipping to all materials
+        // const clippingObjects = ["Apollo", "Temple"];
+        // this.app.scene.traverse((object) => {
+        //     if (object.isMesh && object.material) {
+        //         if (clippingObjects.includes(object.parent?.name) || clippingObjects.some(name => object.name.includes(name))) {
+        //             if (Array.isArray(object.material)) {
+        //                 object.material.forEach(m => {
+        //                     m.clippingPlanes = clippingPlanes;
+        //                 });
+        //             } else {
+        //                 object.material.clippingPlanes = clippingPlanes;
+        //             }
+        //         }
+        //     }
+        // });
+        // /////////////////////
     }
 
     setFishesScale(s) {
@@ -340,6 +514,47 @@ class MyContents  {
         const dt = this._lastUpdateTime ? Math.min(0.1, now - this._lastUpdateTime) : 0;
         this._lastUpdateTime = now;
 
+        if (!this._horsePositioned && 
+            this.terrain.mesh && 
+            this.terrain.mesh.material.displacementMap && 
+            this.terrain.mesh.material.displacementMap.image &&
+            this.terrain.mesh.material.displacementMap.image.width) {
+            
+            this.groupHorsePillars.children.forEach((horse) => {
+            const terrainHeight = this.terrain.displacementAtXY(horse.position.x, horse.position.z);
+            horse.position.y = terrainHeight;
+
+            // Apply terrain inclination to rotate horse with the terrain
+            const inclination = this.terrain.inclinationAtXY(horse.position.x, horse.position.z);
+                horse.rotateX(inclination[1]);
+                horse.rotateZ(-inclination[0]);
+            });
+            
+            this._horsePositioned = true;
+        }
+
+        if (!this._clippingApplied && this.apollo.isLoaded && this.apollo.isLoaded()) {
+            this.applyClipping();
+            this._clippingApplied = true;
+        }
+
+        if (!this._vasePositioned && 
+            this.terrain.mesh && 
+            this.terrain.mesh.material.displacementMap && 
+            this.terrain.mesh.material.displacementMap.image &&
+            this.terrain.mesh.material.displacementMap.image.width) {
+            
+            const terrainHeight = this.terrain.displacementAtXY(this.vase.position.x, this.vase.position.z);
+            this.vase.position.y = terrainHeight;
+
+            // Apply terrain inclination to rotate vase with the terrain
+            const inclination = this.terrain.inclinationAtXY(this.vase.position.x, this.vase.position.z);
+            this.vase.rotateX(inclination[1]);
+            this.vase.rotateZ(-inclination[0]);
+            
+            this._vasePositioned = true;
+        }
+                                                                            
         if (this.sharkController) {
             this.sharkController.update(dt);
         }
@@ -430,6 +645,43 @@ class MyContents  {
         // Interpolate the shark's current rotation towards the target rotation
         this.shark.quaternion.slerp(this._sharkTargetQuaternion, this.sharkTurnSpeed * dt);
     }
+
+    applyClipping() {
+    const clippingPlanes = [
+        new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
+        new THREE.Plane(new THREE.Vector3(1, 0, 0), this.terrainSize / 2),
+        new THREE.Plane(new THREE.Vector3(-1, 0, 0), this.terrainSize / 2),
+        new THREE.Plane(new THREE.Vector3(0, 0, 1), this.terrainSize / 2),
+        new THREE.Plane(new THREE.Vector3(0, 0, -1), this.terrainSize / 2),
+    ];
+    
+    this.app.renderer.localClippingEnabled = true;
+
+    const clippingObjects = ["Apollo", "Temple"];
+
+    const isClippingObject = (obj) => {
+        let current = obj;
+        while (current) {
+            if (clippingObjects.includes(current.name)) {
+                return true;
+            }
+            current = current.parent;
+        }
+        return false;
+    };
+
+    this.app.scene.traverse((object) => {
+        if (object.isMesh && object.material && isClippingObject(object)) {
+            if (Array.isArray(object.material)) {
+                object.material.forEach(m => {
+                    m.clippingPlanes = clippingPlanes;
+                });
+            } else {
+                object.material.clippingPlanes = clippingPlanes;
+            }
+        }
+    });
+}
 }
 
 export { MyContents };
