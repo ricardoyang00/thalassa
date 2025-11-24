@@ -237,7 +237,7 @@ class MyContents  {
         }
     
         this.submarine = new MySubmarineLOD(this.app, {
-            size: 1,
+            size: 2,
             assetsPath: 'models/submarine/',
             gltfFile: 'scene.gltf'
         });
