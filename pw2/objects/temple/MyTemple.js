@@ -1,15 +1,16 @@
 import * as THREE from 'three';
 import { Pillar } from './Pillar.js';
 import { SUBTRACTION, ADDITION, Brush, Evaluator } from 'https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.17/+esm';
+import { createMossMaterial } from '../../shaders/MossShader.js';
 
 class MyTemple extends THREE.Object3D {
-    constructor() {
+    constructor(maxAnisotropy = 1) {
         super();
 
         const limestoneTexture = new THREE.TextureLoader().load('textures/limestone.jpg');
         limestoneTexture.wrapS = THREE.RepeatWrapping;
         limestoneTexture.wrapT = THREE.RepeatWrapping;
-        const repeatFactor = 5;
+        const repeatFactor = 3;
         limestoneTexture.repeat.set(repeatFactor, repeatFactor);
 
         const cobbleTexture = new THREE.TextureLoader().load('textures/cobble3.jpg');
@@ -17,42 +18,38 @@ class MyTemple extends THREE.Object3D {
         cobbleTexture.wrapT = THREE.RepeatWrapping;
         const cobbleRepeatFactor = 15;
         cobbleTexture.repeat.set(cobbleRepeatFactor, cobbleRepeatFactor);
+        cobbleTexture.anisotropy = maxAnisotropy;
 
         const cobbleBumpTexture = new THREE.TextureLoader().load('images/cobble3-bump.jpg');
         cobbleBumpTexture.wrapS = THREE.RepeatWrapping;
         cobbleBumpTexture.wrapT = THREE.RepeatWrapping;
         cobbleBumpTexture.repeat.set(cobbleRepeatFactor, cobbleRepeatFactor);
+        cobbleBumpTexture.anisotropy = maxAnisotropy;
 
-        const goldMarbleTexture = new THREE.TextureLoader().load('textures/gold-marble.jpg');
-        goldMarbleTexture.wrapS = THREE.RepeatWrapping;
-        goldMarbleTexture.wrapT = THREE.RepeatWrapping;
-        const goldMarbleRepeatFactor = 10;
-        goldMarbleTexture.repeat.set(goldMarbleRepeatFactor, goldMarbleRepeatFactor);
+        const pillarLimestoneMaterial = createMossMaterial(
+            limestoneTexture, 
+            new THREE.Color("#557e4e")
+        );
+        const roofLimestoneMaterial = createMossMaterial(
+            limestoneTexture, 
+            new THREE.Color("#557e4e"), 
+            {scale: 0.05}
+        );
 
-
-        const limestoneMaterial = new THREE.MeshPhongMaterial({
-            color: "#f9f6e3", //"#DCD5B4",
-            specular: 0x111111,
-            shininess: 10,
-            map: limestoneTexture,
-        });
-
-        const cobbleMaterial = new THREE.MeshPhongMaterial({
-            color: "#888888",
-            specular: 0x111111,
-            shininess: 5,
-            map: cobbleTexture,
-            bumpMap: cobbleBumpTexture,
-            bumpScale: 5
-        });
-
-        const goldMarbleMaterial = new THREE.MeshPhongMaterial({
-            color: "#d4c19c",
-            specular: 0x222222,
-            shininess: 30,
-            map: goldMarbleTexture,
-        });
-
+        const cobbleMaterial = createMossMaterial(
+            cobbleTexture, 
+            new THREE.Color("#557e4e"),
+            { 
+                scale: 0.12, 
+                threshold: -0.2,
+                color: "#888888",
+                specular: 0x222222,
+                shininess: 2,
+                bumpMap: cobbleBumpTexture,
+                bumpScale: 1
+            }
+        );
+        
         const gridSize = 7;
         const spacing = 5;
         const half = Math.floor(gridSize / 2);
@@ -87,7 +84,7 @@ class MyTemple extends THREE.Object3D {
                     switch (randomState) {
                         case 'perfect':
                         case 'broken': {
-                            const p = new Pillar({state: randomState}, limestoneMaterial);
+                            const p = new Pillar({state: randomState}, pillarLimestoneMaterial);
                             p.position.set(x, 0, z);
                             const pillarScale = 1.3;
                             p.scale.set(pillarScale, 1, pillarScale);
@@ -104,7 +101,7 @@ class MyTemple extends THREE.Object3D {
                             }
 
                             if (isFirstMissing) {
-                                const p = new Pillar({state: 'broken'}, limestoneMaterial);
+                                const p = new Pillar({state: 'broken'}, pillarLimestoneMaterial);
                                 
                                 const h = p.getHeight();
                                 const r = 1.5;
@@ -169,7 +166,7 @@ class MyTemple extends THREE.Object3D {
 
         const slabThickness = 2;
         const largeStoneGeo = new THREE.BoxGeometry(size * 0.95, slabThickness, size * 0.95);
-        const largeStoneMat = limestoneMaterial;
+        const largeStoneMat = roofLimestoneMaterial;
 
         //////////////////////////
         // apply UV fix before any CSG operations

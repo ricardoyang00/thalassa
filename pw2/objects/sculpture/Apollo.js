@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { createMossMaterial } from '../../shaders/MossShader.js';
 
 class Apollo extends THREE.Object3D {
     constructor(app, {
@@ -40,20 +41,18 @@ class Apollo extends THREE.Object3D {
                 console.log('Scene bounds max:', bbox.max);
                 console.log('Scene bounds size:', bbox.getSize(new THREE.Vector3()));
                 
-                // Create limestone material
-                const limestoneMaterial = new THREE.MeshPhongMaterial({
-                    color: "#f9f6e3",
-                    specular: 0x111111,
-                    shininess: 10,
-                    map: limestoneTexture,
-                });
+                const limestoneMaterial = createMossMaterial(
+                    limestoneTexture, 
+                    new THREE.Color("#557e4e"),
+                    { scale: 0.15 }
+                );
                 
                 gltf.scene.traverse((child) => {
                     if (child.isMesh) {
                         console.log('Mesh found:', child.name);
                         child.castShadow = true;
                         child.receiveShadow = true;
-                        child.material = limestoneMaterial.clone();
+                        child.material = limestoneMaterial;
                     }
                 });
 

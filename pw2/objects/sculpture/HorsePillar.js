@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Horse } from './Horse.js';
 import { Pillar } from '../temple/Pillar.js';
+import { createMossMaterial } from '../../shaders/MossShader.js';
 
 class HorsePillar extends THREE.Object3D {
     constructor(app) {
@@ -19,13 +20,10 @@ class HorsePillar extends THREE.Object3D {
         const repeatFactor = 5;
         limestoneTexture.repeat.set(repeatFactor, repeatFactor);
 
-        const limestoneMaterial = new THREE.MeshPhongMaterial({
-                color: "#f9f6e3", //"#DCD5B4",
-                specular: 0x111111,
-                shininess: 10,
-                map: limestoneTexture,
-            });
-        
+        const limestoneMaterial = createMossMaterial(
+            limestoneTexture, 
+            new THREE.Color("#557e4e")
+        );
         
         this.pillar = new Pillar({state: "perfect"}, limestoneMaterial);
         this.pillar.position.set(0, 0, 0);

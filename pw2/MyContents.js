@@ -457,6 +457,11 @@ class MyContents  {
 
         this._lastUpdateTime = Date.now() * 0.001;
 
+        const maxAnisotropy = (this.app && this.app.renderer && this.app.renderer.capabilities)
+            ? this.app.renderer.capabilities.getMaxAnisotropy()
+            : 1;
+        console.log("Max Anisotropy: ", maxAnisotropy);
+
         this.temple = new MyTemple();
         this.temple.name = "Temple";
         this.temple.rotateY(-Math.PI / 4);

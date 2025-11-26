@@ -32,7 +32,15 @@ class Pillar extends THREE.Object3D {
         this.hexCapRadius = this.radius * 1.5;
         this.hexCapSegments = 6;
 
-        this.material = material;
+        if (material) {
+            this.material = material;
+        } else {
+            this.material = new THREE.MeshPhongMaterial({ 
+                color: this.materialColor,
+                specular: 0x111111,
+                shininess: 5
+            });
+        }
         this.evaluator = new Evaluator();
         
         this.totalHeight = this.pillarShaftHeight + this.hexCapThicknessTop + this.capThickness;
@@ -96,15 +104,19 @@ class Pillar extends THREE.Object3D {
             brushes[0].geometry,
             this.material,
         );
+
+        let mediumMat = this.material.clone();
+        mediumMat.onBeforeCompile = this.material.onBeforeCompile;
+        
+        mediumMat.bumpMap = Pillar.#bumpTexture;
+        mediumMat.bumpScale = 2; 
+        mediumMat.needsUpdate = true;
+
         const mediumDetail = new THREE.Mesh(
             brushes[1].geometry,
-            new THREE.MeshPhongMaterial({
-                color: this.material?.color,
-                map: this.material?.map, // if I don't apply texture, the color is notably different
-                bumpMap: Pillar.#bumpTexture,
-                bumpScale: 2,
-            }),
+            mediumMat,
         );
+
         lod.addLevel(highDetail, 0);
         lod.addLevel(mediumDetail, 50);
         return lod;

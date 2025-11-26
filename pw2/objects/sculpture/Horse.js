@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { createMossMaterial } from '../../shaders/MossShader.js';
 
 class Horse extends THREE.Object3D {
     constructor(app, {
@@ -32,13 +33,10 @@ class Horse extends THREE.Object3D {
             const repeatFactor = 5;
             limestoneTexture.repeat.set(repeatFactor, repeatFactor);
             
-            // Create limestone material
-            const limestoneMaterial = new THREE.MeshPhongMaterial({
-                color: "#f9f6e3",
-                specular: 0x111111,
-                shininess: 10,
-                map: limestoneTexture,
-            });
+            const limestoneMaterial = createMossMaterial(
+                limestoneTexture, 
+                new THREE.Color("#557e4e")
+            );
             
             objLoader.load(baseUrl + this.objFile, (object) => {
                 console.log('Model loaded successfully:', object);
@@ -47,7 +45,7 @@ class Horse extends THREE.Object3D {
                     if (child.isMesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
-                        child.material = limestoneMaterial.clone();
+                        child.material = limestoneMaterial;
                     }
                 });
 
