@@ -11,10 +11,8 @@ import { Apollo } from './objects/sculpture/Apollo.js';
 import { HorsePillar } from './objects/sculpture/HorsePillar.js';
 import { Vase } from './objects/others/Vase.js';
 import { Chest } from './objects/others/Chest.js';
-import { Pillar } from './objects/temple/Pillar.js';
 import { SharkController } from './objects/shark/SharkController.js';
 import { Bubble } from './objects/bubble/Bubble.js';
-import { MySubmarine } from './objects/submarine/MySubmarine.js';
 import { MyRock } from './objects/terrain/MyRock.js';
 import { MyTerrain } from './objects/terrain/MyTerrain.js';
 import { SgiUtils } from './SgiUtils.js';
@@ -324,6 +322,39 @@ class MyContents  {
         this.shark = this.sharkController.shark;
     }
 
+    buildWater() {
+        const waterColor = new THREE.Color("#051a3d");
+        this.app.scene.background = waterColor;
+        
+        // the lower the density, the further we can see
+        this.app.scene.fog = new THREE.FogExp2(waterColor, 0.02);
+
+
+        const waterTexture = new THREE.TextureLoader().load('textures/water.jpg');
+        if (waterTexture) {
+            waterTexture.wrapS = THREE.RepeatWrapping;
+            waterTexture.wrapT = THREE.RepeatWrapping;
+            waterTexture.repeat.set(10, 10);
+        }
+
+        const surfaceGeo = new THREE.PlaneGeometry(100, 100);
+        const surfaceMat = new THREE.MeshPhongMaterial({
+            color: "#9dd9ff", 
+            specular: 0xffffff,
+            shininess: 100,
+            opacity: 0.6,
+            transparent: true,
+            side: THREE.DoubleSide,
+            normalMap: waterTexture || null
+        });
+
+        const surface = new THREE.Mesh(surfaceGeo, surfaceMat);
+        surface.rotation.x = -Math.PI / 2;
+        surface.position.y = 40;
+
+        this.app.scene.add(surface);
+    }
+    
     /**
      * initializes the contents
      */
@@ -346,6 +377,26 @@ class MyContents  {
         // Blue-tinted ambient light simulating water's natural color filtering
         const underwaterAmbient = new THREE.AmbientLight("#6b9fb0", 0.3);
         this.app.scene.add(underwaterAmbient);
+
+        const causticsTexture = new THREE.TextureLoader().load('textures/caustics.jpg'); 
+        causticsTexture.wrapS = THREE.RepeatWrapping;
+        causticsTexture.wrapT = THREE.RepeatWrapping;
+        causticsTexture.center.set(0.5, 0.5);
+
+        const causticsLight = new THREE.SpotLight(0xffffff, 5000);
+        causticsLight.position.set(0, 39, 0);
+        causticsLight.target.position.set(0, 0, 0);
+        causticsLight.penumbra = 0.5;
+        causticsLight.angle = Math.PI / 3;
+        causticsLight.decay = 2;
+
+        causticsLight.map = causticsTexture; 
+
+        this.app.scene.add(causticsLight);
+        this.app.scene.add(causticsLight.target);
+
+        // Save reference to animate it
+        this.causticsLight = causticsLight;
 
         // Main directional light: sun rays filtering through water (blueish)
         const sunlight = new THREE.DirectionalLight("#7dd3d1", 0.55);
@@ -441,7 +492,7 @@ class MyContents  {
         const spotLightHelper4 = new THREE.SpotLightHelper(spot4);
         // this.app.scene.add(spotLightHelper4);
 
-
+        this.buildWater();
 
         this.buildSeafloor();
         this.buildSubmarine();
@@ -582,6 +633,15 @@ class MyContents  {
             if (time)
                 time.value = alpha;
         });
+
+        if (this.causticsLight) {
+            const deepTime = now * 0.0002; 
+            const slowTime = now * 0.05; 
+        
+            this.causticsLight.position.x = (Math.sin(deepTime) * 0.05) + (Math.cos(slowTime) * 0.02);
+            this.causticsLight.position.y = 39 + Math.sin(slowTime) * 0.1;
+            this.causticsLight.position.z = (Math.cos(deepTime * 0.7) * 0.05) + (Math.sin(slowTime) * 0.02);
+        }
     }
 
     generateRandomSpawnPos(templeRadius, maxRadius) {
