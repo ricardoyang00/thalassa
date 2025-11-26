@@ -26,14 +26,13 @@ class MyTemple extends THREE.Object3D {
         cobbleBumpTexture.repeat.set(cobbleRepeatFactor, cobbleRepeatFactor);
         cobbleBumpTexture.anisotropy = maxAnisotropy;
 
-        // const limestoneMaterial = new THREE.MeshPhongMaterial({
-        //     color: "#f9f6e3", //"#DCD5B4",
-        //     specular: 0x111111,
-        //     shininess: 10,
-        //     map: limestoneTexture,
-        // });
-        const limestoneMaterial = createMossMaterial(limestoneTexture, new THREE.Color("#557e4e"));
-
+        const pillarLimestoneMaterial = createMossMaterial(limestoneTexture, new THREE.Color("#557e4e"));
+        const roofLimestoneMaterial = createMossMaterial(
+            limestoneTexture, 
+            new THREE.Color("#557e4e"), 
+            {scale: 0.05}
+        );
+        
         const cobbleMaterial = new THREE.MeshPhongMaterial({
             color: "#888888",
             specular: 0x111111,
@@ -77,7 +76,7 @@ class MyTemple extends THREE.Object3D {
                     switch (randomState) {
                         case 'perfect':
                         case 'broken': {
-                            const p = new Pillar({state: randomState}, limestoneMaterial);
+                            const p = new Pillar({state: randomState}, pillarLimestoneMaterial);
                             p.position.set(x, 0, z);
                             const pillarScale = 1.3;
                             p.scale.set(pillarScale, 1, pillarScale);
@@ -94,7 +93,7 @@ class MyTemple extends THREE.Object3D {
                             }
 
                             if (isFirstMissing) {
-                                const p = new Pillar({state: 'broken'}, limestoneMaterial);
+                                const p = new Pillar({state: 'broken'}, pillarLimestoneMaterial);
                                 
                                 const h = p.getHeight();
                                 const r = 1.5;
@@ -159,7 +158,7 @@ class MyTemple extends THREE.Object3D {
 
         const slabThickness = 2;
         const largeStoneGeo = new THREE.BoxGeometry(size * 0.95, slabThickness, size * 0.95);
-        const largeStoneMat = limestoneMaterial;
+        const largeStoneMat = roofLimestoneMaterial;
 
         //////////////////////////
         // apply UV fix before any CSG operations

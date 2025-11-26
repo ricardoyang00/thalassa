@@ -140,7 +140,7 @@ class MySubmarineLOD extends THREE.LOD {
 
                 if (speed > 0.5 || Math.abs(this.verticalSpeed) > 0.5) {
                     if (Math.random() > 0.7) { 
-                        let baseSize = 0.1 * this.scale.x + (speed * 0.01);
+                        let baseSize = 0.07 * this.scale.x + (speed * 0.01);
                     
                         // Apply specific emitter multiplier (Main engine = bigger bubbles)
                         let finalSize = baseSize * emitter.sizeMult; 

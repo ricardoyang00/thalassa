@@ -3,10 +3,16 @@ import * as THREE from 'three';
 /**
  * Returns a ShaderMaterial that applies procedural moss on top of a base texture.
  * @param {THREE.Texture} baseTexture - The stone/limestone texture
- * @param {THREE.Color} mossColor - The color of the moss (default: grey-green for weathering)
+ * @param {THREE.Color} mossColor - The color of the moss
+ * @param {Object} options - Configuration options
+ * @param {number} options.scale - Noise scale (default: 0.3)
+ * @param {number} options.threshold - Global moss coverage (default: 0.0)
  */
-export function createMossMaterial(baseTexture, mossColor = new THREE.Color(0x4a4f3b)) { 
+export function createMossMaterial(baseTexture, mossColor = new THREE.Color("#557e4e"), options = {}) { 
     
+    const scale = options.scale !== undefined ? options.scale : 0.3;
+    const threshold = options.threshold !== undefined ? options.threshold : 0.0;
+
     const vertexShader = `
         varying vec2 vUv;
         varying vec3 vPosition; // World position for noise continuity
@@ -152,8 +158,8 @@ export function createMossMaterial(baseTexture, mossColor = new THREE.Color(0x4a
         uniforms: {
             uBaseTexture: { value: baseTexture },
             uMossColor: { value: mossColor },
-            uScale: { value: 0.3 },
-            uThreshold: { value: 0.0 },  
+            uScale: { value: scale },
+            uThreshold: { value: threshold },  
             uTime: { value: 0.0 }
         },
         vertexShader: vertexShader,
