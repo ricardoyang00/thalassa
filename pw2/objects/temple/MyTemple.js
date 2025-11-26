@@ -10,7 +10,7 @@ class MyTemple extends THREE.Object3D {
         const limestoneTexture = new THREE.TextureLoader().load('textures/limestone.jpg');
         limestoneTexture.wrapS = THREE.RepeatWrapping;
         limestoneTexture.wrapT = THREE.RepeatWrapping;
-        const repeatFactor = 5;
+        const repeatFactor = 3;
         limestoneTexture.repeat.set(repeatFactor, repeatFactor);
 
         const cobbleTexture = new THREE.TextureLoader().load('textures/cobble3.jpg');
@@ -26,21 +26,29 @@ class MyTemple extends THREE.Object3D {
         cobbleBumpTexture.repeat.set(cobbleRepeatFactor, cobbleRepeatFactor);
         cobbleBumpTexture.anisotropy = maxAnisotropy;
 
-        const pillarLimestoneMaterial = createMossMaterial(limestoneTexture, new THREE.Color("#557e4e"));
+        const pillarLimestoneMaterial = createMossMaterial(
+            limestoneTexture, 
+            new THREE.Color("#557e4e")
+        );
         const roofLimestoneMaterial = createMossMaterial(
             limestoneTexture, 
             new THREE.Color("#557e4e"), 
             {scale: 0.05}
         );
-        
-        const cobbleMaterial = new THREE.MeshPhongMaterial({
-            color: "#888888",
-            specular: 0x111111,
-            shininess: 5,
-            map: cobbleTexture,
-            bumpMap: cobbleBumpTexture,
-            bumpScale: 1
-        });
+
+        const cobbleMaterial = createMossMaterial(
+            cobbleTexture, 
+            new THREE.Color("#557e4e"),
+            { 
+                scale: 0.12, 
+                threshold: -0.2,
+                color: "#888888",
+                specular: 0x222222,
+                shininess: 2,
+                bumpMap: cobbleBumpTexture,
+                bumpScale: 1
+            }
+        );
         
         const gridSize = 7;
         const spacing = 5;
