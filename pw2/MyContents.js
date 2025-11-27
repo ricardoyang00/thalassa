@@ -16,6 +16,7 @@ import { Bubble } from './objects/bubble/Bubble.js';
 import { MyRock } from './objects/terrain/MyRock.js';
 import { MyTerrain } from './objects/terrain/MyTerrain.js';
 import { SgiUtils } from './SgiUtils.js';
+import { addVolumetricLight } from './SGILightUtils.js';
 
 /**
  *  This class contains the contents of out application
@@ -354,6 +355,7 @@ class MyContents  {
 
         this.app.scene.add(surface);
     }
+
     
     /**
      * initializes the contents
@@ -444,7 +446,7 @@ class MyContents  {
         // this.app.scene.add(spotLightHelper1);
 
         // temple spots
-        const spot2 = new THREE.SpotLight(0xffffff, 2000);
+        const spot2 = new THREE.SpotLight(0xffffff, 3000);
         spot2.position.set(-20, 75, -45);
         spot2.target.position.set(-10, 0, -10);
         spot2.angle = Math.PI / 8;
@@ -456,6 +458,7 @@ class MyContents  {
         spot2.shadow.camera.near = 0.5;
         spot2.shadow.camera.far = 200;
         this.app.scene.add(spot2);
+        addVolumetricLight(this.app.scene, spot2);
         const spotLightHelper2 = new THREE.SpotLightHelper(spot2);
         // this.app.scene.add(spotLightHelper2);
 
@@ -490,7 +493,7 @@ class MyContents  {
         spot4.shadow.camera.far = 200;
         this.app.scene.add(spot4);
         const spotLightHelper4 = new THREE.SpotLightHelper(spot4);
-        // this.app.scene.add(spotLightHelper4);
+        //this.app.scene.add(spotLightHelper4);
 
         this.buildWater();
 
@@ -640,7 +643,7 @@ class MyContents  {
         
             this.causticsLight.position.x = (Math.sin(deepTime) * 0.05) + (Math.cos(slowTime) * 0.02);
             this.causticsLight.position.y = 39 + Math.sin(slowTime) * 0.1;
-            this.causticsLight.position.z = (Math.cos(deepTime * 0.7) * 0.05) + (Math.sin(slowTime) * 0.02);
+            this.causticsLight.position.z = (Math.cos(deepTime * 0.07) * 0.05) + (Math.sin(slowTime) * 0.02);
         }
     }
 
