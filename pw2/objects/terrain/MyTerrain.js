@@ -57,27 +57,40 @@ class MyTerrain extends THREE.Object3D {
                 zz1 = Math.min(zz1, z1);
                 zz2 = Math.max(zz2, z2);
 
-                this.app.scene.add(new THREE.Box3Helper(new THREE.Box3(
+                coral.box = new THREE.Box3(
                     new THREE.Vector3(x1, y1, z1),
                     new THREE.Vector3(x2, y2, z2),
-                )));
+                );
+
+                this.contents.coralsBVHHelper.add(new THREE.Box3Helper(coral.box));
             });
 
-            this.app.scene.add(new THREE.Box3Helper(new THREE.Box3(
-                new THREE.Vector3(xx1, yy1, zz1),
-                new THREE.Vector3(xx2, yy2, zz2),
-            ), 0x00ff00));
-
-            const gridSize = 4;
+            const grid = [];
+            const gridSize = 6;
             const dx = (xx2 - xx1) / gridSize, dz = (zz2 - zz1) / gridSize;
             for (let i = 0; i < gridSize; ++i) {
                 for (let j = 0; j < gridSize; ++j) {
-                    this.app.scene.add(new THREE.Box3Helper(new THREE.Box3(
-                        new THREE.Vector3(xx1 + i * dx, yy1, zz1 + j * dz),
-                        new THREE.Vector3(xx1 + (i+1) * dx, yy2, zz1 + (j+1) * dz),
-                    ), 0x00ff00))
+                    const child = {
+                        box: new THREE.Box3(
+                            new THREE.Vector3(xx1 + i * dx, yy1, zz1 + j * dz),
+                            new THREE.Vector3(xx1 + (i+1) * dx, yy2, zz1 + (j+1) * dz),
+                        ),
+                    };
+                    child.children = this.contents.corals
+                        .filter(coral => coral.box.intersectsBox(child.box))
+                        .map(coral => {return {box: coral.box, obj: coral}})
+
+                    grid.push(child);
+                    this.contents.coralsBVHHelper.add(new THREE.Box3Helper(child.box, 0x00ff00));
                 }
             }
+
+            this.contents.coralsBVH.box = new THREE.Box3(
+                new THREE.Vector3(xx1, yy1, zz1),
+                new THREE.Vector3(xx2, yy2, zz2),
+            );
+            this.contents.coralsBVH.children = grid;
+            this.app.scene.add(this.contents.coralsBVHHelper);
         });
 
         terrainMap.wrapS = terrainMap.wrapT = THREE.RepeatWrapping;

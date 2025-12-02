@@ -23,20 +23,28 @@ class SgiUtils {
         return Math.floor(this.rand(from, to));
     }
 
-    static getCollidingObjects(a, b) {
+    static collideTestCounter = 0;
+    static getCollidingObjects(a, b, visited = new Set()) {
+        this.collideTestCounter++;
+        if (visited.has(b))
+            return new Set();
+        visited.add(b);
+
         if (a.obj) {
             return b.obj
-                ? a.box.intersectsBox(b.box) ? [{a: a.obj, b: b.obj}] : []
-                : b.children.reduce((result, node) => result.concat(this.getCollidingObjects(a, node)), []);
+                ? a.box.intersectsBox(b.box) ? new Set().add({a: a.obj, b: b.obj}) : new Set()
+                : b.children.reduce((result, node) => result.union(this.getCollidingObjects(a, node, visited)), new Set());
         } else if (b.obj) {
-            return a.children.reduce((result, node) => result.concat(this.getCollidingObjects(node, b)), []);
+            return a.children.reduce((result, node) => result.union(this.getCollidingObjects(node, b, visited)), new Set());
         }
 
-        return a.children.reduce((resA, nodeA) => resA.concat(
-            b.children.reduce((resB, nodeB) => resB.concat(
-                this.getCollidingObjects(nodeA, nodeB)
-            ), [])
-        ), []);
+        return a.children.reduce((resA, nodeA) => resA.union(
+            b.children.reduce((resB, nodeB) => resB.union(
+                nodeA.box.intersectsBox(nodeB.box)
+                    ? this.getCollidingObjects(nodeA, nodeB, visited)
+                    : new Set()
+            ), new Set())
+        ), new Set());
     }
 }
 

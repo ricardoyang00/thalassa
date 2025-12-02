@@ -28,8 +28,9 @@ class FishFlock extends MultiInstancedEntityContainer {
     constructor(fishArray = [], options = {}) {
         super(fishArray.slice());
         this.fish = this._instances;
-        this.boids = []; // internal state per fish
+        // this.boids = []; // internal state per fish
         this.dangers = [];
+        this.avoidances = [];
 
         // default parameters
         const defaults = {
@@ -61,7 +62,7 @@ class FishFlock extends MultiInstancedEntityContainer {
         const startMaxY = Math.max(startMinY + 1, (this.opt.startMaxY !== undefined ? this.opt.startMaxY : startMinY + 4));
 
         for (let i = 0; i < this.fish.length; ++i) {
-            const f = this.fish[i];
+            const fish = this.fish[i];
             // random local position around flock center
             const pos = new THREE.Vector3(
                 SgiUtils.rand(-0.5, 0.5) * 2 * startRadius,
@@ -73,14 +74,17 @@ class FishFlock extends MultiInstancedEntityContainer {
                 SgiUtils.rand(-0.5, 0.5) * 0.5,
                 SgiUtils.rand(-0.5, 0.5) * 1.5
             );
-            this.boids.push({
-                fish: f,
-                position: pos,
-                velocity: vel,
-                acceleration: new THREE.Vector3(),
-            });
+            // this.boids.push({
+            //     fish: f,
+            //     position: pos,
+            //     velocity: vel,
+            //     acceleration: new THREE.Vector3(),
+            // });
+
             // set initial local position into fish (overrides any preset)
-            f.position.copy(pos);
+            fish.position.copy(pos);
+            fish.velocity = vel;
+            fish.acceleration = new THREE.Vector3();
         }
 
         // reusable temp vectors
@@ -119,6 +123,17 @@ class FishFlock extends MultiInstancedEntityContainer {
         }
     }
 
+    // Similar to addDanger, but for non-dangerous objects (e.g. corals)
+    // (also it has to use BVH)
+    addAvoidance(obj, weight) {
+        if (obj && !this.avoidances.includes(obj)) {
+            this.avoidances.push({
+                obj: obj,
+                weight: weight,
+            });
+        }
+    }
+
     update(dt) {
         if (dt <= 0) return;
         const {
@@ -130,12 +145,13 @@ class FishFlock extends MultiInstancedEntityContainer {
         } = this.opt;
 
         // sync positions from fish objects to boids
-        for (let i = 0; i < this.boids.length; ++i) {
-            this.boids[i].position.copy(this.boids[i].fish.position);
-        }
+        // for (let i = 0; i < this.boids.length; ++i) {
+        //     this.boids[i].position.copy(this.boids[i].fish.position);
+        // }
 
-        for (let i = 0; i < this.boids.length; ++i) {
-            const bi = this.boids[i];
+        for (let i = 0; i < this.fish.length; ++i) {
+            const fish = this.fish[i];
+            const bi = fish;
             const pos = bi.position;
             const vel = bi.velocity;
 
@@ -147,9 +163,9 @@ class FishFlock extends MultiInstancedEntityContainer {
             let totalNeighbors = 0;
             let totalSeparation = 0;
 
-            for (let j = 0; j < this.boids.length; ++j) {
+            for (let j = 0; j < this.fish.length; ++j) {
                 if (i === j) continue;
-                const bj = this.boids[j];
+                const bj = this.fish[j];
                 const d = pos.distanceTo(bj.position);
                 if (d < neighborRadius) {
                     // neighbor for alignment & cohesion
@@ -215,7 +231,7 @@ class FishFlock extends MultiInstancedEntityContainer {
                 let avoidance = new THREE.Vector3(); // Accumulator for this fish
                 let totalAvoidance = 0;
 
-                this._fishWorldPos.copy(bi.fish.position);
+                this._fishWorldPos.copy(fish.position);
 
                 for (const danger of this.dangers) {
                     danger.getWorldPosition(this._dangerWorldPos);
@@ -272,6 +288,39 @@ class FishFlock extends MultiInstancedEntityContainer {
 
             // integrate acceleration/velocity (acceleration is per second)
             bi.acceleration.copy(steer);
+        }
+
+        this.fish.forEach(fish => {
+            fish.avoidance = new THREE.Vector3();
+            fish.totalAvoidance = 0;
+        });
+
+        SgiUtils.collideTestCounter = 0;
+        for (const {obj: bvh, weight: weight} of this.avoidances) {
+            for (const {a: fish, b: obj} of SgiUtils.getCollidingObjects(this._bvh, bvh)) {
+                const distVec = this._worldAvoidSteer.subVectors(fish.position, obj.position);
+                const d = distVec.length();
+                fish.avoidance.y += d*d/weight;
+                // fish.avoidance.add(distVec.divideScalar(d*d/weight)); // Weight by inverse distance
+                ++fish.totalAvoidance;
+            }
+        }
+        // console.log(SgiUtils.collideTestCounter);
+
+        this.fish.forEach(fish => {
+            if (fish.totalAvoidance > 0) {
+                fish.avoidance.divideScalar(fish.totalAvoidance);
+                fish.avoidance.normalize();
+                fish.avoidance.multiplyScalar(maxSpeed);
+
+                const avoidSteer = new THREE.Vector3().subVectors(fish.avoidance, fish.velocity);
+                this.limit(avoidSteer, maxForce * 2.0);
+                avoidSteer.multiplyScalar(avoidanceWeight);
+
+                fish.acceleration.add(avoidSteer);
+            }
+
+            const bi = fish;
             bi.velocity.add(bi.acceleration.clone().multiplyScalar(dt));
             this.limit(bi.velocity, maxSpeed);
 
@@ -279,20 +328,21 @@ class FishFlock extends MultiInstancedEntityContainer {
             bi.position.add(bi.velocity.clone().multiplyScalar(dt));
 
             // write back into fish local position
-            bi.fish.position.copy(bi.position);
+            fish.position.copy(bi.position);
             
             // orient fish to movement direction
             if (bi.velocity.lengthSq() > 1e-6) {
                 this._vec.copy(bi.position).add(bi.velocity);
-                bi.fish.lookAt(this._vec);
+                fish.lookAt(this._vec);
             }
 
             // update dummy's bones and save changes
             const dummy = Fish.defaultOwner.dummy;
             const speedFactor = bi.velocity.length() / this.opt.maxSpeed;
-            dummy.animate(bi.fish, dt, speedFactor);
-            Fish.defaultOwner.setBonesAt(bi.fish._instances[0].id);
-        }
+            dummy.animate(fish, dt, speedFactor);
+            Fish.defaultOwner.setBonesAt(fish._instances[0].id);
+        })
+
         this.updateBVH();
     }
 

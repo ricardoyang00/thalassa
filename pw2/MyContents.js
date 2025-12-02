@@ -30,6 +30,7 @@ class MyContents  {
     */ 
     constructor(app) {
         this.app = app
+        this.fastLoad = true;
 
         this.axis = null;
 
@@ -41,9 +42,17 @@ class MyContents  {
         this.coralMeshes = null;
 
         // fish related attributes
+        this.allFishMesh = null;
         this.fishByGroup = [];              // array of arrays with fish references per group
         this.fish = [];                     // flat list of all fish
+        this.fishScale = 0.1;
         this.showFish = true;
+        this.fishBVHHelper = new THREE.Group();
+        this.fishBVHHelper.visible = false;
+
+        this.coralsBVH = {box: new THREE.Box3(), children: []};
+        this.coralsBVHHelper = new THREE.Group();
+        this.coralsBVHHelper.visible = false;
 
         this.flocks = [];
         this._lastUpdateTime = null;
@@ -51,7 +60,9 @@ class MyContents  {
         // this.aquaman = new MyAquaman(this.app);
         // this.app.scene.add(this.aquaman);
         // this.aquaman.position.set(0, 0, 0);
-        this.apollo = new Apollo(this.app);
+        this.apollo = this.fastLoad
+            ? new THREE.Mesh(new THREE.BoxGeometry())
+            : new Apollo(this.app);
         this.apollo.name = "Apollo";
         this.apollo.castShadow = true;
         this.apollo.receiveShadow = true;
@@ -75,13 +86,17 @@ class MyContents  {
         ///// horse
         this.groupHorsePillars = new THREE.Group();
 
-        this.horse1 = new HorsePillar(this.app);
+        this.horse1 = this.fastLoad
+            ? new THREE.Mesh(new THREE.BoxGeometry())
+            : new HorsePillar(this.app);
         this.horse1.scale.setScalar(0.75);
         this.horse1.position.set(-15, 0, 22);
         this.horse1.rotateY(Math.PI/2);
         this.groupHorsePillars.add(this.horse1);
 
-        this.horse2 = new HorsePillar(this.app);
+        this.horse2 = this.fastLoad
+            ? new THREE.Mesh(new THREE.BoxGeometry())
+            : new HorsePillar(this.app);
         this.horse2.scale.setScalar(0.75);
         this.horse2.position.set(22, 0, -15);
         this.horse2.rotateY(-Math.PI);
@@ -124,12 +139,16 @@ class MyContents  {
 
         this._horsePositioned = false;
 
-        this.vase = new Vase(this.app);
+        this.vase = this.fastLoad
+            ? new THREE.Mesh(new THREE.BoxGeometry())
+            : new Vase(this.app);
         this.vase.position.set(10, 0, 10);
         this.app.scene.add(this.vase);
         this._vasePositioned = false;
 
-        this.chest = new Chest(this.app);
+        this.chest = this.fastLoad
+            ? new THREE.Mesh(new THREE.BoxGeometry())
+            : new Chest(this.app);
         this.chest.position.set(1, 0, 18);
         this.chest.rotateY(-Math.PI/4);
         this.app.scene.add(this.chest);
@@ -309,10 +328,13 @@ class MyContents  {
             if (this.shark) {
                 flock.addDanger(this.shark);
             }
+            flock.addAvoidance(this.coralsBVH, 1);
+            console.log(flock.fish.length);
             this.flocks.push(flock);
-            this.app.scene.add(new THREE.Box3Helper(flock._bvh.box));
-            flock._bvh.children.forEach(fish => this.app.scene.add(new THREE.Box3Helper(fish.box, 0x00ffff)));
+            this.fishBVHHelper.add(new THREE.Box3Helper(flock._bvh.box));
+            flock._bvh.children.forEach(fish => this.fishBVHHelper.add(new THREE.Box3Helper(fish.box, 0x00ffff)));
         }
+        this.app.scene.add(this.fishBVHHelper);
         this.app.scene.add(Fish.defaultOwner);
         this.allFishMesh = Fish.defaultOwner.updateInstances(() => {});
     }
@@ -450,7 +472,8 @@ class MyContents  {
 
         this.buildSeafloor();
         this.buildSubmarine();
-        this.buildShark();
+        if (!this.fastLoad)
+            this.buildShark();
         this.buildFishGroups(5, 100, 200);
         
 
@@ -462,21 +485,23 @@ class MyContents  {
 
         this._lastUpdateTime = Date.now() * 0.001;
 
-        // this.temple = new MyTemple();
-        // this.temple.name = "Temple";
-        // this.temple.rotateY(-Math.PI / 4);
-        // this.temple.position.set(-15, 1, -15);
-        // const templeScale = 0.75;
-        // this.temple.scale.setScalar(templeScale);
+        this.temple = this.fastLoad
+            ? new THREE.Mesh(new THREE.BoxGeometry())
+            : new MyTemple();
+        this.temple.name = "Temple";
+        this.temple.rotateY(-Math.PI / 4);
+        this.temple.position.set(-15, 1, -15);
+        const templeScale = 0.75;
+        this.temple.scale.setScalar(templeScale);
 
-        // this.temple.traverse((child) => {
-        //     if (child.isMesh) {
-        //         child.receiveShadow = true;
-        //         child.castShadow = true;
-        //     }
-        // });
+        this.temple.traverse((child) => {
+            if (child.isMesh) {
+                child.receiveShadow = true;
+                child.castShadow = true;
+            }
+        });
 
-        // this.app.scene.add(this.temple);
+        this.app.scene.add(this.temple);
         
         if (this.submarine) {
             this.submarine.setBubbleSystem(this.bubble);
@@ -512,7 +537,8 @@ class MyContents  {
     }
 
     setFishesScale(s) {
-        this.fishGroup.scale.setScalar(s);
+        this.fish.forEach(fish => fish.scale.multiplyScalar(s / this.fishScale));
+        this.fishScale = s;
     }
 
     update(/* now, dt */) {
