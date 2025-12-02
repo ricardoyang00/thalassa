@@ -22,6 +22,22 @@ class SgiUtils {
     static randInt(from = 1, to = 0) {
         return Math.floor(this.rand(from, to));
     }
+
+    static getCollidingObjects(a, b) {
+        if (a.obj) {
+            return b.obj
+                ? a.box.intersectsBox(b.box) ? [{a: a.obj, b: b.obj}] : []
+                : b.children.reduce((result, node) => result.concat(this.getCollidingObjects(a, node)), []);
+        } else if (b.obj) {
+            return a.children.reduce((result, node) => result.concat(this.getCollidingObjects(node, b)), []);
+        }
+
+        return a.children.reduce((resA, nodeA) => resA.concat(
+            b.children.reduce((resB, nodeB) => resB.concat(
+                this.getCollidingObjects(nodeA, nodeB)
+            ), [])
+        ), []);
+    }
 }
 
 export { SgiUtils };

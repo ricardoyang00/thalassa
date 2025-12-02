@@ -95,6 +95,15 @@ class FishFlock extends MultiInstancedEntityContainer {
         this._worldAvoidSteer = new THREE.Vector3();
         this._localAvoidSteer = new THREE.Vector3();
         this._worldToLocalMatrix = new THREE.Matrix4();
+
+        this._bvh = {
+            box: new THREE.Box3(),
+            children: this.fish.map(fish => {return {
+                box: new THREE.Box3(),
+                obj: fish,
+            };}),
+        };
+        this.updateBVH();
     }
 
     // Helper to limit a vector's length to cap fish speed and steer force
@@ -284,6 +293,26 @@ class FishFlock extends MultiInstancedEntityContainer {
             dummy.animate(bi.fish, dt, speedFactor);
             Fish.defaultOwner.setBonesAt(bi.fish._instances[0].id);
         }
+        this.updateBVH();
+    }
+
+    updateBVH() {
+        let x1 = +Infinity, x2 = -Infinity, y1 = +Infinity, y2 = -Infinity, z1 = +Infinity, z2 = -Infinity;
+        const box = this._bvh.box;
+        const margin = 0.3;
+        for (const fish of this._bvh.children) {
+            const pos = fish.obj.position;
+            x1 = x1 < pos.x ? x1 : pos.x;
+            x2 = x2 > pos.x ? x2 : pos.x;
+            y1 = y1 < pos.y ? y1 : pos.y;
+            y2 = y2 > pos.y ? y2 : pos.y;
+            z1 = z1 < pos.z ? z1 : pos.z;
+            z2 = z2 > pos.z ? z2: pos.z;
+            fish.box.min.set(pos.x - margin, pos.y - margin, pos.z - margin);
+            fish.box.max.set(pos.x + margin, pos.y + margin, pos.z + margin);
+        };
+        box.min.set(x1- margin, y1 - margin, z1 - margin);
+        box.max.set(x2 + margin, y2 + margin, z2 + margin);
     }
 }
 

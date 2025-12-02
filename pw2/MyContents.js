@@ -228,6 +228,10 @@ class MyContents  {
 
         this.seafloorGroup.add(this.coralMeshes);
 
+        TubeCoral.defaultOwner.computeBVH({margin: 0.5});
+        BrainCoral.defaultOwner.computeBVH({margin: 0.5});
+        LSystemCoral.defaultOwner.computeBVH({margin: 0.5});
+
         this.app.scene.add(this.seafloorGroup);
     }
 
@@ -306,6 +310,8 @@ class MyContents  {
                 flock.addDanger(this.shark);
             }
             this.flocks.push(flock);
+            this.app.scene.add(new THREE.Box3Helper(flock._bvh.box));
+            flock._bvh.children.forEach(fish => this.app.scene.add(new THREE.Box3Helper(fish.box, 0x00ffff)));
         }
         this.app.scene.add(Fish.defaultOwner);
         this.allFishMesh = Fish.defaultOwner.updateInstances(() => {});
@@ -432,7 +438,7 @@ class MyContents  {
         spot4.penumbra = 0.5;
         spot4.decay = 2;
         spot4.distance = 150;
-        spot4.castShadow = true;
+        // spot4.castShadow = true;
         spot4.shadow.mapSize.set(2048, 2048);
         spot4.shadow.camera.near = 0.5;
         spot4.shadow.camera.far = 200;
@@ -456,21 +462,21 @@ class MyContents  {
 
         this._lastUpdateTime = Date.now() * 0.001;
 
-        this.temple = new MyTemple();
-        this.temple.name = "Temple";
-        this.temple.rotateY(-Math.PI / 4);
-        this.temple.position.set(-15, 1, -15);
-        const templeScale = 0.75;
-        this.temple.scale.setScalar(templeScale);
+        // this.temple = new MyTemple();
+        // this.temple.name = "Temple";
+        // this.temple.rotateY(-Math.PI / 4);
+        // this.temple.position.set(-15, 1, -15);
+        // const templeScale = 0.75;
+        // this.temple.scale.setScalar(templeScale);
 
-        this.temple.traverse((child) => {
-            if (child.isMesh) {
-                child.receiveShadow = true;
-                child.castShadow = true;
-            }
-        });
+        // this.temple.traverse((child) => {
+        //     if (child.isMesh) {
+        //         child.receiveShadow = true;
+        //         child.castShadow = true;
+        //     }
+        // });
 
-        this.app.scene.add(this.temple);
+        // this.app.scene.add(this.temple);
         
         if (this.submarine) {
             this.submarine.setBubbleSystem(this.bubble);

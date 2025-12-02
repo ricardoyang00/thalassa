@@ -36,7 +36,48 @@ class MyTerrain extends THREE.Object3D {
             BrainCoral.defaultOwner.updateInstances(() => {});
             LSystemCoral.defaultOwner.updateInstances(() => {});
             seafloorGroup.getObjectByName("rocks").children.forEach((rock) => rock.position.y += this.displacementAtXY(rock.position.x, rock.position.z));
-            this.#canvas = undefined;
+            this.#canvas = this.#canvasCtx = undefined;
+
+            let xx1 = +Infinity, xx2 = -Infinity, yy1 = +Infinity, yy2 = -Infinity, zz1 = +Infinity, zz2 = -Infinity;
+            this.contents.corals.forEach(coral => {
+                let x1 = +Infinity, x2 = -Infinity, y1 = +Infinity, y2 = -Infinity, z1 = +Infinity, z2 = -Infinity;
+                coral._instances.forEach(obj => {
+                    const box = obj.owner.bvh.nodesMap.get(obj.id).box;
+                    x1 = Math.min(x1, box[0]);
+                    x2 = Math.max(x2, box[1]);
+                    y1 = Math.min(y1, box[2]);
+                    y2 = Math.max(y2, box[3]);
+                    z1 = Math.min(z1, box[4]);
+                    z2 = Math.max(z2, box[5]);
+                });
+                xx1 = Math.min(xx1, x1);
+                xx2 = Math.max(xx2, x2);
+                yy1 = Math.min(yy1, y1);
+                yy2 = Math.max(yy2, y2);
+                zz1 = Math.min(zz1, z1);
+                zz2 = Math.max(zz2, z2);
+
+                this.app.scene.add(new THREE.Box3Helper(new THREE.Box3(
+                    new THREE.Vector3(x1, y1, z1),
+                    new THREE.Vector3(x2, y2, z2),
+                )));
+            });
+
+            this.app.scene.add(new THREE.Box3Helper(new THREE.Box3(
+                new THREE.Vector3(xx1, yy1, zz1),
+                new THREE.Vector3(xx2, yy2, zz2),
+            ), 0x00ff00));
+
+            const gridSize = 4;
+            const dx = (xx2 - xx1) / gridSize, dz = (zz2 - zz1) / gridSize;
+            for (let i = 0; i < gridSize; ++i) {
+                for (let j = 0; j < gridSize; ++j) {
+                    this.app.scene.add(new THREE.Box3Helper(new THREE.Box3(
+                        new THREE.Vector3(xx1 + i * dx, yy1, zz1 + j * dz),
+                        new THREE.Vector3(xx1 + (i+1) * dx, yy2, zz1 + (j+1) * dz),
+                    ), 0x00ff00))
+                }
+            }
         });
 
         terrainMap.wrapS = terrainMap.wrapT = THREE.RepeatWrapping;
