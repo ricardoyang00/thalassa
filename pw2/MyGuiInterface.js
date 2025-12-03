@@ -98,6 +98,18 @@ class MyGuiInterface  {
         });
         submarineFolder.close();
 
+        const templeFolder = this.datgui.addFolder('Temple');
+        const templeOpt = {
+            showBVH: false,
+        };
+        templeFolder.add(templeOpt, 'showBVH').name('Show BVH').onChange((val) => {
+            this.contents.temple.traverse((child) => {
+                if (child.bvhhelper)
+                    child.bvhhelper.visible = val;
+            })
+        });
+        templeFolder.close();
+
         if (this.contents.flocks && this.contents.flocks[0]?.opt) {
             const defaultOpts = this.contents.flocks[0].opt;
             const flockParams = {

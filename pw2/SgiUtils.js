@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 class SgiUtils {
     static #seed = 0;
 

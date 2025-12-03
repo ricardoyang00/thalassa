@@ -30,7 +30,7 @@ class MyContents  {
     */ 
     constructor(app) {
         this.app = app
-        this.fastLoad = true;
+        this.fastLoad = false;
         this.mainRaycaster = new THREE.Raycaster();
         this.selectedObject = null;
 

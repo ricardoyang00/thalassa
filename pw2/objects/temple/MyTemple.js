@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import { Pillar } from './Pillar.js';
 import { SUBTRACTION, ADDITION, Brush, Evaluator } from 'https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.17/+esm';
+import { MeshBVH, MeshBVHHelper, SAH, AVERAGE } from 'three-mesh-bvh';
+import { SGIMesh } from '../SGIMesh.js';
 
-class MyTemple extends THREE.Object3D {
+class MyTemple extends THREE.Group {
     constructor() {
         super();
 
@@ -361,11 +363,13 @@ class MyTemple extends THREE.Object3D {
         combinedRoofBrush = evaluator.evaluate(combinedRoofBrush, largeCutterBrush, SUBTRACTION);
         prismBrush = evaluator.evaluate(prismBrush, largeCutterBrush, SUBTRACTION);
 
-        const finalSlabMesh = new THREE.Mesh(combinedRoofBrush.geometry, largeStoneMat);
+        const finalSlabMesh = SGIMesh.new(combinedRoofBrush.geometry, largeStoneMat);
         finalSlabMesh.geometry.computeVertexNormals();
         roofGroup.add(finalSlabMesh);
 
-        const finalPrismMesh = new THREE.Mesh(prismBrush.geometry, largeStoneMat);
+        const finalPrismMesh = SGIMesh.new(prismBrush.geometry, largeStoneMat, {
+            maxLeafTris: 1,
+        });
         finalPrismMesh.geometry.computeVertexNormals();
         roofGroup.add(finalPrismMesh);
 
@@ -462,7 +466,7 @@ class MyTemple extends THREE.Object3D {
                 combinedBrush = applyGouge(combinedBrush, bottomStepRadius, baseHeight, evaluator);
             }
 
-            const baseMesh = new THREE.Mesh(combinedBrush.geometry, baseMat);
+            const baseMesh = SGIMesh.new(combinedBrush.geometry, baseMat);
             baseMesh.geometry.computeVertexNormals();
             baseGroup.add(baseMesh);
         }
@@ -473,7 +477,7 @@ class MyTemple extends THREE.Object3D {
 
 
         // groups
-        const templeGroup = new THREE.Group();
+        const templeGroup = this;
         templeGroup.add(pillarGroup);
         templeGroup.add(roofGroup);
         templeGroup.add(baseGroup);
@@ -488,10 +492,6 @@ class MyTemple extends THREE.Object3D {
         const pillarScaleY = 1;
         
         roofGroup.position.set(0, baseHeight + (perfectPillarHeight * pillarScaleY), 0);
-
-        //templeGroup.translateY(-2*individualStairHeight);
-        this.add(templeGroup);
-
     }
 }
 
