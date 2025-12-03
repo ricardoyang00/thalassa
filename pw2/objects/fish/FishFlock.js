@@ -30,7 +30,7 @@ class FishFlock extends MultiInstancedEntityContainer {
         this.fish = this._instances;
         // this.boids = []; // internal state per fish
         this.dangers = [];
-        this.avoidances = [];
+        this.obstacles = [];
 
         // default parameters
         const defaults = {
@@ -125,11 +125,11 @@ class FishFlock extends MultiInstancedEntityContainer {
 
     // Similar to addDanger, but for non-dangerous objects (e.g. corals)
     // (also it has to use BVH)
-    addAvoidance(obj, weight) {
-        if (obj && !this.avoidances.includes(obj)) {
-            this.avoidances.push({
+    addObstacle(obj, avoidance) {
+        if (obj && !this.obstacles.includes(obj)) {
+            this.obstacles.push({
                 obj: obj,
-                weight: weight,
+                avoidance: avoidance,
             });
         }
     }
@@ -296,11 +296,11 @@ class FishFlock extends MultiInstancedEntityContainer {
         });
 
         SgiUtils.collideTestCounter = 0;
-        for (const {obj: bvh, weight: weight} of this.avoidances) {
+        for (const {obj: bvh, avoidance: avoidance} of this.obstacles) {
             for (const {a: fish, b: obj} of SgiUtils.getCollidingObjects(this._bvh, bvh)) {
                 const distVec = this._worldAvoidSteer.subVectors(fish.position, obj.position);
                 const d = distVec.length();
-                fish.avoidance.y += d*d/weight;
+                fish.avoidance.y += d*d/avoidance;
                 // fish.avoidance.add(distVec.divideScalar(d*d/weight)); // Weight by inverse distance
                 ++fish.totalAvoidance;
             }

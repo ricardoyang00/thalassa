@@ -330,7 +330,7 @@ class MyContents  {
             if (this.shark) {
                 flock.addDanger(this.shark);
             }
-            flock.addAvoidance(this.coralsBVH, 1);
+            flock.addObstacle(this.coralsBVH, 1);
             this.flocks.push(flock);
             this.fishBVHHelper.add(new THREE.Box3Helper(flock._bvh.box));
             flock._bvh.children.forEach(fish => this.fishBVHHelper.add(new THREE.Box3Helper(fish.box, 0x00ffff)));
