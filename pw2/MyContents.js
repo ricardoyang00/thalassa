@@ -712,7 +712,6 @@ class MyContents  {
                 .filter(x => SgiUtils.isObjectVisible(x.object))
                 ;
 
-            console.log(intersects);
             if (this.selectedObject) {
                 this.selectedObject.scale.divideScalar(5);
                 this.selectedObject.updateMatrix();
