@@ -45,6 +45,15 @@ class SgiUtils {
 
         return result;
     }
+
+    static isObjectVisible(obj) {
+        while (obj) {
+            if (!obj.visible)
+                return false;
+            obj = obj.parent;
+        }
+        return true;
+    }
 }
 
 export { SgiUtils };

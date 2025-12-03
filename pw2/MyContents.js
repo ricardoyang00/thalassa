@@ -31,6 +31,8 @@ class MyContents  {
     constructor(app) {
         this.app = app
         this.fastLoad = true;
+        this.mainRaycaster = new THREE.Raycaster();
+        this.selectedObject = null;
 
         this.axis = null;
 
@@ -329,7 +331,6 @@ class MyContents  {
                 flock.addDanger(this.shark);
             }
             flock.addAvoidance(this.coralsBVH, 1);
-            console.log(flock.fish.length);
             this.flocks.push(flock);
             this.fishBVHHelper.add(new THREE.Box3Helper(flock._bvh.box));
             flock._bvh.children.forEach(fish => this.fishBVHHelper.add(new THREE.Box3Helper(fish.box, 0x00ffff)));
@@ -506,6 +507,9 @@ class MyContents  {
         if (this.submarine) {
             this.submarine.setBubbleSystem(this.bubble);
         }
+
+        this.setupClickHandler();
+
         // // CLIPPING ///////////
         // // clipping plane at y = 0
         // const clippingPlanes = [
@@ -676,6 +680,58 @@ class MyContents  {
         
         // Interpolate the shark's current rotation towards the target rotation
         this.shark.quaternion.slerp(this._sharkTargetQuaternion, this.sharkTurnSpeed * dt);
+    }
+
+    setupClickHandler() {
+        const clickStart = new THREE.Vector2();
+        let clickTime;
+
+        window.addEventListener('mousedown', (e) => {
+            clickStart.set(e.clientX, e.clientY);
+            clickTime = performance.now();
+        });
+
+        window.addEventListener('mouseup', (e) => {
+            if (e.target.tagName != 'CANVAS')
+                return;
+
+            const dx = e.clientX - clickStart.x;
+            const dy = e.clientY - clickStart.y;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d >= 5 || (performance.now() - clickTime) >= 500)
+                return;
+
+            const mouse = new THREE.Vector2(
+                (e.clientX / window.innerWidth) * 2 - 1,
+                -(e.clientY / window.innerHeight) * 2 + 1,
+            );
+
+            this.mainRaycaster.setFromCamera(mouse, this.app.activeCamera);
+            const intersects = this.mainRaycaster
+                .intersectObjects([this.allFishMesh, this.coralMeshes, this.rocks, this.vase, this.chest])
+                .filter(x => SgiUtils.isObjectVisible(x.object))
+                ;
+
+            console.log(intersects);
+            if (this.selectedObject) {
+                this.selectedObject.scale.divideScalar(5);
+                this.selectedObject.updateMatrix();
+            }
+
+            if (intersects.length === 0) {
+                this.selectedObject = null;
+                return;
+            }
+
+            let obj = intersects[0];
+            obj = obj.object.isInstancedMesh
+                ? obj.object.instances[obj.instanceId].userData.owner
+                : obj.object;
+
+            obj.scale.multiplyScalar(5);
+            obj.updateMatrix();
+            this.selectedObject = obj;
+        })
     }
 
     applyClipping() {

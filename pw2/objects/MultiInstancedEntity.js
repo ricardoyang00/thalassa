@@ -22,6 +22,7 @@ export class MultiInstancedEntity {
 
     addInstances(n, fn) {
         this.owner.addInstances(n, (obj, i) => {
+            obj.userData = {owner: this};
             fn(obj, i);
             this._instances.push(obj);
         });
@@ -72,6 +73,10 @@ export class MultiInstancedEntity {
             (m1[1] - m1[4]) / w4,
             w,
         );
+    }
+
+    updateMatrix() {
+        this._instances.forEach(o => o.updateMatrix());
     }
 
     static Position = class extends THREE.Vector3 {
@@ -207,17 +212,32 @@ export class MultiInstancedEntity {
         }
 
         set x(val) {
-            this.entity?._instances.forEach((obj) => obj.scale.x += val - this._x);
+            this.entity?._instances.forEach((obj) => {
+                obj.position.x -= this.entity.position.x;
+                obj.position.x *= val / this._x;
+                obj.position.x += this.entity.position.x;
+                obj.scale.x *= val / this._x;
+            });
             this._x = val;
         }
 
         set y(val) {
-            this.entity?._instances.forEach((obj) => obj.scale.y += val - this._y);
+            this.entity?._instances.forEach((obj) => {
+                obj.position.y -= this.entity.position.y;
+                obj.position.y *= val / this._y;
+                obj.position.y += this.entity.position.y;
+                obj.scale.y *= val / this._y;
+            });
             this._y = val;
         }
 
         set z(val) {
-            this.entity?._instances.forEach((obj) => obj.scale.z += val - this._z);
+            this.entity?._instances.forEach((obj) => {
+                obj.position.z -= this.entity.position.z;
+                obj.position.z *= val / this._z;
+                obj.position.z += this.entity.position.z;
+                obj.scale.z *= val / this._z;
+            });
             this._z = val;
         }
 
