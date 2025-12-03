@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
+import { MeshBVH, MeshBVHHelper, SAH, AVERAGE } from 'three-mesh-bvh';
 import { MyAxis } from './MyAxis.js';
 import { BrainCoral } from './objects/corals/BrainCoral.js';
 import { LSystemCoral } from './objects/corals/LSystemCoral.js';
@@ -33,6 +35,7 @@ class MyContents  {
         this.fastLoad = false;
         this.mainRaycaster = new THREE.Raycaster();
         this.selectedObject = null;
+        this.colliders = [];
 
         this.axis = null;
 
@@ -269,7 +272,7 @@ class MyContents  {
         
         this.submarine.position.set(0, 10, -4);
         this.app.scene.add(this.submarine);
-        this.submarine.initControls();
+        this.submarine.initControls(this.colliders);
     }
 
     /**
@@ -494,6 +497,25 @@ class MyContents  {
         this.temple.position.set(-15, 1, -15);
         const templeScale = 0.75;
         this.temple.scale.setScalar(templeScale);
+
+        this.temple.updateMatrixWorld();
+        const templeGeometries = [];
+        this.temple.traverse((child) => {
+            if (child.isMesh) {
+                const geo = child.geometry.clone();
+                child.updateMatrixWorld();
+                geo.applyMatrix4(child.matrixWorld);
+                templeGeometries.push(geo);
+            }
+        });
+        const templeBVHGeo = BufferGeometryUtils.mergeGeometries(templeGeometries);
+        templeBVHGeo.boundsTree = new MeshBVH(templeBVHGeo);
+        const templeCollideMesh = new THREE.Mesh(templeBVHGeo);
+        templeCollideMesh.visible = false;
+        this.templeBVHHelper = new MeshBVHHelper(templeCollideMesh, 20);
+        this.templeBVHHelper.visible = false;
+        this.app.scene.add(this.templeBVHHelper);
+        this.colliders.push(templeBVHGeo.boundsTree);
 
         this.temple.traverse((child) => {
             if (child.isMesh) {

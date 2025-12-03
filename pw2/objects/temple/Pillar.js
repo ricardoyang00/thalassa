@@ -1,7 +1,5 @@
 import * as THREE from 'three';
-import { MeshBVH, MeshBVHHelper } from 'three-mesh-bvh';
 import { SUBTRACTION, Brush, Evaluator } from 'https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.17/+esm';
-import { SGIMesh } from '../SGIMesh.js';
 
 class Pillar extends THREE.Object3D {
     static #groovedColumnGeometry;
@@ -49,12 +47,6 @@ class Pillar extends THREE.Object3D {
                 this.buildPerfectPillar();
                 break;
         }
-
-        this.traverse((child) => {
-            if (child.isMesh && !child.bvhhelper) {
-                SGIMesh.fromThreeMesh(child);
-            }
-        })
     }
 
     buildPerfectPillar() {

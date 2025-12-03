@@ -90,23 +90,23 @@ class MyGuiInterface  {
         const submarineFolder = this.datgui.addFolder('Submarine');
         const submarineOpt = {
             showBVH: false,
+            showBoundingSphere: false,
         };
         submarineFolder.add(submarineOpt, 'showBVH').name("Show BVH").onChange((val) => {
             if (this.contents.submarine.bvhhelper) {
                 this.contents.submarine.bvhhelper.visible = val;
             }
         });
+        submarineFolder.add(submarineOpt, 'showBoundingSphere').name('Show Bounding Sphere').onChange((val) => {
+            if (this.contents.submarine.boundingSphereHelper)
+                this.contents.submarine.boundingSphereHelper.visible = val;
+        });
         submarineFolder.close();
 
         const templeFolder = this.datgui.addFolder('Temple');
-        const templeOpt = {
-            showBVH: false,
-        };
-        templeFolder.add(templeOpt, 'showBVH').name('Show BVH').onChange((val) => {
-            this.contents.temple.traverse((child) => {
-                if (child.bvhhelper)
-                    child.bvhhelper.visible = val;
-            })
+        templeFolder.add(this.contents.templeBVHHelper, 'visible').name('Show BVH');
+        templeFolder.add(this.contents.templeBVHHelper, 'depth', 1, 20, 1).name('BVH Helper Depth').onChange(() => {
+            this.contents.templeBVHHelper.update();
         });
         templeFolder.close();
 
@@ -149,6 +149,8 @@ class MyGuiInterface  {
             avoidanceFolder.close();
 
             flockFolder.close();
+
+            this.datgui.add(SgiUtils, 'debug').name('Debug');
         }
     }
 }

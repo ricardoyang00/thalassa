@@ -1,8 +1,10 @@
 import * as THREE from 'three';
+import { SgiUtils } from '../../SgiUtils.js';
 
 class SubmarineControls {
-    constructor(submarine) {
+    constructor(submarine, colliders = []) {
         this.submarine = submarine;
+        this.colliders = colliders;
         
         this._keys = { 
             w: false, 
@@ -92,11 +94,41 @@ class SubmarineControls {
             this.submarine.rotation.y -= this.submarine.yawRate * dt;
         }
 
-        const localForward = new THREE.Vector3(1, 0, 0);
-        localForward.applyQuaternion(this.submarine.quaternion);
-        
-        this.submarine.position.addScaledVector(localForward, this.submarine.forwardSpeed * dt);
-        this.submarine.position.y += this.submarine.verticalSpeed * dt;
+        const dv = new THREE.Vector3(1, 0, 0)
+            .applyQuaternion(this.submarine.quaternion) // rotate vector according to submarine's orientation
+            .multiplyScalar(this.submarine.forwardSpeed * dt) // multiply by speed
+            ;
+        dv.y += this.submarine.verticalSpeed * dt;
+
+        const boundingSphere = this.submarine.userData?.boundingSphere?.clone();
+        if (!boundingSphere)
+            return;
+
+        if (!this.submarine.boundingSphereHelper) {
+            this.submarine.boundingSphereHelper = new THREE.Mesh(
+                new THREE.SphereGeometry(boundingSphere.radius),
+                new THREE.MeshBasicMaterial({
+                    wireframe: true,
+                    transparent: true,
+                    opacity: 0.1,
+                }),
+            );
+            this.submarine.boundingSphereHelper.visible = false;
+            this.submarine.boundingSphereHelper.material.wireframe = true;
+            this.submarine.add(this.submarine.boundingSphereHelper);
+        }
+
+        this.submarine.position.add(dv);
+        boundingSphere.center.add(this.submarine.position);
+
+        for (const collider of this.colliders) {
+            if (collider.intersectsSphere(boundingSphere)) {
+                this.submarine.position.sub(dv);
+                this.submarine.forwardSpeed = 0;
+                this.submarine.verticalSpeed = 0;
+                return;
+            }
+        }
 
         if (this.submarine.position.y < this.submarine.minY) {
             this.submarine.position.y = this.submarine.minY;

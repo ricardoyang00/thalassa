@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 class SgiUtils {
     static #seed = 0;
+    static debug = false;
 
     static setSeed(seed) {
         this.#seed = seed;

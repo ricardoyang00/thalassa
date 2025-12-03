@@ -1,8 +1,6 @@
 import * as THREE from 'three';
 import { Pillar } from './Pillar.js';
 import { SUBTRACTION, ADDITION, Brush, Evaluator } from 'https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.17/+esm';
-import { MeshBVH, MeshBVHHelper, SAH, AVERAGE } from 'three-mesh-bvh';
-import { SGIMesh } from '../SGIMesh.js';
 
 class MyTemple extends THREE.Group {
     constructor() {
@@ -363,11 +361,11 @@ class MyTemple extends THREE.Group {
         combinedRoofBrush = evaluator.evaluate(combinedRoofBrush, largeCutterBrush, SUBTRACTION);
         prismBrush = evaluator.evaluate(prismBrush, largeCutterBrush, SUBTRACTION);
 
-        const finalSlabMesh = SGIMesh.new(combinedRoofBrush.geometry, largeStoneMat);
+        const finalSlabMesh = new THREE.Mesh(combinedRoofBrush.geometry, largeStoneMat);
         finalSlabMesh.geometry.computeVertexNormals();
         roofGroup.add(finalSlabMesh);
 
-        const finalPrismMesh = SGIMesh.new(prismBrush.geometry, largeStoneMat, {
+        const finalPrismMesh = new THREE.Mesh(prismBrush.geometry, largeStoneMat, {
             maxLeafTris: 1,
         });
         finalPrismMesh.geometry.computeVertexNormals();
@@ -466,7 +464,7 @@ class MyTemple extends THREE.Group {
                 combinedBrush = applyGouge(combinedBrush, bottomStepRadius, baseHeight, evaluator);
             }
 
-            const baseMesh = SGIMesh.new(combinedBrush.geometry, baseMat);
+            const baseMesh = new THREE.Mesh(combinedBrush.geometry, baseMat);
             baseMesh.geometry.computeVertexNormals();
             baseGroup.add(baseMesh);
         }
