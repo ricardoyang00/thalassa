@@ -47,6 +47,8 @@ class MySubmarineLOD extends THREE.LOD {
             gltfFile,
             onLoad: () => {
                 self.highDetailModel.rotation.y = -Math.PI / 2;
+                self.bvh = self.highDetailModel.bvh;
+                self.bvhhelper = self.highDetailModel.bvhhelper;
                 
                 setTimeout(() => {
                     self.#alignModels();

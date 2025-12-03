@@ -87,6 +87,17 @@ class MyGuiInterface  {
         });
         fishesFolder.close();
 
+        const submarineFolder = this.datgui.addFolder('Submarine');
+        const submarineOpt = {
+            showBVH: false,
+        };
+        submarineFolder.add(submarineOpt, 'showBVH').name("Show BVH").onChange((val) => {
+            if (this.contents.submarine.bvhhelper) {
+                this.contents.submarine.bvhhelper.visible = val;
+            }
+        });
+        submarineFolder.close();
+
         if (this.contents.flocks && this.contents.flocks[0]?.opt) {
             const defaultOpts = this.contents.flocks[0].opt;
             const flockParams = {

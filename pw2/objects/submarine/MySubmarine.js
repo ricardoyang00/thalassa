@@ -1,7 +1,8 @@
 import * as THREE from 'three';
+import { MeshBVH, MeshBVHHelper } from 'three-mesh-bvh';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-class MySubmarine extends THREE.Object3D {
+class MySubmarine extends THREE.Group {
     constructor(app, {
         size = 1,
         assetsPath = 'models/submarine/',
@@ -29,6 +30,10 @@ class MySubmarine extends THREE.Object3D {
 
                 object.traverse((child) => {
                     if (child.isMesh) {
+                        this.bvh = new MeshBVH(child.geometry);
+                        this.bvhhelper = new MeshBVHHelper(this.bvh);
+                        this.bvhhelper.visible = false;
+                        child.add(this.bvhhelper)
                         child.castShadow = true;
                         child.receiveShadow = true;
                     }
