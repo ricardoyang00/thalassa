@@ -133,25 +133,25 @@ class SubmarineControls {
                     return false;
                 }
             });
+        }
 
-            if (trianglesIntersected.length > 0) {
-                this.submarine.position.sub(dv);
+        if (trianglesIntersected.length > 0) {
+            this.submarine.position.sub(dv);
 
-                const normal = new THREE.Vector3();
-                trianglesIntersected[0].getNormal(normal); // TODO: is it possible/common to get more than 1 triangle?
+            const normal = new THREE.Vector3();
+            trianglesIntersected[0].getNormal(normal); // TODO: is it possible/common to get more than 1 triangle?
 
-                // vslide​=v−(v⋅n)n
-                const slide = dv.clone().sub(normal.clone().multiplyScalar(dv.clone().dot(normal)));
-                this.submarine.position.add(slide);
-                boundingSphere.center.sub(dv).add(slide);
+            // vslide​=v−(v⋅n)n
+            const slide = dv.clone().sub(normal.clone().multiplyScalar(dv.clone().dot(normal)));
+            this.submarine.position.add(slide);
+            boundingSphere.center.sub(dv).add(slide);
 
-                for (const collider of this.colliders) {
-                    if (collider.intersectsSphere(boundingSphere)) {
-                        this.submarine.position.sub(slide);
-                        // this.submarine.forwardSpeed = 0;
-                        // this.submarine.verticalSpeed = 0;
-                        return;
-                    }
+            for (const collider of this.colliders) {
+                if (collider.intersectsSphere(boundingSphere)) {
+                    this.submarine.position.sub(slide);
+                    // this.submarine.forwardSpeed = 0;
+                    // this.submarine.verticalSpeed = 0;
+                    return;
                 }
             }
         }
