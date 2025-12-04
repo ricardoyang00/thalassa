@@ -502,7 +502,15 @@ class MyContents  {
         const templeGeometries = [];
         this.temple.traverse((child) => {
             if (child.isMesh) {
+                if (child.parent.isLOD)
+                    return;
                 const geo = child.geometry.clone();
+                child.updateMatrixWorld();
+                geo.applyMatrix4(child.matrixWorld);
+                templeGeometries.push(geo);
+            } else if (child.isLOD) {
+                console.log(child.levels[child.levels.length - 1]);
+                const geo = child.levels[child.levels.length - 1].object.geometry.clone();
                 child.updateMatrixWorld();
                 geo.applyMatrix4(child.matrixWorld);
                 templeGeometries.push(geo);
