@@ -67,7 +67,9 @@ class MyContents  {
         // this.aquaman.position.set(0, 0, 0);
         this.apollo = this.fastLoad
             ? new THREE.Mesh(new THREE.BoxGeometry())
-            : new Apollo(this.app);
+            : new Apollo(this.app, {
+                onLoad: () => this.colliders.push(SgiUtils.buildColliderGeo(this.apollo).boundsTree)
+            });
         this.apollo.name = "Apollo";
         this.apollo.castShadow = true;
         this.apollo.receiveShadow = true;
@@ -93,7 +95,7 @@ class MyContents  {
 
         this.horse1 = this.fastLoad
             ? new THREE.Mesh(new THREE.BoxGeometry())
-            : new HorsePillar(this.app);
+            : new HorsePillar(this.app, () => this.colliders.push(SgiUtils.buildColliderGeo(this.horse1).boundsTree));
         this.horse1.scale.setScalar(0.75);
         this.horse1.position.set(-15, 0, 22);
         this.horse1.rotateY(Math.PI/2);
@@ -101,7 +103,7 @@ class MyContents  {
 
         this.horse2 = this.fastLoad
             ? new THREE.Mesh(new THREE.BoxGeometry())
-            : new HorsePillar(this.app);
+            : new HorsePillar(this.app, () => this.colliders.push(SgiUtils.buildColliderGeo(this.horse2).boundsTree));
         this.horse2.scale.setScalar(0.75);
         this.horse2.position.set(22, 0, -15);
         this.horse2.rotateY(-Math.PI);
@@ -498,26 +500,7 @@ class MyContents  {
         const templeScale = 0.75;
         this.temple.scale.setScalar(templeScale);
 
-        this.temple.updateMatrixWorld();
-        const templeGeometries = [];
-        this.temple.traverse((child) => {
-            if (child.isMesh) {
-                if (child.parent.isLOD)
-                    return;
-                const geo = child.geometry.clone();
-                child.updateMatrixWorld();
-                geo.applyMatrix4(child.matrixWorld);
-                templeGeometries.push(geo);
-            } else if (child.isLOD) {
-                console.log(child.levels[child.levels.length - 1]);
-                const geo = child.levels[child.levels.length - 1].object.geometry.clone();
-                child.updateMatrixWorld();
-                geo.applyMatrix4(child.matrixWorld);
-                templeGeometries.push(geo);
-            }
-        });
-        const templeBVHGeo = BufferGeometryUtils.mergeGeometries(templeGeometries);
-        templeBVHGeo.boundsTree = new MeshBVH(templeBVHGeo);
+        const templeBVHGeo = SgiUtils.buildColliderGeo(this.temple);
         const templeCollideMesh = new THREE.Mesh(templeBVHGeo);
         templeCollideMesh.visible = false;
         this.templeBVHHelper = new MeshBVHHelper(templeCollideMesh, 20);

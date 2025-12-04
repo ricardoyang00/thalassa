@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
+import { MeshBVH, MeshBVHHelper, SAH, AVERAGE } from 'three-mesh-bvh';
 
 class SgiUtils {
     static #seed = 0;
@@ -56,6 +58,35 @@ class SgiUtils {
             obj = obj.parent;
         }
         return true;
+    }
+
+    static buildColliderGeo(obj) {
+        obj.updateMatrixWorld();
+
+        const geometries = [];
+        obj.traverse((child) => {
+            const geo = new THREE.BufferGeometry();
+            const fullGeo = (
+                child.isMesh ? child.parent.isLOD ? null : child.geometry :
+                child.isLOD ? child.levels[child.levels.length - 1].object.geometry :
+                null
+            );
+
+            if (!fullGeo)
+                return;
+
+            geo.setAttribute('position', fullGeo.getAttribute('position').clone());
+            console.log(fullGeo.index);
+            geo.setIndex(fullGeo.index ? fullGeo.index.clone() : null);
+
+            child.updateMatrixWorld();
+            geo.applyMatrix4(child.matrixWorld);
+            geometries.push(geo);
+        });
+
+        const bvhGeo = BufferGeometryUtils.mergeGeometries(geometries);
+        bvhGeo.boundsTree = new MeshBVH(bvhGeo);
+        return bvhGeo;
     }
 }
 

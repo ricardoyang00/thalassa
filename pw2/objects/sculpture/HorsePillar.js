@@ -3,11 +3,14 @@ import { Horse } from './Horse.js';
 import { Pillar } from '../temple/Pillar.js';
 
 class HorsePillar extends THREE.Object3D {
-    constructor(app) {
+    constructor(app, onLoad = null) {
         super();
         this.app = app;
 
-        this.horse = new Horse(this.app, { size: 0.012 });
+        this.horse = new Horse(this.app, {
+            size: 0.012,
+            onLoad,
+        });
         this.horse.position.set(0, 6.15, 0);
         this.horse.rotation.y = -Math.PI/4 -Math.PI/9;
         this.add(this.horse);
