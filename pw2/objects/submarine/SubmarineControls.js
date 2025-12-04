@@ -5,6 +5,7 @@ class SubmarineControls {
     constructor(submarine, colliders = []) {
         this.submarine = submarine;
         this.colliders = colliders;
+        this.collisionHelpers = [];
         
         this._keys = { 
             w: false, 
@@ -101,6 +102,9 @@ class SubmarineControls {
         dv.y += this.submarine.verticalSpeed * dt;
 
         const boundingSphere = this.submarine.userData?.boundingSphere?.clone();
+
+        this.collisionHelpers.forEach(line => this.submarine.app.scene.remove(line));
+
         if (!boundingSphere)
             return;
 
@@ -136,15 +140,40 @@ class SubmarineControls {
         }
 
         if (trianglesIntersected.length > 0) {
+            if (SgiUtils.debug) {
+                trianglesIntersected.forEach(tri => {
+                    const line = new THREE.Line(
+                        new THREE.BufferGeometry().setFromPoints([this.submarine.position.clone(), tri.getMidpoint(new THREE.Vector3())]),
+                        new THREE.LineBasicMaterial({color: 0xff0000}),
+                    );
+                    this.collisionHelpers.push(line);
+                    this.submarine.app.scene.add(line);
+                });
+            }
+
             this.submarine.position.sub(dv);
 
             const normal = new THREE.Vector3();
             trianglesIntersected[0].getNormal(normal); // TODO: is it possible/common to get more than 1 triangle?
 
             // vslide​=v−(v⋅n)n
-            const slide = dv.clone().sub(normal.clone().multiplyScalar(dv.clone().dot(normal)));
+            const dotProduct = dv.clone().dot(normal);
+            const slide = dv.clone()
+                .sub(normal.clone()
+                .multiplyScalar(
+                    Math.min(10, dv.length() / Math.abs(dotProduct)) // make normal stronger the bigger the angle between V and N is
+                    *
+                    dotProduct)
+                );
+
             this.submarine.position.add(slide);
             boundingSphere.center.sub(dv).add(slide);
+
+            if (SgiUtils.debug) {
+                console.log(`dotProduct: ${dotProduct}/${dv.length()}`);
+                console.log('dv:', dv);
+                console.log('slide:', slide);
+            }
 
             for (const collider of this.colliders) {
                 if (collider.intersectsSphere(boundingSphere)) {
