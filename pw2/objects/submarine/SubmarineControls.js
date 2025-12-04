@@ -10,7 +10,8 @@ class SubmarineControls {
             a: false, 
             d: false, 
             p: false, 
-            l: false
+            l: false,
+            o: false
         };
 
         this._onKeyDown = this._onKeyDown.bind(this);
@@ -40,6 +41,15 @@ class SubmarineControls {
 
     update(dt) {
         if (!dt || dt <= 0) return;
+
+        // Toggle front light with 'O' key
+        if (this._keys.o && this.submarine.frontLight && !this._lightToggleCooldown) {
+            this.submarine.frontLight.visible = !this.submarine.frontLight.visible;
+            this._lightToggleCooldown = true;
+            setTimeout(() => {
+                this._lightToggleCooldown = false;
+            }, 200); // Prevent rapid toggling
+        }
 
         if (this._keys.w) {
             this.submarine.forwardSpeed -= this.submarine.forwardAccel * dt;

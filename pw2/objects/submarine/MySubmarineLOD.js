@@ -69,6 +69,19 @@ class MySubmarineLOD extends THREE.LOD {
         this.fpvCamera.position.set(-size * 1.0, size * 0.7, 0);
         this.fpvCamera.rotation.y = Math.PI / 2;
         this.add(this.fpvCamera);
+
+        // Front spotlight
+        const frontLight = new THREE.SpotLight(0xFFD700, 2000);
+        frontLight.position.set(-size * 0.4, -size * 0.2, 0);
+        frontLight.target.position.set(-size * 2.0, -size * 1.5, 0);
+        frontLight.angle = Math.PI / 6;
+        frontLight.penumbra = 0.3;
+        frontLight.decay = 2.5;
+        frontLight.distance = 80;
+        frontLight.castShadow = true;
+        this.add(frontLight);
+        this.add(frontLight.target);
+        this.frontLight = frontLight;
     }
 
     #buildSubmarine(highDetailParams) {
@@ -155,7 +168,7 @@ class MySubmarineLOD extends THREE.LOD {
     setControlsEnabled(enabled) {
         this.controlsEnabled = !!enabled;
         if (!this.controlsEnabled && this.controls) {
-            this.controls._keys = { w: false, s: false, a: false, d: false, p: false, l: false };
+            this.controls._keys = { w: false, s: false, a: false, d: false, p: false, l: false, o: false};
         }
     }
 
