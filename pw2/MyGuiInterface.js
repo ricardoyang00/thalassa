@@ -69,6 +69,61 @@ class MyGuiInterface  {
         renderFolder.add(this.app, 'wireframeMode', false).name("Wireframe Mode").onChange( (value) => { this.app.setWireframeMode(value) } );
         renderFolder.close()
 
+        const submarineFolder = this.datgui.addFolder('Submarine Lights');
+        const submarine = this.contents.submarine;
+        
+        if (submarine && submarine.frontLight) {
+            const frontLightFolder = submarineFolder.addFolder('Front Light');
+            
+            // Front light color control
+            const frontLightParams = {
+                color: submarine.frontLight.color.getHex(),
+                intensity: submarine.frontLight.intensity,
+                decay: submarine.frontLight.decay
+            };
+            
+            frontLightFolder.addColor(frontLightParams, 'color').name('Color').onChange(value => {
+                submarine.frontLight.color.setHex(value);
+            });
+            
+            frontLightFolder.add(frontLightParams, 'intensity', 0, 3000, 100).name('Intensity').onChange(value => {
+                submarine.frontLight.intensity = value;
+            });
+            
+            frontLightFolder.add(frontLightParams, 'decay', 0.5, 5, 0.1).name('Attenuation (Decay)').onChange(value => {
+                submarine.frontLight.decay = value;
+            });
+            
+            frontLightFolder.close();
+        }
+        
+        if (submarine && submarine.periscopeLight) {
+            const periscopeLightFolder = submarineFolder.addFolder('Warning Light');
+            
+            // Periscope light flash controls
+            const periscopeLightParams = {
+                intensity: submarine.periscopeLightIntensity,
+                flashCycle: submarine._flashCycle,
+                flashOn: submarine._flashOn
+            };
+            
+            periscopeLightFolder.add(periscopeLightParams, 'intensity', 500, 3000, 100).name('Intensity').onChange(value => {
+                submarine.periscopeLightIntensity = value;
+            });
+            
+            periscopeLightFolder.add(periscopeLightParams, 'flashCycle', 0.2, 2.0, 0.1).name('Flash Cycle').onChange(value => {
+                submarine._flashCycle = value;
+            });
+            
+            periscopeLightFolder.add(periscopeLightParams, 'flashOn', 0.05, 1.0, 0.05).name('Flash On Duration').onChange(value => {
+                submarine._flashOn = value;
+            });
+            
+            periscopeLightFolder.close();
+        }
+        
+        submarineFolder.close();
+
         const rocksFolder = this.datgui.addFolder('Rocks');
         rocksFolder.add(this.contents.rocks, 'visible').name("Show Rocks");
         rocksFolder.close();

@@ -82,6 +82,19 @@ class MySubmarineLOD extends THREE.LOD {
         this.add(frontLight);
         this.add(frontLight.target);
         this.frontLight = frontLight;
+
+        // Periscope warning light (red, flashing)
+        const periscopeLight = new THREE.PointLight(0xFF0000, 1500);
+        periscopeLight.position.set(size * 0.2, size * 0.5, 0);
+        periscopeLight.distance = 40;
+        periscopeLight.decay = 5;
+        periscopeLight.castShadow = true;
+        this.add(periscopeLight);
+        this.periscopeLight = periscopeLight;
+        this.periscopeLightIntensity = 1500;
+        this.periscopeLightFlashTime = 0;
+        this._flashCycle = 0.6;
+        this._flashOn = 0.3;
     }
 
     #buildSubmarine(highDetailParams) {
@@ -135,6 +148,11 @@ class MySubmarineLOD extends THREE.LOD {
 
     updateSubmarine(dt) {
         if (!dt || dt <= 0 || typeof dt !== 'number') return;
+
+        // Flash periscope light
+        this.periscopeLightFlashTime += dt;
+        const timeInCycle = this.periscopeLightFlashTime % this._flashCycle;
+        this.periscopeLight.intensity = timeInCycle < this._flashOn ? this.periscopeLightIntensity : 0;
 
         if (this.controls && this.controlsEnabled) {
             this.controls.update(dt);
