@@ -169,11 +169,11 @@ class SubmarineControls {
             this.submarine.position.add(slide);
             boundingSphere.center.sub(dv).add(slide);
 
-            if (SgiUtils.debug) {
-                console.log(`dotProduct: ${dotProduct}/${dv.length()}`);
-                console.log('dv:', dv);
-                console.log('slide:', slide);
-            }
+            // if (SgiUtils.debug) {
+            //     console.log(`dotProduct: ${dotProduct}/${dv.length()}`);
+            //     console.log('dv:', dv);
+            //     console.log('slide:', slide);
+            // }
 
             for (const collider of this.colliders) {
                 if (collider.intersectsSphere(boundingSphere)) {

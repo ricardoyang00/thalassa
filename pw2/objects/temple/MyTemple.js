@@ -200,6 +200,10 @@ class MyTemple extends THREE.Group {
 
         mainSlabBrush = evaluator.evaluate(mainSlabBrush, cuttingBrush, SUBTRACTION);
 
+        let lowDetailSlabBrush = new Brush(mainSlabBrush.geometry.clone()
+            .scale(1, 2.7, 1)
+            .translate(0, 1.35 * slabThickness, 0)
+        );
 
         let combinedRoofBrush = null;
 
@@ -360,10 +364,13 @@ class MyTemple extends THREE.Group {
         
         combinedRoofBrush = evaluator.evaluate(combinedRoofBrush, largeCutterBrush, SUBTRACTION);
         prismBrush = evaluator.evaluate(prismBrush, largeCutterBrush, SUBTRACTION);
+        lowDetailSlabBrush = evaluator.evaluate(lowDetailSlabBrush, largeCutterBrush, SUBTRACTION);
 
-        const finalSlabMesh = new THREE.Mesh(combinedRoofBrush.geometry, largeStoneMat);
-        finalSlabMesh.geometry.computeVertexNormals();
-        roofGroup.add(finalSlabMesh);
+        const slabLOD = new THREE.LOD();
+        slabLOD.addLevel(new THREE.Mesh(combinedRoofBrush.geometry, largeStoneMat), 0);
+        slabLOD.addLevel(new THREE.Mesh(lowDetailSlabBrush.geometry, largeStoneMat), 300); // mainly just useful for BVH
+        slabLOD.levels.forEach(level => level.object.geometry.computeVertexNormals());
+        roofGroup.add(slabLOD);
 
         const finalPrismMesh = new THREE.Mesh(prismBrush.geometry, largeStoneMat, {
             maxLeafTris: 1,
