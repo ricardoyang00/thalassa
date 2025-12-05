@@ -92,3 +92,5 @@ Thumbs.db
 
 # local files
 local/
+
+.vscode
