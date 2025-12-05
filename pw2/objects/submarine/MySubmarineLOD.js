@@ -165,21 +165,36 @@ class MySubmarineLOD extends THREE.LOD {
         if (this.bubbleSystem) {
             const speed = Math.abs(this.forwardSpeed);
             const verticalPush = -this.verticalSpeed * 0.8;
-            this.emitters.forEach(emitter => {
-                // Uncomment to show debug helper
-                //this.bubbleSystem.updateSpawnHelper(this, emitter.pos, emitter.id);
-
-                if (speed > 0.5 || Math.abs(this.verticalSpeed) > 0.5) {
-                    if (Math.random() > 0.7) { 
-                        let baseSize = 0.07 * this.scale.x + (speed * 0.01);
-                    
-                        // Apply specific emitter multiplier (Main engine = bigger bubbles)
-                        let finalSize = baseSize * emitter.sizeMult; 
-                        
-                        this.bubbleSystem.spawnFromObject(this, emitter.pos, finalSize, verticalPush);                    
-                    }
+            
+            // Check if we're only turning (A/D without W/P/L)
+            if (this.turningBubbleDirection) {
+                let activeEmitters = [];
+                if (this.turningBubbleDirection === 'left') {
+                    activeEmitters = this.emitters.filter(e => e.id === 'left');
+                } else if (this.turningBubbleDirection === 'right') {
+                    activeEmitters = this.emitters.filter(e => e.id === 'right');
                 }
-            });
+                
+                activeEmitters.forEach(emitter => {
+                    if (Math.random() > 0.7) {
+                        let baseSize = 0.07 * this.scale.x;
+                        let finalSize = baseSize * emitter.sizeMult;
+                        this.bubbleSystem.spawnFromObject(this, emitter.pos, finalSize, 0);
+                    }
+                });
+            } else {
+                this.emitters.forEach(emitter => {
+                    if (speed > 0.5 || Math.abs(this.verticalSpeed) > 0.5) {
+                        if (Math.random() > 0.7) { 
+                            let baseSize = 0.07 * this.scale.x + (speed * 0.01);
+                        
+                            let finalSize = baseSize * emitter.sizeMult; 
+                            
+                            this.bubbleSystem.spawnFromObject(this, emitter.pos, finalSize, verticalPush);                    
+                        }
+                    }
+                });
+            }
         }
     }
 

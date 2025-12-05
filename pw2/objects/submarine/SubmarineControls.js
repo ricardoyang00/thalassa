@@ -108,6 +108,16 @@ class SubmarineControls {
         this.submarine.position.addScaledVector(localForward, this.submarine.forwardSpeed * dt);
         this.submarine.position.y += this.submarine.verticalSpeed * dt;
 
+        // Handle turning bubbles (A/D keys without W)
+        this.submarine.turningBubbleDirection = null;
+        if (!this._keys.w && !this._keys.s && !this._keys.p && !this._keys.l) {
+            if (this._keys.a) {
+                this.submarine.turningBubbleDirection = 'right';
+            } else if (this._keys.d) {
+                this.submarine.turningBubbleDirection = 'left';
+            }
+        }
+
         if (this.submarine.position.y < this.submarine.minY) {
             this.submarine.position.y = this.submarine.minY;
             if (this.submarine.verticalSpeed < 0) this.submarine.verticalSpeed = 0;
