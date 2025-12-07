@@ -6,6 +6,11 @@ import { MyContents } from './MyContents.js';
 import { MyGuiInterface } from './MyGuiInterface.js';
 import Stats from 'three/addons/libs/stats.module.js'
 
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
 /**
  * This class contains the application object
  */
@@ -38,6 +43,14 @@ class MyApp  {
         this.flyCameraInitialTarget = new THREE.Vector3(0, 0, 0)
 
         this.wireframeMode = false
+
+        this.composer = null;
+        this.bokehPass = null;
+        this.postProcessingParams = {
+            focus: 10.0,
+            aperture: 0.005, // Adjustable in UI
+            maxblur: 0.01
+        };
     }
     /**
      * initializes the application
@@ -68,6 +81,9 @@ class MyApp  {
 
         // manage window resizes
         window.addEventListener('resize', this.onResize.bind(this), false );
+
+        // INIT POST PROCESSING
+        this.initPostProcessing();
     }
 
     /**
@@ -115,6 +131,48 @@ class MyApp  {
         orthoFront.position.set(0,0, this.frustumSize /4) 
         orthoFront.lookAt( new THREE.Vector3(0,0,0) );
         this.cameras['Front'] = orthoFront
+    }
+
+    /**
+     * Initializes the EffectComposer and BokehPass for the Fly Camera
+     */
+    initPostProcessing() {
+        // We use the 'Fly' camera specifically for the Bokeh pass
+        const flyCamera = this.cameras['Fly'];
+
+        this.composer = new EffectComposer(this.renderer);
+        
+        // Render Pass (Basic Scene Render)
+        const renderPass = new RenderPass(this.scene, flyCamera);
+        this.composer.addPass(renderPass);
+
+        // Bokeh Pass (Depth of Field)
+        this.bokehPass = new BokehPass(this.scene, flyCamera, {
+            focus: 1.0,
+            aperture: 0.025,
+            maxblur: 0.01,
+            width: window.innerWidth,
+            height: window.innerHeight
+        });
+        this.composer.addPass(this.bokehPass);
+
+        // Output Pass (Fixes the darkness/color space)
+        const outputPass = new OutputPass();
+        this.composer.addPass(outputPass);
+    }
+
+    /**
+     * Update the Bokeh Pass parameters (for GUI)
+     * @param {Number} aperture 
+     * @param {Number} focus 
+     * @param {Number} maxblur 
+     */
+    updateBokehParams(aperture, focus, maxblur) {
+        if (this.bokehPass) {
+            this.bokehPass.uniforms['aperture'].value = aperture;
+            if (focus !== undefined) this.bokehPass.uniforms['focus'].value = focus;
+            if (maxblur !== undefined) this.bokehPass.uniforms['maxblur'].value = maxblur;
+        }
     }
 
     /**
@@ -169,6 +227,12 @@ class MyApp  {
                 if (this.contents && this.contents.submarine && typeof this.contents.submarine.setControlsEnabled === 'function') {
                     this.contents.submarine.setControlsEnabled(false);
                 }
+
+                if (this.bokehPass) {
+                    this.bokehPass.camera = this.activeCamera;
+                    // Bokeh pass internal material needs the camera projection matrix
+                    this.bokehPass.uniforms['aspect'].value = this.activeCamera.aspect;
+                }
             } else if (this.activeCameraName === 'SubmarineFPV') {
                 if (this.contents && this.contents.submarine && typeof this.contents.submarine.setControlsEnabled === 'function') {
                     this.contents.submarine.setControlsEnabled(true);
@@ -203,6 +267,9 @@ class MyApp  {
             this.activeCamera.aspect = window.innerWidth / window.innerHeight;
             this.activeCamera.updateProjectionMatrix();
             this.renderer.setSize( window.innerWidth, window.innerHeight );
+            if (this.composer) {
+                this.composer.setSize(window.innerWidth, window.innerHeight);
+            }
         }
     }
     /**
@@ -263,9 +330,16 @@ class MyApp  {
             this.controls.update();
         }
 
-        // render the scene
-        this.renderer.render(this.scene, this.activeCamera);
-
+        // If we are in Fly mode, use the Post-Processing Composer
+        if (this.activeCameraName === 'Fly' && this.composer) {
+            // Check if delta is valid (prevent NaN issues on first frame)
+            const d = delta > 0 ? delta : 0.01; 
+            this.composer.render(d); 
+        } else {
+            // Otherwise use the standard renderer
+            this.renderer.render(this.scene, this.activeCamera);
+        }
+        
         // subsequent async calls to the render loop
         requestAnimationFrame( this.render.bind(this) );
 

@@ -62,6 +62,23 @@ class MyGuiInterface  {
         flyCameraFolder.add({ info3: 'RF - Up/Down' }, 'info3').name('').disable();
         flyCameraFolder.add({ info4: 'Drag Mouse - Look around' }, 'info4').name('').disable();
 
+        const dofFolder = cameraFolder.addFolder('Depth of Field (Fly Mode)');
+
+        if (this.app.postProcessingParams) {
+            dofFolder.add(this.app.postProcessingParams, 'focus', 1.0, 300.0).name('Focus Distance').onChange((value) => {
+                this.app.updateBokehParams(this.app.postProcessingParams.aperture, value, this.app.postProcessingParams.maxblur);
+            });
+
+            dofFolder.add(this.app.postProcessingParams, 'aperture', 0, 0.05, 0.001).name('Aperture (Blur)').onChange((value) => {
+                this.app.updateBokehParams(value, this.app.postProcessingParams.focus, this.app.postProcessingParams.maxblur);
+            });
+
+            dofFolder.add(this.app.postProcessingParams, 'maxblur', 0.0, 0.1, 0.001).name('Max Blur').onChange((value) => {
+                this.app.updateBokehParams(this.app.postProcessingParams.aperture, this.app.postProcessingParams.focus, value);
+            });
+        }
+        dofFolder.open();
+        
         cameraFolder.close()
 
 
