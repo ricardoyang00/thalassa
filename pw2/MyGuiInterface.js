@@ -1,7 +1,6 @@
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { MyApp } from './MyApp.js';
 import { MyContents } from './MyContents.js';
-import { SgiUtils } from './SgiUtils.js';
 
 /**
     This class customizes the gui interface for the app
@@ -140,6 +139,37 @@ class MyGuiInterface  {
         }
         
         submarineFolder.close();
+
+        // Shield controls
+        const shieldFolder = this.datgui.addFolder('Submarine Shield');
+
+        if (submarine) {
+            const shieldParams = {
+                active: submarine.shieldActive,
+                color: submarine.shieldColor.getHex(),
+                opacity: submarine.shieldOpacity
+            };
+
+            shieldFolder.add(shieldParams, 'active').name('Activate Shield').onChange(value => {
+                submarine.setShieldActive(value);
+            });
+
+            shieldFolder.addColor(shieldParams, 'color').name('Shield Color').onChange(value => {
+                submarine.shieldColor.setHex(value);
+                if (submarine.shieldMesh && submarine.shieldMesh.material.uniforms) {
+                    submarine.shieldMesh.material.uniforms.uShieldColor.value.setHex(value);
+                }
+            });
+
+            shieldFolder.add(shieldParams, 'opacity', 0.0, 1.0, 0.05).name('Glow Opacity').onChange(value => {
+                submarine.shieldOpacity = value;
+                if (submarine.shieldMesh && submarine.shieldMesh.material.uniforms) {
+                    submarine.shieldMesh.material.uniforms.uOpacity.value = value;
+                }
+            });
+
+            shieldFolder.close();
+        }
 
         const rocksFolder = this.datgui.addFolder('Rocks');
         rocksFolder.add(this.contents.rocks, 'visible').name("Show Rocks");

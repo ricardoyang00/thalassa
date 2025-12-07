@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MySubmarine } from './MySubmarine.js';
 import { SubmarineControls } from './SubmarineControls.js';
 import { createLowDetailSubmarine } from './SubmarineGeometry.js';
+import { createShieldMaterial } from '../../shaders/ShieldShader.js';
 class MySubmarineLOD extends THREE.LOD {
     constructor(app, {
         size = 1,
@@ -95,10 +96,30 @@ class MySubmarineLOD extends THREE.LOD {
         this.periscopeLightFlashTime = 0;
         this._flashCycle = 0.6;
         this._flashOn = 0.3;
+
+        // Shield
+        this.shieldMesh = null;
+        this.shieldActive = false;
+        this.shieldColor = new THREE.Color(0x00FFFF);
+        this.shieldSize = size * 1.5;
+        this.shieldOpacity = 0.3;
+        this.#createShield(size);
     }
 
     #buildSubmarine(highDetailParams) {
         this.highDetailModel = new MySubmarine(this.app, highDetailParams);
+    }
+
+    #createShield() {
+        const shieldGeometry = new THREE.IcosahedronGeometry(this.shieldSize / 2, 16);
+        const shieldMaterial = createShieldMaterial({
+            color: this.shieldColor,
+            opacity: this.shieldOpacity
+        });
+
+        this.shieldMesh = new THREE.Mesh(shieldGeometry, shieldMaterial);
+        this.shieldMesh.visible = false;
+        this.add(this.shieldMesh);
     }
 
     #alignModels() {
@@ -144,6 +165,21 @@ class MySubmarineLOD extends THREE.LOD {
 
     setBubbleSystem(bubbleSystem) {
         this.bubbleSystem = bubbleSystem;
+    }
+
+    toggleShield() {
+        this.shieldActive = !this.shieldActive;
+        if (this.shieldMesh) {
+            this.shieldMesh.visible = this.shieldActive;
+        }
+        return this.shieldActive;
+    }
+
+    setShieldActive(active) {
+        this.shieldActive = !!active;
+        if (this.shieldMesh) {
+            this.shieldMesh.visible = this.shieldActive;
+        }
     }
 
     updateSubmarine(dt) {
