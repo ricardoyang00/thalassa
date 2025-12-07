@@ -194,10 +194,17 @@ class MyApp  {
         
         const scratchesTexture = createScratchesTexture();
         const crosshairTexture = createCrosshairTexture();
+        
+        // Load coordinates spritesheet
+        const textureLoader = new THREE.TextureLoader();
+        const coordinatesTexture = textureLoader.load('images/coordinates.png');
+        coordinatesTexture.magFilter = THREE.NearestFilter;
+        coordinatesTexture.minFilter = THREE.NearestFilter;
 
         // Set up shader uniforms
         periscopeShader.uniforms.tScratchesNoise = { value: scratchesTexture };
         periscopeShader.uniforms.tCrosshair = { value: crosshairTexture };
+        periscopeShader.uniforms.tCoordinates = { value: coordinatesTexture };
         periscopeShader.uniforms.uTint = { value: new THREE.Vector3(0.7, 0.9, 0.4) };
         periscopeShader.uniforms.uVignetteStrength = { value: 0.6 };
         periscopeShader.uniforms.uCircleRadius = { value: 0.45 };
@@ -248,7 +255,7 @@ class MyApp  {
             this.lastCameraName = this.activeCameraName;
             this.activeCamera = this.cameras[this.activeCameraName]
             document.getElementById("camera").innerHTML = this.activeCameraName
-           
+            
             // call on resize to update the camera aspect ratio
             // among other things
             this.onResize()
@@ -397,6 +404,14 @@ class MyApp  {
             const d = delta > 0 ? delta : 0.01; 
             this.composer.render(d); 
         } else if (this.activeCameraName === 'SubmarinePeriscope' && this.periscopeComposer) {
+            // Update submarine coordinates for HUD display
+            if (this.contents && this.contents.submarine) {
+                const subPos = this.contents.submarine.position;
+                this.periscopePass.uniforms.uSubmarineX.value = subPos.x;
+                this.periscopePass.uniforms.uSubmarineY.value = subPos.y;
+                this.periscopePass.uniforms.uSubmarineZ.value = subPos.z;
+            }
+            
             const d = delta > 0 ? delta : 0.01;
             this.periscopeComposer.render(d);
         } else {

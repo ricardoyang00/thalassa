@@ -15,15 +15,18 @@ export function createPeriscopeShader() {
             tDiffuse: { value: null },
             tScratchesNoise: { value: null },
             tCrosshair: { value: null },
+            tCoordinates: { value: null }, 
             uTime: { value: 0 },
-            uTint: { value: new THREE.Vector3(0.7, 0.9, 0.4) }, // Greenish-yellow
+            uTint: { value: new THREE.Vector3(0.7, 0.9, 0.4) },
             uVignette: { value: 1.0 },
             uAberration: { value: 0.002 },
-            uAspect: { value: 1.0 }
+            uAspect: { value: 1.0 },
+            uSubmarineX: { value: 0.0 },
+            uSubmarineY: { value: 0.0 },
+            uSubmarineZ: { value: 0.0 }
         },
         vertexShader: `
             varying vec2 vUv;
-            
             void main() {
                 vUv = uv;
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
@@ -33,66 +36,170 @@ export function createPeriscopeShader() {
             uniform sampler2D tDiffuse;
             uniform sampler2D tScratchesNoise;
             uniform sampler2D tCrosshair;
+            uniform sampler2D tCoordinates;
             uniform vec3 uTint;
             uniform float uVignette;
             uniform float uTime;
             uniform float uAberration;
             uniform float uAspect;
+            uniform float uSubmarineX;
+            uniform float uSubmarineY;
+            uniform float uSubmarineZ;
             
             varying vec2 vUv;
             
+            // Sample a digit from spritesheet 6x3
+            vec4 sampleDigit(int digitIndex, vec2 position) {
+                int col = digitIndex % 6;
+                int row = digitIndex / 6;
+                
+                float cellWidth = 1.0 / 6.0;
+                float cellHeight = 1.0 / 3.0;
+                
+                vec2 pos = clamp(position, vec2(0.0), vec2(0.999));
+                
+                float u = float(col) * cellWidth + pos.x * cellWidth;
+                float v = 1.0 - ((float(row) + 1.0) * cellHeight) + (pos.y * cellHeight);
+
+                return texture2D(tCoordinates, vec2(u, v));
+            }
+            
+            int getDigit(float value, float multiplier) {
+                float absVal = abs(value);
+                return int(mod(floor(absVal * multiplier), 10.0));
+            }
+
             void main() {
+                // --- BASE RENDER ---
                 vec2 center = vec2(0.5, 0.5);
                 vec2 toCenter = center - vUv;
-                // Correct for aspect ratio to make circle truly round
                 toCenter.x *= uAspect;
                 float dist = length(toCenter);
                 
-                // Circular viewport - sharp circle cutoff
                 float circleRadius = 0.45;
                 float circleEdge = 0.47;
                 float vignette = smoothstep(circleRadius, circleEdge, dist);
                 
-                // Sample base color
                 vec4 baseColor = texture2D(tDiffuse, vUv);
-                
-                // Apply color tint (greenish-yellow for periscope)
                 baseColor.rgb *= uTint;
                 
-                // Add subtle lens aberration
                 vec3 color = baseColor.rgb;
+                // Aberration
                 color.r = texture2D(tDiffuse, vUv + vec2(uAberration, 0.0)).r * uTint.r;
                 color.b = texture2D(tDiffuse, vUv - vec2(uAberration, 0.0)).b * uTint.b;
                 color.g = mix(color.g, baseColor.g * uTint.g, 0.8);
                 
-                // Sample scratches and dirt texture - only apply bright scratches as highlights
+                // Scratches
                 vec4 scratches = texture2D(tScratchesNoise, vUv + vec2(uTime * 0.05, 0.0));
-                
-                // Only apply scratches that are very bright (high values) - rare and sparse
-                float scratchBrightness = scratches.r;
-                if (scratchBrightness > 0.95) {
-                    // Thin scratches - only brightest pixels show as tiny white lines
-                    float scratchLine = (scratchBrightness - 0.95) / 0.05;
-                    color = mix(color, vec3(1.0), scratchLine * 0.3);
+                if (scratches.r > 0.95) {
+                    color = mix(color, vec3(1.0), (scratches.r - 0.95) / 0.05 * 0.3);
                 }
                 
-                // Sample crosshair at center
+                // Crosshair
                 vec4 crosshair = texture2D(tCrosshair, vUv);
-                
-                // Blend crosshair (only if not transparent)
                 if (crosshair.a > 0.5) {
                     color = mix(color, crosshair.rgb, crosshair.a * 0.8);
                 }
                 
-                // Apply circular vignette (black border outside circle)
+                // Vignette Application
                 color = mix(vec3(0.0), color, 1.0 - vignette);
-                
-                // Additional subtle vignette darkening at edges within circle
                 float edgeVignette = smoothstep(0.0, circleRadius * 0.3, dist);
                 color *= mix(0.6, 1.0, edgeVignette);
-                
-                // Add slight green tint overlay for old equipment look
                 color = mix(color, color * uTint, 0.2);
+                
+                // --- COORDINATE DISPLAY LOGIC ---
+                vec2 screenPos = vUv - vec2(0.5, 0.5);
+                
+                // Area Check
+                if (screenPos.x > -0.40 && screenPos.x < 0.0 && dist > circleRadius) {
+                    
+                    // Variable Width Settings
+                    float stdW = 0.015;   // Standard width for numbers/letters (tighter than before)
+                    float dotW = 0.008;   // Narrow width for dot
+                    float charHeight = 0.04;
+                    float lineSpacing = 0.08;
+                    
+                    float yLinePos = 0.0;
+                    float xLinePos = yLinePos + lineSpacing;
+                    float zLinePos = yLinePos - lineSpacing;
+                    
+                    int activeLine = -1;
+                    float valueToDisplay = 0.0;
+                    float currentLineY = 0.0;
+                    int labelIndex = 0;
+
+                    if (abs(screenPos.y - xLinePos) < charHeight * 0.5) {
+                        activeLine = 0; valueToDisplay = uSubmarineX; currentLineY = xLinePos; labelIndex = 12; // X
+                    } else if (abs(screenPos.y - yLinePos) < charHeight * 0.5) {
+                        activeLine = 1; valueToDisplay = uSubmarineY; currentLineY = yLinePos; labelIndex = 13; // Y
+                    } else if (abs(screenPos.y - zLinePos) < charHeight * 0.5) {
+                        activeLine = 2; valueToDisplay = uSubmarineZ; currentLineY = zLinePos; labelIndex = 14; // Z
+                    }
+
+                    if (activeLine != -1) {
+                        float startX = -0.38;
+                        float relX = screenPos.x - startX;
+                        
+                        // Calculate cutoffs for 7 characters
+                        // Layout: Label | Sign | Tens | Ones | Dot | Tenths | Hunds
+                        // Widths: stdW  | stdW | stdW | stdW | dotW| stdW   | stdW
+                        
+                        float p0 = stdW;
+                        float p1 = p0 + stdW;
+                        float p2 = p1 + stdW;
+                        float p3 = p2 + stdW;
+                        float p4 = p3 + dotW; // The dot is narrow
+                        float p5 = p4 + stdW;
+                        float p6 = p5 + stdW;
+
+                        int charPos = -1;
+                        float u_char = 0.0;
+                        float currentW = stdW;
+
+                        if (relX >= 0.0) {
+                            if (relX < p0) {
+                                charPos = 0; u_char = relX / stdW;
+                            } else if (relX < p1) {
+                                charPos = 1; u_char = (relX - p0) / stdW;
+                            } else if (relX < p2) {
+                                charPos = 2; u_char = (relX - p1) / stdW;
+                            } else if (relX < p3) {
+                                charPos = 3; u_char = (relX - p2) / stdW;
+                            } else if (relX < p4) {
+                                charPos = 4; u_char = (relX - p3) / dotW; currentW = dotW;
+                            } else if (relX < p5) {
+                                charPos = 5; u_char = (relX - p4) / stdW;
+                            } else if (relX < p6) {
+                                charPos = 6; u_char = (relX - p5) / stdW;
+                            }
+                        }
+
+                        if (charPos != -1) {
+                            float v_char = (screenPos.y - (currentLineY - charHeight * 0.5)) / charHeight;
+                            int digitIndex = -1;
+                            
+                            if (charPos == 0) digitIndex = labelIndex;
+                            else if (charPos == 1) digitIndex = valueToDisplay >= 0.0 ? 10 : 11;
+                            else if (charPos == 2) digitIndex = getDigit(valueToDisplay, 0.1);
+                            else if (charPos == 3) digitIndex = getDigit(valueToDisplay, 1.0);
+                            else if (charPos == 4) {
+                                digitIndex = 15; // Dot
+                                // Crop UVs for dot so it stays round, not squashed
+                                // Map 0..1 to 0.3..0.7 of the texture width
+                                u_char = mix(0.3, 0.7, u_char); 
+                            }
+                            else if (charPos == 5) digitIndex = getDigit(valueToDisplay, 10.0);
+                            else if (charPos == 6) digitIndex = getDigit(valueToDisplay, 100.0);
+                            
+                            if (digitIndex != -1) {
+                                vec4 dColor = sampleDigit(digitIndex, vec2(u_char, v_char));
+                                if (dColor.a > 0.4) {
+                                    color = mix(color, dColor.rgb, dColor.a * 0.95);
+                                }
+                            }
+                        }
+                    }
+                }
                 
                 gl_FragColor = vec4(color, 1.0);
             }
