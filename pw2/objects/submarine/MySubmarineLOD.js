@@ -67,9 +67,15 @@ class MySubmarineLOD extends THREE.LOD {
 
         // FPV camera
         this.fpvCamera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
-        this.fpvCamera.position.set(-size * 1.0, size * 0.7, 0);
+        this.fpvCamera.position.set(-size * 0.4, size * 0.18, 0);
         this.fpvCamera.rotation.y = Math.PI / 2;
         this.add(this.fpvCamera);
+
+        // Periscope camera
+        this.periscopeCamera = new THREE.PerspectiveCamera(60, 1.0, 0.1, 1000);
+        this.periscopeCamera.position.set(0, size * 0.6, 0);
+        this.periscopeCamera.rotation.y = Math.PI / 2;
+        this.add(this.periscopeCamera);
 
         // Front spotlight
         const frontLight = new THREE.SpotLight(0xFFD700, 2000);

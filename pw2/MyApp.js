@@ -5,11 +5,14 @@ import { FlyControls } from 'three/addons/controls/FlyControls.js';
 import { MyContents } from './MyContents.js';
 import { MyGuiInterface } from './MyGuiInterface.js';
 import Stats from 'three/addons/libs/stats.module.js'
-
+// DOF Post-Processing
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+// Periscope HUD shader
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { createPeriscopeShader, createScratchesTexture, createCrosshairTexture } from './shaders/PeriscopeShader.js';
 
 /**
  * This class contains the application object
@@ -44,6 +47,7 @@ class MyApp  {
 
         this.wireframeMode = false
 
+        // DOF Post-Processing
         this.composer = null;
         this.bokehPass = null;
         this.postProcessingParams = {
@@ -51,6 +55,10 @@ class MyApp  {
             aperture: 0.005, // Adjustable in UI
             maxblur: 0.01
         };
+
+        // Periscope HUD
+        this.periscopeComposer = null;
+        this.periscopePass = null;
     }
     /**
      * initializes the application
@@ -145,7 +153,6 @@ class MyApp  {
         // Render Pass (Basic Scene Render)
         const renderPass = new RenderPass(this.scene, flyCamera);
         this.composer.addPass(renderPass);
-
         // Bokeh Pass (Depth of Field)
         this.bokehPass = new BokehPass(this.scene, flyCamera, {
             focus: 1.0,
@@ -159,6 +166,50 @@ class MyApp  {
         // Output Pass (Fixes the darkness/color space)
         const outputPass = new OutputPass();
         this.composer.addPass(outputPass);
+    }
+
+    /**
+     * Initializes the EffectComposer for Periscope HUD
+     */
+    initPeriscopePostProcessing() {
+        if (!this.cameras['SubmarinePeriscope']) {
+            console.warn('Periscope camera not found');
+            return;
+        }
+
+        this.periscopeComposer = new EffectComposer(this.renderer);
+        this.periscopeComposer.addPass(new RenderPass(this.scene, this.cameras['SubmarinePeriscope']));
+
+        // Add Bokeh Pass (Depth of Field) for periscope
+        const bokehPass = new BokehPass(this.scene, this.cameras['SubmarinePeriscope'], {
+            focus: 10.0,
+            aperture: 0.0005,  // Much smaller aperture for deeper focus
+            maxblur: 0.001,     // Minimal blur
+            width: window.innerWidth,
+            height: window.innerHeight
+        });
+        this.periscopeComposer.addPass(bokehPass);
+
+        const periscopeShader = createPeriscopeShader();
+        
+        const scratchesTexture = createScratchesTexture();
+        const crosshairTexture = createCrosshairTexture();
+
+        // Set up shader uniforms
+        periscopeShader.uniforms.tScratchesNoise = { value: scratchesTexture };
+        periscopeShader.uniforms.tCrosshair = { value: crosshairTexture };
+        periscopeShader.uniforms.uTint = { value: new THREE.Vector3(0.7, 0.9, 0.4) };
+        periscopeShader.uniforms.uVignetteStrength = { value: 0.6 };
+        periscopeShader.uniforms.uCircleRadius = { value: 0.45 };
+        periscopeShader.uniforms.uAspect = { value: window.innerWidth / window.innerHeight };
+
+        this.periscopePass = new ShaderPass(periscopeShader);
+        this.periscopePass.renderToScreen = false;
+        this.periscopeComposer.addPass(this.periscopePass);
+
+        // Output pass
+        const outputPass = new OutputPass();
+        this.periscopeComposer.addPass(outputPass);
     }
 
     /**
@@ -233,7 +284,7 @@ class MyApp  {
                     // Bokeh pass internal material needs the camera projection matrix
                     this.bokehPass.uniforms['aspect'].value = this.activeCamera.aspect;
                 }
-            } else if (this.activeCameraName === 'SubmarineFPV') {
+            } else if (this.activeCameraName === 'SubmarineFPV' || this.activeCameraName === 'SubmarinePeriscope') {
                 if (this.contents && this.contents.submarine && typeof this.contents.submarine.setControlsEnabled === 'function') {
                     this.contents.submarine.setControlsEnabled(true);
                 }
@@ -270,6 +321,12 @@ class MyApp  {
             if (this.composer) {
                 this.composer.setSize(window.innerWidth, window.innerHeight);
             }
+            if (this.periscopeComposer) {
+                this.periscopeComposer.setSize(window.innerWidth, window.innerHeight);
+                if (this.periscopePass && this.periscopePass.uniforms && this.periscopePass.uniforms.uAspect) {
+                    this.periscopePass.uniforms.uAspect.value = window.innerWidth / window.innerHeight;
+                }
+            }
         }
     }
     /**
@@ -280,6 +337,10 @@ class MyApp  {
         this.contents = contents;
         if (this.contents && this.contents.submarine && this.contents.submarine.fpvCamera) {
             this.cameras['SubmarineFPV'] = this.contents.submarine.fpvCamera;
+        }
+        if (this.contents && this.contents.submarine && this.contents.submarine.periscopeCamera) {
+            this.cameras['SubmarinePeriscope'] = this.contents.submarine.periscopeCamera;
+            this.initPeriscopePostProcessing();
         }
     }
 
@@ -335,6 +396,9 @@ class MyApp  {
             // Check if delta is valid (prevent NaN issues on first frame)
             const d = delta > 0 ? delta : 0.01; 
             this.composer.render(d); 
+        } else if (this.activeCameraName === 'SubmarinePeriscope' && this.periscopeComposer) {
+            const d = delta > 0 ? delta : 0.01;
+            this.periscopeComposer.render(d);
         } else {
             // Otherwise use the standard renderer
             this.renderer.render(this.scene, this.activeCamera);
