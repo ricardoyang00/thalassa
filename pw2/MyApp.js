@@ -102,12 +102,13 @@ class MyApp  {
 
         // Create a basic perspective camera
         const perspective1 = new THREE.PerspectiveCamera( 75, aspect, 0.1, 1000 )
-        perspective1.position.set(23.5, 6.8, 9.6)
+        perspective1.position.set(23.5, 12, 9.6)
+        perspective1.lookAt(new THREE.Vector3(0,0,0))
         this.cameras['Perspective'] = perspective1
 
         // Create a free fly camera (another perspective camera)
         const flyCamera = new THREE.PerspectiveCamera( 75, aspect, 0.1, 1000 )
-        flyCamera.position.set(23.5,6.8,9.6)
+        flyCamera.position.set(23.5, 12, 9.6)
         flyCamera.lookAt(0, 0, 0)
         this.cameras['Fly'] = flyCamera
 
