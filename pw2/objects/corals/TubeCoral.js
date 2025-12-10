@@ -59,6 +59,19 @@ export class TubeCoral extends MultiInstancedEntity {
 
     constructor(color = 0xffffff, size = 1, owner = TubeCoral.defaultOwner) {
         super(owner);
+        this.color = color;
+        this.size = size;
+        this.bubbleSpawner = null;
+        this.bubbleSpawnTime = 0;
+        
+        // Give each coral its own unique personality
+        this.bubbleIntensity = SgiUtils.rand(0.8, 2.0); // How much bubbles this coral produces (0.8 = active, 2.0 = very intense)
+        this.bubbleConcentration = SgiUtils.rand(1.5, 3.5); // Concentration multiplier (affects bubble density per spawn)
+        this.baseSpawnInterval = SgiUtils.rand(3.0, 6.0); // Longer spawn intervals for pop effect
+        this.bubbleSpawnInterval = this.baseSpawnInterval / this.bubbleIntensity; // More active corals spawn more frequently
+        this.bubbleSpawnPhase = SgiUtils.rand(0, this.bubbleSpawnInterval); // Random phase offset for natural staggering
+        this.bubbleSpawnTime = this.bubbleSpawnPhase; // Start at phase offset
+        
         const layers = 3;
         let n = 4;
 
@@ -95,5 +108,57 @@ export class TubeCoral extends MultiInstancedEntity {
             owner.setColorAt(j, color); // Using "obj.color" throws an error
             i++;
         });
+    }
+
+    setBubbleSystem(bubbleSystem) {
+        this.bubbleSpawner = bubbleSystem;
+    }
+
+    update(dt) {
+        if (!this.bubbleSpawner) return;
+        
+        this.bubbleSpawnTime += dt;
+        
+        if (this.bubbleSpawnTime >= this.bubbleSpawnInterval) {
+            // Spawn bubbles based on this coral's intensity
+            // Low intensity corals spawn 2-4 bubbles, high intensity spawn 4-8 clusters
+            const bubblesPerSpawn = Math.max(2, Math.round(SgiUtils.rand(2, 8) * this.bubbleConcentration));
+            
+            for (let i = 0; i < bubblesPerSpawn; i++) {
+                // Randomize spawn position on coral
+                const angle = Math.random() * Math.PI * 2;
+                const radius = SgiUtils.rand(0.0, 0.3);
+                
+                const topOffset = new THREE.Vector3(
+                    Math.cos(angle) * radius + SgiUtils.rand(-0.1, 0.1),
+                    this.size * (0.4 + Math.random() * 0.2), // Varied height on coral
+                    Math.sin(angle) * radius + SgiUtils.rand(-0.1, 0.1)
+                );
+                
+                // Get world position without triggering custom setters
+                const spawnPos = new THREE.Vector3(this.position.x, this.position.y, this.position.z).add(topOffset);
+                
+                // Highly randomized bubble properties for natural feel
+                // Low intensity corals have smaller, dimmer bubbles
+                const bubbleScale = SgiUtils.rand(0.18, 0.55) * this.bubbleIntensity;
+                const glowIntensity = SgiUtils.rand(1.0, 2.0) * this.bubbleIntensity;
+                const velocity = SgiUtils.rand(0.6, 3.0);
+                
+                this.bubbleSpawner.spawnBubble(
+                    spawnPos,
+                    bubbleScale,
+                    velocity,
+                    glowIntensity,
+                    1000, // More particles for better visibility
+                    8.0, // Much longer lifetime so bubbles spread more before disappearing
+                    true // isCoralBubble - use continuous distribution
+                );
+            }
+            
+            this.bubbleSpawnTime = 0;
+            // Add some variation to interval for organic feel
+            this.bubbleSpawnInterval = (this.baseSpawnInterval + SgiUtils.rand(-0.2, 0.2)) / this.bubbleIntensity;
+            this.bubbleSpawnInterval = Math.max(0.2, this.bubbleSpawnInterval); // Never below 0.2s
+        }
     }
 }

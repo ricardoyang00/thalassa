@@ -218,21 +218,22 @@ class MySubmarineLOD extends THREE.LOD {
                 }
                 
                 activeEmitters.forEach(emitter => {
-                    if (Math.random() > 0.7) {
-                        let baseSize = 0.07 * this.scale.x;
+                    if (Math.random() > 0.5) {
+                        let baseSize = 0.1 * this.scale.x;
                         let finalSize = baseSize * emitter.sizeMult;
-                        this.bubbleSystem.spawnFromObject(this, emitter.pos, finalSize, 0);
+                        // Submarine bubbles: more intense with higher glow and concentrated particles
+                        this.bubbleSystem.spawnFromObject(this, emitter.pos, finalSize, 0, 0.7, 2500);
                     }
                 });
             } else {
                 this.emitters.forEach(emitter => {
                     if (speed > 0.5 || Math.abs(this.verticalSpeed) > 0.5) {
-                        if (Math.random() > 0.7) { 
-                            let baseSize = 0.07 * this.scale.x + (speed * 0.01);
+                        if (Math.random() > 0.5) { 
+                            let baseSize = 0.1 * this.scale.x + (speed * 0.015);
                         
-                            let finalSize = baseSize * emitter.sizeMult; 
-                            
-                            this.bubbleSystem.spawnFromObject(this, emitter.pos, finalSize, verticalPush);                    
+                            let finalSize = baseSize * emitter.sizeMult;
+                            // Submarine bubbles: more intense glow and concentrated particles
+                            this.bubbleSystem.spawnFromObject(this, emitter.pos, finalSize, verticalPush, 0.8, 2500);                    
                         }
                     }
                 });

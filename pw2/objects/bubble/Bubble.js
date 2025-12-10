@@ -4,12 +4,12 @@ class Bubble {
     constructor(scene) {
         this.scene = scene;
         this.bubbleGroups = [];  // Array of particle systems for each bubble spawn
-
+        this.ambientLight = null;
+        this.ambientLightCached = false;
         this.clock = new THREE.Clock();
     }
 
-        spawnBubble(position, scale = 0.2, initVelY = 0) {
-        const particleCount = 1000;
+    spawnBubble(position, scale = 0.2, initVelY = 0, glowIntensity = 0.0, particleCount = 1000, lifetime = 3.0, isCoralBubble = false) {
         const geometry = new THREE.BufferGeometry();
         
         const positions = new Float32Array(particleCount * 3);
@@ -20,10 +20,21 @@ class Bubble {
             const i4 = i * 4;
             const randomScale = scale * (0.8 + Math.random() * 0.5);
             
-            // Randomly distributed in a sphere with larger spread
-            const radius = Math.sqrt(Math.random()) * randomScale * 1.5; 
-            const angle = Math.random() * Math.PI * 2;
-            const phi = Math.random() * Math.PI;
+            // For coral bubbles, use more continuous distribution (no clear layers)
+            // For submarine bubbles, use traditional sphere distribution
+            let radius, angle, phi;
+            
+            if (isCoralBubble) {
+                // Continuous distribution with smooth radius variation
+                radius = Math.pow(Math.random(), 0.6) * randomScale * 1.8; // More particles closer to center initially
+                angle = Math.random() * Math.PI * 2;
+                phi = Math.acos(2 * Math.random() - 1); // More uniform distribution in 3D space
+            } else {
+                // Traditional distribution for submarine
+                radius = Math.sqrt(Math.random()) * randomScale * 1.5;
+                angle = Math.random() * Math.PI * 2;
+                phi = Math.random() * Math.PI;
+            }
             
             positions[i3 + 0] = Math.cos(angle) * Math.sin(phi) * radius;
             positions[i3 + 1] = Math.cos(phi) * radius;
@@ -45,7 +56,9 @@ class Bubble {
             uSpawnTime: { value: this.clock.getElapsedTime() },
             uRiseSpeed: { value: 1.0 + Math.random() * 0.5 },
             uExternalVelY: { value: initVelY },
-            uLifeTime: { value: 3.0 }
+            uLifeTime: { value: lifetime },
+            uAmbientLightIntensity: { value: 0.5 },
+            uGlowIntensity: { value: glowIntensity }
         };
 
         const material = new THREE.ShaderMaterial({
@@ -61,6 +74,7 @@ class Bubble {
                 attribute vec4 aOffset;
                 
                 varying float vAlpha;
+                varying float vDistance;
                 
                 void main() {
                     float age = uTime - uSpawnTime;
@@ -87,16 +101,16 @@ class Bubble {
                     float spreadZ = sin(spreadAngle) * coneSpread;
                     
                     // More chaotic drift with stronger spreading
-                    float driftX = sin(aOffset.y + age * 0.5 + aOffset.z * 10.0) * 0.4
-                                 + sin(age * 0.3 + aOffset.z) * 0.3;
-                    float driftZ = cos(aOffset.y + age * 0.5 + aOffset.z * 10.0) * 0.4
-                                 + cos(age * 0.3 + aOffset.z) * 0.3;
+                    float driftX = sin(aOffset.y + age * 0.5 + aOffset.z * 10.0) * 0.6
+                                 + sin(age * 0.3 + aOffset.z) * 0.5;
+                    float driftZ = cos(aOffset.y + age * 0.5 + aOffset.z * 10.0) * 0.6
+                                 + cos(age * 0.3 + aOffset.z) * 0.5;
                     
-                    // Random lateral acceleration
-                    float lateralDrift = sin(aOffset.z * 100.0 + age) * 0.25;
+                    // Random lateral acceleration - increased for wider spread
+                    float lateralDrift = sin(aOffset.z * 100.0 + age) * 0.45;
                     
-                    // Additional radial expansion based on age
-                    float expansionFactor = lifeFraction * 0.5;
+                    // Additional radial expansion based on age - much more aggressive
+                    float expansionFactor = lifeFraction * 1.2;
                     float radialExpansion = sin(aOffset.y + age) * expansionFactor;
                     
                     vec3 transformed = position + vec3(
@@ -112,22 +126,47 @@ class Bubble {
                     gl_Position = projectionPosition;
                     gl_PointSize = uSize / (-viewPosition.z);
                     
-                    // CHANGED: Smooth fade out instead of sudden pop
-                    vAlpha = 1.0 - smoothstep(0.7, 1.0, lifeFraction);
+                    // Pass distance to fragment shader for fog effect
+                    vDistance = length(viewPosition.xyz);
+                    
+                    // Continuous smooth fade: starts at full opacity, gradually fades throughout lifetime
+                    vAlpha = 1.0 - lifeFraction;
                 }
             `,
             fragmentShader: `
                 uniform vec3 uColor;
+                uniform float uAmbientLightIntensity;
+                uniform float uGlowIntensity;
                 varying float vAlpha;
+                varying float vDistance;
                 
                 void main() {
                     float dist = length(gl_PointCoord - 0.5);
                     float pointAlpha = 1.0 - smoothstep(0.15, 0.5, dist);
-                    float finalAlpha = pointAlpha * vAlpha * 0.8;
+                    
+                    // Scale opacity based on ambient light intensity
+                    // In low light, bubbles fade significantly
+                    float lightResponsiveness = uAmbientLightIntensity * 1.2;
+                    
+                    // Apply fog distance fading (similar to scene fog)
+                    // Fog density = 0.02 (from scene fog), but stronger for bubbles
+                    float fogFactor = exp(-0.03 * vDistance);
+                    
+                    // Proximity boost: bubbles are more visible when close (within 30 units)
+                    float proximityBoost = 1.0;
+                    if (vDistance < 30.0) {
+                        proximityBoost = 1.0 + (1.0 - vDistance / 30.0) * 0.5;
+                    }
+                    
+                    float finalAlpha = pointAlpha * vAlpha * 0.6 * lightResponsiveness * fogFactor * proximityBoost;
                     
                     vec3 mutedColor = mix(uColor, vec3(0.5), 0.15);
                     
-                    gl_FragColor = vec4(mutedColor, finalAlpha);
+                    // Add glow for distant visibility (helps with underwater fog)
+                    vec3 glowColor = uColor * (1.0 + uGlowIntensity * 2.0);
+                    vec3 finalColor = mix(mutedColor, glowColor, uGlowIntensity * 0.5);
+                    
+                    gl_FragColor = vec4(finalColor, finalAlpha);
                     
                     if (finalAlpha < 0.01) {
                         discard;
@@ -152,15 +191,28 @@ class Bubble {
         });
     }
 
-    spawnFromObject(object, offset = new THREE.Vector3(0, 0, 0), scale = 0.2, initVelY = 0) {
+    spawnFromObject(object, offset = new THREE.Vector3(0, 0, 0), scale = 0.2, initVelY = 0, glowIntensity = 0.0, particleCount = 1000, lifetime = 3.0, isCoralBubble = false) {
         const localOffset = offset.clone();
         localOffset.applyQuaternion(object.quaternion);
         const spawnPos = object.position.clone().add(localOffset);
-        this.spawnBubble(spawnPos, scale, initVelY);
+        this.spawnBubble(spawnPos, scale, initVelY, glowIntensity, particleCount, lifetime, isCoralBubble);
     }
 
     update(dt) {
         const currentTime = this.clock.getElapsedTime();
+        
+        // Cache ambient light reference on first call
+        if (!this.ambientLightCached) {
+            this.scene.traverse((obj) => {
+                if (obj instanceof THREE.AmbientLight && !this.ambientLight) {
+                    this.ambientLight = obj;
+                    this.ambientLightCached = true;
+                }
+            });
+            if (!this.ambientLight) this.ambientLightCached = true;
+        }
+        
+        const ambientIntensity = this.ambientLight ? this.ambientLight.intensity : 0.3;
         
         for (let i = this.bubbleGroups.length - 1; i >= 0; i--) {
             const bubble = this.bubbleGroups[i];
@@ -168,6 +220,7 @@ class Bubble {
             
             // Update uniforms
             bubble.uniforms.uTime.value = currentTime;
+            bubble.uniforms.uAmbientLightIntensity.value = ambientIntensity;
             
             // Remove old bubbles
             if (age > bubble.lifeTime) {
