@@ -228,6 +228,51 @@ class MyGuiInterface  {
 
             flockFolder.close();
         }
+
+        // Exclusion Zones Controls
+        if (this.contents && this.contents.seafloorGroup) {
+            const exclusionZonesFolder = this.datgui.addFolder('Exclusion Zones');
+            
+            // Find the debug group
+            const debugGroup = this.contents.seafloorGroup.getObjectByName('exclusionZoneDebug');
+            
+            if (debugGroup) {
+                // Set to hidden by default
+                debugGroup.visible = false;
+                
+                // Toggle visibility
+                exclusionZonesFolder.add(debugGroup, 'visible').name('Show Zones');
+                
+                // Control opacity
+                const opacityControl = {
+                    opacity: 0.3
+                };
+                
+                exclusionZonesFolder.add(opacityControl, 'opacity', 0, 1, 0.1).name('Opacity').onChange(value => {
+                    debugGroup.traverse(child => {
+                        if (child.isMesh && child.material) {
+                            child.material.opacity = value;
+                        }
+                    });
+                });
+                
+                // Control color
+                const colorControl = {
+                    color: 0xff0000
+                };
+                
+                exclusionZonesFolder.addColor(colorControl, 'color').name('Color').onChange(value => {
+                    debugGroup.traverse(child => {
+                        if (child.isMesh && child.material) {
+                            child.material.color.setHex(value);
+                            child.material.emissive.setHex(value);
+                        }
+                    });
+                });
+            }
+            
+            exclusionZonesFolder.close();
+        }
     }
 }
 

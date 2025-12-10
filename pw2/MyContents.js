@@ -149,73 +149,195 @@ class MyContents  {
 
     /**
      * builds the seafloor with terrain, rocks and corals
+     * Spawns objects anywhere on terrain except in exclusion zones
+     * Natural spacing prevents overlapping
+     * 
+     * @param {number} rockCount - number of rocks to spawn (default: 50)
+     * @param {number} coralCount - number of corals to spawn (default: 150)
+     * @param {number} terrainMargin - margin from terrain edges to avoid spawn (default: 10)
      */
-    buildSeafloor() {
-        // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-        /// temp function, only for visualization, still need to organize the scene and optimize the constructors
+    buildSeafloor(rockCount = 50, coralCount = 350, terrainMargin = 2) {
+        // Remove old seafloor if it exists
+        if (this.seafloorGroup && this.seafloorGroup.parent) {
+            this.app.scene.remove(this.seafloorGroup);
+        }
+
         this.seafloorGroup = new THREE.Group();
         this.seafloorGroup.name = "seafloorGroup";
         this.seafloorGroup.add(this.terrain);   
 
-        // --- Define the spawn boundaries ---
-        const minArea = 50;
-        const maxArea = 90;
+        // Define exclusion zones around existing objects
+        this.exclusionZones = [
+            { pos: new THREE.Vector3(-15, 0, -15), radius: 26, name: "Temple", rotationY: Math.PI / 4 },
+            { pos: new THREE.Vector3(10, 0, 5), radius: 15, name: "Apollo", rotationY: Math.PI / 4 },
+            { pos: new THREE.Vector3(-15, 0, 22), radius: 2, name: "Horse 1", rotationY: 0 },
+            { pos: new THREE.Vector3(22, 0, -15), radius: 2, name: "Horse 2", rotationY: 0 },
+        ];
 
+        // Draw debug boxes for exclusion zones (visual representation)
+        const debugGroup = new THREE.Group();
+        debugGroup.name = "exclusionZoneDebug";
+        for (const zone of this.exclusionZones) {
+            const boxGeometry = new THREE.BoxGeometry(zone.radius * 2, 5, zone.radius * 2);
+            const boxMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xff0000, 
+                emissive: 0xff0000,
+                transparent: true,
+                opacity: 0.3,
+                wireframe: false
+            });
+            const box = new THREE.Mesh(boxGeometry, boxMaterial);
+            box.position.copy(zone.pos);
+            box.position.y = 2.5;
+            box.rotation.y = zone.rotationY || 0;
+            box.name = `exclusion_${zone.name}`;
+            debugGroup.add(box);
+        }
+        this.seafloorGroup.add(debugGroup);
 
+        // Calculate spawn boundaries with margin
+        const terrainSize = this.terrainSize; // 100
+        const spawnMinX = -terrainSize / 2 + terrainMargin;
+        const spawnMaxX = terrainSize / 2 - terrainMargin;
+        const spawnMinZ = -terrainSize / 2 + terrainMargin;
+        const spawnMaxZ = terrainSize / 2 - terrainMargin;
 
-        const maxRadius = maxArea/2;
-        const templeRadius = minArea/2;
+        console.log(`Building seafloor: ${rockCount} rocks, ${coralCount} corals, margin=${terrainMargin}`);
+        console.log(`Exclusion zones: ${this.exclusionZones.map(z => `${z.name}@(${z.pos.x},${z.pos.z}) r=${z.radius}`).join(', ')}`);
+        console.log(`Spawn area: X[${spawnMinX}, ${spawnMaxX}], Z[${spawnMinZ}, ${spawnMaxZ}]`);
 
+        // Spawn rocks across entire terrain
         this.rocks = new THREE.Group();
         this.rocks.name = "rocks";
-        for (let i = 0; i < 50; i++) {
-            const rock = new MyRock(this, SgiUtils.rand(0.5, 2) * 1.5, SgiUtils.rand.bind(SgiUtils));
+        const maxAttempts = 100; // Prevent infinite loops
+        let rocksPlaced = 0;
+        
+        for (let i = 0; i < rockCount; i++) {
+            const rock = new MyRock(this, SgiUtils.rand(0.5, 2), SgiUtils.rand.bind(SgiUtils));
+            let placed = false;
+            let attempts = 0;
 
-            while (true) {
-                // Use the new spawn function to get a valid position
-                const pos = this.generateRandomSpawnPos(templeRadius, maxRadius);
+            while (!placed && attempts < maxAttempts) {
+                // Random position with margin from edges
+                const x = SgiUtils.rand(spawnMinX, spawnMaxX);
+                const z = SgiUtils.rand(spawnMinZ, spawnMaxZ);
+                const pos = new THREE.Vector3(x, 0, z);
 
-                // Now we only need to check for rock-to-rock distance
-                if (this.rocks.children.every((rock) => rock.position.distanceTo(pos) > rock.size + rock.size)) {
-                    rock.position.copy(pos);
-                    break;
+                // Check exclusion zones FIRST
+                if (this.isNearObject(pos)) {
+                    attempts++;
+                    continue;
                 }
-            };
-            this.rocks.add(rock);
+
+                // Check distance from other rocks (natural spacing with randomness) - use XZ distance only
+                const minSpacing = rock.size + SgiUtils.rand(0.5, 2);
+                let tooClose = false;
+                for (const existingRock of this.rocks.children) {
+                    const rockDistXZ = Math.sqrt(
+                        Math.pow(pos.x - existingRock.position.x, 2) + 
+                        Math.pow(pos.z - existingRock.position.z, 2)
+                    );
+                    if (rockDistXZ < minSpacing) {
+                        tooClose = true;
+                        break;
+                    }
+                }
+
+                if (!tooClose) {
+                    rock.position.copy(pos);
+                    this.rocks.add(rock);
+                    rocksPlaced++;
+                    placed = true;
+                }
+
+                attempts++;
+            }
         }
+        console.log(`Rocks placed: ${rocksPlaced}/${rockCount}`);
         this.seafloorGroup.add(this.rocks);
 
-        // Add Corals
+        // Spawn corals across entire terrain
         this.coralMeshes = new THREE.Group();
         this.coralMeshes.name = "corals";
-
         this.corals = [];
+        let coralsPlaced = 0;
 
         const coralTypes = [
             TubeCoral,
             LSystemCoral,
             BrainCoral,
-        ]
+        ];
 
-        for (let i = 0; i < 200; ++i) {
+        for (let i = 0; i < coralCount; ++i) {
             const coralType = coralTypes[SgiUtils.randInt(coralTypes.length)];
             const coral = new coralType(SgiUtils.rand(0, 0xffffff), 2);
+            let placed = false;
+            let attempts = 0;
 
-            coral.position.copy(new THREE.Vector3(SgiUtils.rand(-maxRadius, maxRadius), 0, SgiUtils.rand(-maxRadius, maxRadius)));
-            while (true) {
-                // Use the new spawn function to get a valid position
-                const pos = this.generateRandomSpawnPos(templeRadius, maxRadius);
+            while (!placed && attempts < maxAttempts) {
+                // Random position with margin from edges
+                const x = SgiUtils.rand(spawnMinX, spawnMaxX);
+                const z = SgiUtils.rand(spawnMinZ, spawnMaxZ);
+                const pos = new THREE.Vector3(x, 0, z);
 
-                // Now we only need to check for rock/coral distances
-                if (this.rocks.children.every((rock) => rock.position.distanceTo(pos) > rock.size + 0.75)
-                    && this.corals.every((coral) => coral.position.distanceTo(pos) > 4)
-                ) {
-                    coral.position.copy(pos);
-                    break;
+                // Check exclusion zones FIRST
+                if (this.isNearObject(pos)) {
+                    attempts++;
+                    continue;
                 }
+
+                // Check distance from rocks (natural spacing) - use XZ distance only
+                const rockMinSpacing = 1.2;
+                let tooCloseToRock = false;
+                for (const rock of this.rocks.children) {
+                    const rockDistXZ = Math.sqrt(
+                        Math.pow(pos.x - rock.position.x, 2) + 
+                        Math.pow(pos.z - rock.position.z, 2)
+                    );
+                    if (rockDistXZ < rock.size + rockMinSpacing) {
+                        tooCloseToRock = true;
+                        break;
+                    }
+                }
+
+                if (tooCloseToRock) {
+                    attempts++;
+                    continue;
+                }
+
+                // Check distance from other corals (natural spacing with randomness) - use XZ distance only
+                const coralMinSpacing = SgiUtils.rand(2, 3.5);
+                let tooCloseToCoral = false;
+                for (const existingCoral of this.corals) {
+                    const coralDistXZ = Math.sqrt(
+                        Math.pow(pos.x - existingCoral.position.x, 2) + 
+                        Math.pow(pos.z - existingCoral.position.z, 2)
+                    );
+                    if (coralDistXZ < coralMinSpacing) {
+                        tooCloseToCoral = true;
+                        break;
+                    }
+                }
+
+                if (!tooCloseToCoral) {
+                    coral.position.copy(pos);
+                    
+                    // Set bubble system for TubeCoral instances
+                    if (coral instanceof TubeCoral) {
+                        coral.setBubbleSystem(this.bubble);
+                    }
+                    
+                    this.corals.push(coral);
+                    coralsPlaced++;
+                    placed = true;
+                }
+
+                attempts++;
             }
-            this.corals.push(coral);
         }
+
+        console.log(`Corals placed: ${coralsPlaced}/${coralCount}`);
+
         this.coralMeshes.add(TubeCoral.defaultOwner);
         this.coralMeshes.add(BrainCoral.defaultOwner);
         this.coralMeshes.add(LSystemCoral.defaultOwner);
@@ -227,8 +349,39 @@ class MyContents  {
         });
 
         this.seafloorGroup.add(this.coralMeshes);
-
         this.app.scene.add(this.seafloorGroup);
+
+        // Verify no objects are in exclusion zones
+        this.verifyExclusionZones();
+    }
+
+    /**
+     * Verify that no rocks or corals are inside exclusion zones
+     */
+    verifyExclusionZones() {
+        let violations = 0;
+        
+        // Check rocks
+        for (const rock of this.rocks.children) {
+            if (this.isNearObject(rock.position)) {
+                violations++;
+                console.warn(`❌ VIOLATION: Rock at (${rock.position.x.toFixed(2)}, ${rock.position.z.toFixed(2)}) is in exclusion zone!`);
+            }
+        }
+        
+        // Check corals
+        for (const coral of this.corals) {
+            if (this.isNearObject(coral.position)) {
+                violations++;
+                console.warn(`❌ VIOLATION: Coral at (${coral.position.x.toFixed(2)}, ${coral.position.z.toFixed(2)}) is in exclusion zone!`);
+            }
+        }
+        
+        if (violations === 0) {
+            console.log(`✅ Verification passed: No objects in exclusion zones`);
+        } else {
+            console.warn(`⚠️  Found ${violations} objects in exclusion zones!`);
+        }
     }
 
     buildSubmarine() {
@@ -622,6 +775,13 @@ class MyContents  {
         this.flocks.forEach(f => f.update(dt));
         this.allFishMesh.updateInstances(() => {});
 
+        // Update tube corals for bubble spawning
+        this.corals.forEach(coral => {
+            if (coral instanceof TubeCoral && typeof coral.update === 'function') {
+                coral.update(dt);
+            }
+        });
+
         if (this.bubble) {
             this.bubble.update(dt); 
         }
@@ -670,6 +830,66 @@ class MyContents  {
         }
 
         return new THREE.Vector3(x, 0, z);
+    }
+
+    /**
+     * Check if a position is inside any exclusion zone
+     * Supports rotated rectangular zones via rotationY parameter
+     */
+    isNearObject(pos) {
+        if (!this.exclusionZones || this.exclusionZones.length === 0) return false;
+        
+        for (const zone of this.exclusionZones) {
+            // If zone has rotation, we need to check against a rotated rectangle
+            if (zone.rotationY && zone.rotationY !== 0) {
+                // Translate position relative to zone center
+                const relX = pos.x - zone.pos.x;
+                const relZ = pos.z - zone.pos.z;
+                
+                // Rotate position back by -rotationY to align with axis-aligned rectangle
+                const cos = Math.cos(-zone.rotationY);
+                const sin = Math.sin(-zone.rotationY);
+                const rotatedX = relX * cos - relZ * sin;
+                const rotatedZ = relX * sin + relZ * cos;
+                
+                // Check if rotated position is within axis-aligned square/rectangle
+                // Using radius as half-width/depth of the box
+                if (Math.abs(rotatedX) <= zone.radius && Math.abs(rotatedZ) <= zone.radius) {
+                    return true;
+                }
+            } else {
+                // No rotation - use simple circular distance check
+                const distXZ = Math.sqrt(
+                    Math.pow(pos.x - zone.pos.x, 2) + 
+                    Math.pow(pos.z - zone.pos.z, 2)
+                );
+                
+                if (distXZ >= zone.radius) continue;
+                
+                // If no angle constraint, it's in the zone
+                if (zone.angleStart === undefined || zone.angleEnd === undefined) {
+                    return true;
+                }
+                
+                // Check if angle is within the sector
+                const angle = Math.atan2(pos.z - zone.pos.z, pos.x - zone.pos.x);
+                // Normalize angles to [0, 2π)
+                const normalizedAngle = angle < 0 ? angle + 2 * Math.PI : angle;
+                const normalizedStart = zone.angleStart < 0 ? zone.angleStart + 2 * Math.PI : zone.angleStart;
+                const normalizedEnd = zone.angleEnd < 0 ? zone.angleEnd + 2 * Math.PI : zone.angleEnd;
+                
+                // Handle wraparound case (e.g., from 3π/2 to π/2)
+                if (normalizedStart > normalizedEnd) {
+                    if (normalizedAngle >= normalizedStart || normalizedAngle <= normalizedEnd) {
+                        return true;
+                    }
+                } else if (normalizedAngle >= normalizedStart && normalizedAngle <= normalizedEnd) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 
     /**
