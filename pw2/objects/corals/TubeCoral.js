@@ -62,6 +62,7 @@ export class TubeCoral extends MultiInstancedEntity {
         this.color = color;
         this.size = size;
         this.bubbleSpawner = null;
+        this.bubblesEnabled = true; // Control flag for bubbles
         this.bubbleSpawnTime = 0;
         
         // Give each coral its own unique personality
@@ -115,7 +116,7 @@ export class TubeCoral extends MultiInstancedEntity {
     }
 
     update(dt) {
-        if (!this.bubbleSpawner) return;
+        if (!this.bubbleSpawner || !this.bubblesEnabled) return;
         
         this.bubbleSpawnTime += dt;
         

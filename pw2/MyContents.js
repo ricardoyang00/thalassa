@@ -130,7 +130,7 @@ class MyContents  {
         this._vasePositioned = false;
 
         this.chest = new Chest(this.app);
-        this.chest.position.set(1, 0, 18);
+        this.chest.position.set(1, 0.8, 18);
         this.chest.rotateY(-Math.PI/4);
         this.app.scene.add(this.chest);
 
@@ -145,6 +145,7 @@ class MyContents  {
         this.sharkController = null;
 
         this.bubble = new Bubble(this.app.scene);
+        this.coralBubblesEnabled = true; // Toggle for coral bubbles
     }
 
     /**
@@ -404,65 +405,103 @@ class MyContents  {
      * Create multiple fish groups. Each group is a THREE.Group with 20-30 fish by default.
      * Fish references are stored in this.fishByGroup (array of arrays) and flat in this.fish.
      */
-    buildFishGroups(numGroups = 3, minPer = 20, maxPer = 30, palette = [0xff6b6b, 0x4ecdc4, 0xffd166]) {
-        this.fish = [];
-        this.fishByGroup = [];
-    
-        const rawPalette = Array.isArray(palette) && palette.length ? palette : [0xff9933];
-        const colors = rawPalette.map(c => {
-            if (typeof c === 'number') return c;
-            if (typeof c === 'string') {
-                if (c.startsWith('#')) return parseInt(c.slice(1), 16);
-                if (c.startsWith('0x')) return parseInt(c.slice(2), 16);
-                const n = Number(c);
-                return Number.isFinite(n) ? n : parseInt(c, 16);
-            }
-            return Number(c);
-        });
-    
-        for (let g = 0; g < numGroups; ++g) {
-            const cols = Math.ceil(Math.sqrt(numGroups));
-            const rows = Math.ceil(numGroups / cols);
-            const spacing = 20;
-            const col = g % cols;
-            const row = Math.floor(g / cols);
-            const cx = (cols - 1) / 2;
-            const rz = (rows - 1) / 2;
+    buildFishGroups(numGroups = 3, minPer = 20, maxPer = 30) {
+    this.fish = [];
+    this.fishByGroup = [];
 
-            const count = Math.max(minPer, Math.floor(SgiUtils.rand(minPer, maxPer + 1)));
-            const groupFishes = [];
+    // 1. DEFINED WARM/NATURAL PALETTE (Heavy on Gold, Orange, Silver, Pink)
+    // We explicitly avoid deep blues to prevent them blending into the water or dominating.
+    const colorPalette = [
+        0xff4500, // OrangeRed (High Vis)
+        0xff8c00, // DarkOrange
+        0xffa500, // Orange
+        0xff6347, // Tomato
+        0xff0000, // Pure Red
+        0xffb7c5, // Cherry Blossom Pink (Good contrast vs blue)
+    ];
+
+    // Use user palette if provided, otherwise use our natural warm palette
+    const activePalette = colorPalette;
+
+    // Helper to parse colors safely
+    const parseColor = (c) => {
+        if (typeof c === 'number') return c;
+        if (typeof c === 'string') return parseInt(c.replace(/^#|^0x/, ''), 16);
+        return 0xffffff;
+    };
+
+    const colors = activePalette.map(parseColor);
+
+    for (let g = 0; g < numGroups; ++g) {
+        // ... (Spatial Logic remains unchanged) ...
+        const cols = Math.ceil(Math.sqrt(numGroups));
+        const spacing = 20;
+        const col = g % cols;
+        const row = Math.floor(g / cols);
+        const cx = (cols - 1) / 2;
+        const rz = (Math.ceil(numGroups / cols) - 1) / 2;
+
+        const count = Math.max(minPer, Math.floor(SgiUtils.rand(minPer, maxPer + 1)));
+        const groupFishes = [];
+
+        // --- STEP 1: PICK A "SPECIES THEME" FOR THE GROUP ---
+        // We pick ONE base color for this whole group.
+        // This prevents the "confetti" look where every fish is different.
+        const baseColorHex = colors[g % colors.length];
+        const baseColor = new THREE.Color(baseColorHex);
         
-            for (let i = 0; i < count; ++i) {
-                const color = colors[Math.floor(Math.random() * colors.length)];
+        // Convert to HSL so we can do math on the color wheel
+        const baseHSL = { h: 0, s: 0, l: 0 };
+        baseColor.getHSL(baseHSL);
 
-                const fish = new Fish({
-                    scale: SgiUtils.rand(0.08, 0.16),
-                    color: color,
-                });
+        for (let i = 0; i < count; ++i) {
+            
+            // --- STEP 2: ANALOGOUS VARIATION (The "Natural" Look) ---
+            
+            // A. Hue Drift: 
+            // Allow the color to shift +/- 10% on the color wheel.
+            // If the base is Orange, some fish will be Yellowish, some Reddish.
+            const hueDrift = (Math.random() - 0.5) * 0.12; 
 
-                // local position inside group (clustered)
-                fish.position.set(SgiUtils.rand(-4, 4), SgiUtils.rand(-1, 3), SgiUtils.rand(-4, 4));
+            // B. Saturation drop (The "Silver" Scale Effect):
+            // Real fish are rarely 100% saturated neon.
+            // We tend to lower saturation to make them look more like living creatures.
+            // We allow a wide range: some are dull (grey/silver), some are vibrant.
+            const satDrift = (Math.random() - 0.5) * 0.3; 
 
-                groupFishes.push(fish);
-                this.fish.push(fish);
-            }
+            // C. Lightness: 
+            // Top of fish catches sun, bottom is shadow. Randomize slightly.
+            const lightDrift = (Math.random() - 0.5) * 0.2;
 
-            this.fishByGroup.push(groupFishes);
+            const fishColor = new THREE.Color().setHSL(
+                (baseHSL.h + hueDrift + 1) % 1, // Ensure hue stays 0-1
+                THREE.MathUtils.clamp(baseHSL.s + satDrift, 0.2, 1.0), // Keep between 0.2 (grey) and 1.0 (neon)
+                THREE.MathUtils.clamp(baseHSL.l + lightDrift, 0.3, 0.8) // Keep visible
+            );
 
-            // create a FishFlock to govern the boids for this group
-            const flock = new FishFlock(groupFishes);
-            flock.position.set((col - cx) * spacing, SgiUtils.rand(1, 6), (row - rz) * spacing);
-            if (this.submarine) {
-                flock.addDanger(this.submarine);
-            }
-            if (this.shark) {
-                flock.addDanger(this.shark);
-            }
-            this.flocks.push(flock);
+            const fish = new Fish({
+                scale: SgiUtils.rand(0.08, 0.16),
+                color: fishColor.getHex(),
+            });
+
+            fish.position.set(SgiUtils.rand(-4, 4), SgiUtils.rand(-1, 3), SgiUtils.rand(-4, 4));
+
+            groupFishes.push(fish);
+            this.fish.push(fish);
         }
-        this.app.scene.add(Fish.defaultOwner);
-        this.allFishMesh = Fish.defaultOwner.updateInstances(() => {});
+
+        this.fishByGroup.push(groupFishes);
+
+        // ... (Flock Logic unchanged) ...
+        const flock = new FishFlock(groupFishes);
+        flock.position.set((col - cx) * spacing, SgiUtils.rand(1, 6), (row - rz) * spacing);
+        if (this.submarine) flock.addDanger(this.submarine);
+        if (this.shark) flock.addDanger(this.shark);
+        this.flocks.push(flock);
     }
+    this.app.scene.add(Fish.defaultOwner);
+    this.allFishMesh = Fish.defaultOwner.updateInstances(() => {});
+}
 
     /**
      * Creates the shark, its wrapper, and its flock controller.
@@ -653,7 +692,7 @@ class MyContents  {
         this.buildSeafloor();
         this.buildSubmarine();
         this.buildShark();
-        this.buildFishGroups(5, 100, 200);
+        this.buildFishGroups(15, 100, 200);
         
 
         this.seafloorGroup.traverse((child) => {
@@ -778,6 +817,7 @@ class MyContents  {
         // Update tube corals for bubble spawning
         this.corals.forEach(coral => {
             if (coral instanceof TubeCoral && typeof coral.update === 'function') {
+                coral.bubblesEnabled = this.coralBubblesEnabled;
                 coral.update(dt);
             }
         });
