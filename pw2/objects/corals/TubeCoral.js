@@ -66,9 +66,9 @@ export class TubeCoral extends MultiInstancedEntity {
         this.bubbleSpawnTime = 0;
         
         // Give each coral its own unique personality
-        this.bubbleIntensity = SgiUtils.rand(0.8, 2.0); // How much bubbles this coral produces (0.8 = active, 2.0 = very intense)
+        this.bubbleIntensity = SgiUtils.rand(0.4, 1.2); // How much bubbles this coral produces (0.8 = active, 2.0 = very intense)
         this.bubbleConcentration = SgiUtils.rand(1.5, 3.5); // Concentration multiplier (affects bubble density per spawn)
-        this.baseSpawnInterval = SgiUtils.rand(3.0, 6.0); // Longer spawn intervals for pop effect
+        this.baseSpawnInterval = SgiUtils.rand(6.0, 12.0); // Longer spawn intervals for pop effect
         this.bubbleSpawnInterval = this.baseSpawnInterval / this.bubbleIntensity; // More active corals spawn more frequently
         this.bubbleSpawnPhase = SgiUtils.rand(0, this.bubbleSpawnInterval); // Random phase offset for natural staggering
         this.bubbleSpawnTime = this.bubbleSpawnPhase; // Start at phase offset
@@ -91,9 +91,9 @@ export class TubeCoral extends MultiInstancedEntity {
                         x: layer * SgiUtils.rand(Math.PI / 20, Math.PI / 10),
                     },
                     pos: new THREE.Vector3(
-                        layer * size * Math.sin(ang) / 8,
+                        layer * size * Math.sin(ang) / 48,
                         0,
-                        layer * size * Math.cos(ang) / 8,
+                        layer * size * Math.cos(ang) / 48,
                     ),
                 })
             }

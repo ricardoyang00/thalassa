@@ -134,6 +134,18 @@ class MyContents  {
         this.chest.rotateY(-Math.PI/4);
         this.app.scene.add(this.chest);
 
+        // Add golden light inside the chest
+        const chestGoldenLight = new THREE.PointLight(0xFFD700, 8, 15);
+        chestGoldenLight.position.set(3.8, 4.55, 11.45);
+        chestGoldenLight.castShadow = true;
+        chestGoldenLight.shadow.mapSize.width = 512;
+        chestGoldenLight.shadow.mapSize.height = 512;
+        this.app.scene.add(chestGoldenLight);
+        
+        // Add light helper to visualize the light
+        // const chestLightHelper = new THREE.PointLightHelper(chestGoldenLight, 0.5);
+        // this.app.scene.add(chestLightHelper);
+
 
         
 
@@ -157,7 +169,7 @@ class MyContents  {
      * @param {number} coralCount - number of corals to spawn (default: 150)
      * @param {number} terrainMargin - margin from terrain edges to avoid spawn (default: 10)
      */
-    buildSeafloor(rockCount = 50, coralCount = 350, terrainMargin = 2) {
+    buildSeafloor(rockCount = 100, coralCount = 850, terrainMargin = 3) {
         // Remove old seafloor if it exists
         if (this.seafloorGroup && this.seafloorGroup.parent) {
             this.app.scene.remove(this.seafloorGroup);
@@ -170,7 +182,7 @@ class MyContents  {
         // Define exclusion zones around existing objects
         this.exclusionZones = [
             { pos: new THREE.Vector3(-15, 0, -15), radius: 26, name: "Temple", rotationY: Math.PI / 4 },
-            { pos: new THREE.Vector3(10, 0, 5), radius: 15, name: "Apollo", rotationY: Math.PI / 4 },
+            { pos: new THREE.Vector3(9, 0, 4), radius: 15, name: "Apollo", rotationY: Math.PI / 4 },
             { pos: new THREE.Vector3(-15, 0, 22), radius: 2, name: "Horse 1", rotationY: 0 },
             { pos: new THREE.Vector3(22, 0, -15), radius: 2, name: "Horse 2", rotationY: 0 },
         ];
@@ -214,7 +226,7 @@ class MyContents  {
         let rocksPlaced = 0;
         
         for (let i = 0; i < rockCount; i++) {
-            const rock = new MyRock(this, SgiUtils.rand(0.5, 2), SgiUtils.rand.bind(SgiUtils));
+            const rock = new MyRock(this, SgiUtils.rand(0.2, 1), SgiUtils.rand.bind(SgiUtils));
             let placed = false;
             let attempts = 0;
 
@@ -231,7 +243,7 @@ class MyContents  {
                 }
 
                 // Check distance from other rocks (natural spacing with randomness) - use XZ distance only
-                const minSpacing = rock.size + SgiUtils.rand(0.5, 2);
+                const minSpacing = rock.size + SgiUtils.rand(0.5, 1.5);
                 let tooClose = false;
                 for (const existingRock of this.rocks.children) {
                     const rockDistXZ = Math.sqrt(
@@ -269,9 +281,31 @@ class MyContents  {
             BrainCoral,
         ];
 
+        const naturalCoralPalette = [
+            0xff7f50, // Coral (The classic color)
+            0xf08080, // Light Coral / Salmon
+            0xe9967a, // Dark Salmon
+            0xda70d6, // Orchid (Soft Purple)
+            0x9370db, // Medium Purple
+            0x8b008b, // Dark Magenta (Deep water fans)
+            0x4682b4, // Steel Blue (Staghorn corals)
+            0x20b2aa, // Light Sea Green
+            0xf0e68c, // Khaki (Sponge/Sand look)
+            0xffd700, // Gold (Yellow Sponges)
+            0xcd5c5c, // Indian Red (Hard pipe corals)
+        ];
+
         for (let i = 0; i < coralCount; ++i) {
             const coralType = coralTypes[SgiUtils.randInt(coralTypes.length)];
-            const coral = new coralType(SgiUtils.rand(0, 0xffffff), 2);
+
+            const baseHex = naturalCoralPalette[SgiUtils.randInt(naturalCoralPalette.length)];
+            const colorObj = new THREE.Color(baseHex);
+            const hueShift = (Math.random() - 0.5) * 0.05;  // Slight tint change
+            const satShift = (Math.random() - 0.5) * 0.15;  // Some are pale, some vivid
+            const lightShift = (Math.random() - 0.5) * 0.1; // Shadows/Sunlight diff
+            colorObj.offsetHSL(hueShift, satShift, lightShift);
+
+            const coral = new coralType(colorObj.getHex(), SgiUtils.rand(0.9, 1.2));
             let placed = false;
             let attempts = 0;
 
@@ -288,7 +322,7 @@ class MyContents  {
                 }
 
                 // Check distance from rocks (natural spacing) - use XZ distance only
-                const rockMinSpacing = 1.2;
+                const rockMinSpacing = 0.75;
                 let tooCloseToRock = false;
                 for (const rock of this.rocks.children) {
                     const rockDistXZ = Math.sqrt(
@@ -307,7 +341,7 @@ class MyContents  {
                 }
 
                 // Check distance from other corals (natural spacing with randomness) - use XZ distance only
-                const coralMinSpacing = SgiUtils.rand(2, 3.5);
+                const coralMinSpacing = SgiUtils.rand(0.5, 1.5);
                 let tooCloseToCoral = false;
                 for (const existingCoral of this.corals) {
                     const coralDistXZ = Math.sqrt(
@@ -406,102 +440,101 @@ class MyContents  {
      * Fish references are stored in this.fishByGroup (array of arrays) and flat in this.fish.
      */
     buildFishGroups(numGroups = 3, minPer = 20, maxPer = 30) {
-    this.fish = [];
-    this.fishByGroup = [];
+        this.fish = [];
+        this.fishByGroup = [];
 
-    // 1. DEFINED WARM/NATURAL PALETTE (Heavy on Gold, Orange, Silver, Pink)
-    // We explicitly avoid deep blues to prevent them blending into the water or dominating.
-    const colorPalette = [
-        0xff4500, // OrangeRed (High Vis)
-        0xff8c00, // DarkOrange
-        0xffa500, // Orange
-        0xff6347, // Tomato
-        0xff0000, // Pure Red
-        0xffb7c5, // Cherry Blossom Pink (Good contrast vs blue)
-    ];
+        // 1. DEFINED WARM/NATURAL PALETTE (Heavy on Gold, Orange, Silver, Pink)
+        // We explicitly avoid deep blues to prevent them blending into the water or dominating.
+        const colorPalette = [
+            0xff4500, // OrangeRed (High Vis)
+            0xff8c00, // DarkOrange
+            0xffa500, // Orange
+            0xff6347, // Tomato
+            0xff0000, // Pure Red
+            0xffb7c5, // Cherry Blossom Pink (Good contrast vs blue)
+        ];
 
-    // Use user palette if provided, otherwise use our natural warm palette
-    const activePalette = colorPalette;
+        // Use user palette if provided, otherwise use our natural warm palette
+        const activePalette = colorPalette;
 
-    // Helper to parse colors safely
-    const parseColor = (c) => {
-        if (typeof c === 'number') return c;
-        if (typeof c === 'string') return parseInt(c.replace(/^#|^0x/, ''), 16);
-        return 0xffffff;
-    };
+        // Helper to parse colors safely
+        const parseColor = (c) => {
+            if (typeof c === 'number') return c;
+            if (typeof c === 'string') return parseInt(c.replace(/^#|^0x/, ''), 16);
+            return 0xffffff;
+        };
 
-    const colors = activePalette.map(parseColor);
+        const colors = activePalette.map(parseColor);
 
-    for (let g = 0; g < numGroups; ++g) {
-        // ... (Spatial Logic remains unchanged) ...
-        const cols = Math.ceil(Math.sqrt(numGroups));
-        const spacing = 20;
-        const col = g % cols;
-        const row = Math.floor(g / cols);
-        const cx = (cols - 1) / 2;
-        const rz = (Math.ceil(numGroups / cols) - 1) / 2;
+        for (let g = 0; g < numGroups; ++g) {
+            const cols = Math.ceil(Math.sqrt(numGroups));
+            const spacing = 20;
+            const col = g % cols;
+            const row = Math.floor(g / cols);
+            const cx = (cols - 1) / 2;
+            const rz = (Math.ceil(numGroups / cols) - 1) / 2;
 
-        const count = Math.max(minPer, Math.floor(SgiUtils.rand(minPer, maxPer + 1)));
-        const groupFishes = [];
+            const count = Math.max(minPer, Math.floor(SgiUtils.rand(minPer, maxPer + 1)));
+            const groupFishes = [];
 
-        // --- STEP 1: PICK A "SPECIES THEME" FOR THE GROUP ---
-        // We pick ONE base color for this whole group.
-        // This prevents the "confetti" look where every fish is different.
-        const baseColorHex = colors[g % colors.length];
-        const baseColor = new THREE.Color(baseColorHex);
-        
-        // Convert to HSL so we can do math on the color wheel
-        const baseHSL = { h: 0, s: 0, l: 0 };
-        baseColor.getHSL(baseHSL);
-
-        for (let i = 0; i < count; ++i) {
+            // --- STEP 1: PICK A "SPECIES THEME" FOR THE GROUP ---
+            // We pick ONE base color for this whole group.
+            // This prevents the "confetti" look where every fish is different.
+            const baseColorHex = colors[g % colors.length];
+            const baseColor = new THREE.Color(baseColorHex);
             
-            // --- STEP 2: ANALOGOUS VARIATION (The "Natural" Look) ---
-            
-            // A. Hue Drift: 
-            // Allow the color to shift +/- 10% on the color wheel.
-            // If the base is Orange, some fish will be Yellowish, some Reddish.
-            const hueDrift = (Math.random() - 0.5) * 0.12; 
+            // Convert to HSL so we can do math on the color wheel
+            const baseHSL = { h: 0, s: 0, l: 0 };
+            baseColor.getHSL(baseHSL);
 
-            // B. Saturation drop (The "Silver" Scale Effect):
-            // Real fish are rarely 100% saturated neon.
-            // We tend to lower saturation to make them look more like living creatures.
-            // We allow a wide range: some are dull (grey/silver), some are vibrant.
-            const satDrift = (Math.random() - 0.5) * 0.3; 
+            for (let i = 0; i < count; ++i) {
+                
+                // --- STEP 2: ANALOGOUS VARIATION (The "Natural" Look) ---
+                
+                // A. Hue Drift: 
+                // Allow the color to shift +/- 10% on the color wheel.
+                // If the base is Orange, some fish will be Yellowish, some Reddish.
+                const hueDrift = (Math.random() - 0.5) * 0.12; 
 
-            // C. Lightness: 
-            // Top of fish catches sun, bottom is shadow. Randomize slightly.
-            const lightDrift = (Math.random() - 0.5) * 0.2;
+                // B. Saturation drop (The "Silver" Scale Effect):
+                // Real fish are rarely 100% saturated neon.
+                // We tend to lower saturation to make them look more like living creatures.
+                // We allow a wide range: some are dull (grey/silver), some are vibrant.
+                const satDrift = (Math.random() - 0.5) * 0.3; 
 
-            const fishColor = new THREE.Color().setHSL(
-                (baseHSL.h + hueDrift + 1) % 1, // Ensure hue stays 0-1
-                THREE.MathUtils.clamp(baseHSL.s + satDrift, 0.2, 1.0), // Keep between 0.2 (grey) and 1.0 (neon)
-                THREE.MathUtils.clamp(baseHSL.l + lightDrift, 0.3, 0.8) // Keep visible
-            );
+                // C. Lightness: 
+                // Top of fish catches sun, bottom is shadow. Randomize slightly.
+                const lightDrift = (Math.random() - 0.5) * 0.2;
 
-            const fish = new Fish({
-                scale: SgiUtils.rand(0.08, 0.16),
-                color: fishColor.getHex(),
-            });
+                const fishColor = new THREE.Color().setHSL(
+                    (baseHSL.h + hueDrift + 1) % 1, // Ensure hue stays 0-1
+                    THREE.MathUtils.clamp(baseHSL.s + satDrift, 0.2, 1.0), // Keep between 0.2 (grey) and 1.0 (neon)
+                    THREE.MathUtils.clamp(baseHSL.l + lightDrift, 0.3, 0.8) // Keep visible
+                );
 
-            fish.position.set(SgiUtils.rand(-4, 4), SgiUtils.rand(-1, 3), SgiUtils.rand(-4, 4));
+                const fish = new Fish({
+                    scale: SgiUtils.rand(0.08, 0.16),
+                    color: fishColor.getHex(),
+                });
 
-            groupFishes.push(fish);
-            this.fish.push(fish);
+                fish.position.set(SgiUtils.rand(-4, 4), SgiUtils.rand(-1, 3), SgiUtils.rand(-4, 4));
+
+                groupFishes.push(fish);
+                this.fish.push(fish);
+            }
+
+            this.fishByGroup.push(groupFishes);
+
+            // ... (Flock Logic unchanged) ...
+            const flock = new FishFlock(groupFishes);
+            flock.position.set((col - cx) * spacing, SgiUtils.rand(1, 6), (row - rz) * spacing);
+            if (this.submarine) flock.addDanger(this.submarine);
+            if (this.shark) flock.addDanger(this.shark);
+            this.flocks.push(flock);
         }
-
-        this.fishByGroup.push(groupFishes);
-
-        // ... (Flock Logic unchanged) ...
-        const flock = new FishFlock(groupFishes);
-        flock.position.set((col - cx) * spacing, SgiUtils.rand(1, 6), (row - rz) * spacing);
-        if (this.submarine) flock.addDanger(this.submarine);
-        if (this.shark) flock.addDanger(this.shark);
-        this.flocks.push(flock);
+        this.app.scene.add(Fish.defaultOwner);
+        this.allFishMesh = Fish.defaultOwner.updateInstances(() => {});
     }
-    this.app.scene.add(Fish.defaultOwner);
-    this.allFishMesh = Fish.defaultOwner.updateInstances(() => {});
-}
 
     /**
      * Creates the shark, its wrapper, and its flock controller.
