@@ -187,7 +187,8 @@ class Bubble {
             mesh: mesh,
             uniforms: uniforms,
             spawnTime: this.clock.getElapsedTime(),
-            lifeTime: 3.0
+            lifeTime: lifetime,
+            isCoralBubble: isCoralBubble
         });
     }
 
@@ -239,6 +240,18 @@ class Bubble {
             bubble.mesh.material.dispose();
         });
         this.bubbleGroups = [];
+    }
+
+    clearCoralBubbles() {
+        for (let i = this.bubbleGroups.length - 1; i >= 0; i--) {
+            if (this.bubbleGroups[i].isCoralBubble) {
+                const bubble = this.bubbleGroups[i];
+                this.scene.remove(bubble.mesh);
+                bubble.mesh.geometry.dispose();
+                bubble.mesh.material.dispose();
+                this.bubbleGroups.splice(i, 1);
+            }
+        }
     }
 }
 

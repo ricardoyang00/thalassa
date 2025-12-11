@@ -287,6 +287,14 @@ class MyApp  {
                     this.contents.submarine.setControlsEnabled(false);
                 }
 
+                // Disable coral bubbles for fly camera
+                if (this.contents) {
+                    this.contents.coralBubblesEnabled = false;
+                    if (this.contents.bubble && typeof this.contents.bubble.clearCoralBubbles === 'function') {
+                        this.contents.bubble.clearCoralBubbles();
+                    }
+                }
+
                 if (this.bokehPass) {
                     this.bokehPass.camera = this.activeCamera;
                     // Bokeh pass internal material needs the camera projection matrix
@@ -295,6 +303,17 @@ class MyApp  {
             } else if (this.activeCameraName === 'SubmarineFPV' || this.activeCameraName === 'SubmarinePeriscope') {
                 if (this.contents && this.contents.submarine && typeof this.contents.submarine.setControlsEnabled === 'function') {
                     this.contents.submarine.setControlsEnabled(true);
+                }
+
+                // Disable coral bubbles for periscope camera
+                if (this.activeCameraName === 'SubmarinePeriscope' && this.contents) {
+                    this.contents.coralBubblesEnabled = false;
+                    if (this.contents.bubble && typeof this.contents.bubble.clearCoralBubbles === 'function') {
+                        this.contents.bubble.clearCoralBubbles();
+                    }
+                } else if (this.contents) {
+                    // Re-enable for FPV
+                    this.contents.coralBubblesEnabled = true;
                 }
             } else {
                 // Disable fly controls for other cameras (handled by Three.js FlyControls)
@@ -313,6 +332,11 @@ class MyApp  {
                 // Re-enable submarine keyboard controls for non-fly cameras
                 if (this.contents && this.contents.submarine && typeof this.contents.submarine.setControlsEnabled === 'function') {
                     this.contents.submarine.setControlsEnabled(true);
+                }
+
+                // Re-enable coral bubbles for other cameras
+                if (this.contents) {
+                    this.contents.coralBubblesEnabled = true;
                 }
             }
         }
