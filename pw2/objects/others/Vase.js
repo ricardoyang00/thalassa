@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 class Vase extends THREE.Object3D {
     constructor(app, {
-        size = 3,
+        size = 2,
         assetsPath = 'models/others/',
         gltfFile = 'coinsclay_game_ready_asset_for_unity_urp.glb',
         onLoad = null

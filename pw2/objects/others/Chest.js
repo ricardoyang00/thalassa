@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 class Chest extends THREE.Object3D {
     constructor(app, {
-        size = 3,
+        size = 2,
         assetsPath = 'models/others/',
         gltfFile = 'old_treasure_chest.glb',
         onLoad = null

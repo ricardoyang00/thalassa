@@ -130,13 +130,13 @@ class MyContents  {
         this._vasePositioned = false;
 
         this.chest = new Chest(this.app);
-        this.chest.position.set(1, 0.8, 18);
+        this.chest.position.set(3, 1.5, 15);
         this.chest.rotateY(-Math.PI/4);
         this.app.scene.add(this.chest);
 
         // Add golden light inside the chest
         const chestGoldenLight = new THREE.PointLight(0xFFD700, 8, 15);
-        chestGoldenLight.position.set(3.8, 4.55, 11.45);
+        chestGoldenLight.position.set(5, 3.9, 10.5);
         chestGoldenLight.castShadow = true;
         chestGoldenLight.shadow.mapSize.width = 512;
         chestGoldenLight.shadow.mapSize.height = 512;
@@ -182,9 +182,14 @@ class MyContents  {
         // Define exclusion zones around existing objects
         this.exclusionZones = [
             { pos: new THREE.Vector3(-15, 0, -15), radius: 26, name: "Temple", rotationY: Math.PI / 4 },
-            { pos: new THREE.Vector3(9, 0, 4), radius: 15, name: "Apollo", rotationY: Math.PI / 4 },
+            // { pos: new THREE.Vector3(9, 0, 4), radius: 15, name: "Apollo", rotationY: Math.PI / 4 },
             { pos: new THREE.Vector3(-15, 0, 22), radius: 2, name: "Horse 1", rotationY: 0 },
             { pos: new THREE.Vector3(22, 0, -15), radius: 2, name: "Horse 2", rotationY: 0 },
+            { pos: new THREE.Vector3(10, 0, 10), radius: 2, name: "Vase", rotationY: 0 },
+            { pos: new THREE.Vector3(4.5, 0, 10.5), radius: 2, name: "Chest", rotationY: 0 },
+            { pos: new THREE.Vector3(11, 0, 4), radius: 5, name: "ApolloHead", rotationY:0 },
+            { pos: new THREE.Vector3(23, 0, 5), radius: 3.5, name: "ApolloArmLeft", rotationY:0 },
+            { pos: new THREE.Vector3(6.5, 0, 14), radius: 2, name: "ApolloArmRight", rotationY:0 }
         ];
 
         // Draw debug boxes for exclusion zones (visual representation)
