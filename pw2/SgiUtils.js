@@ -67,7 +67,7 @@ class SgiUtils {
         obj.traverse((child) => {
             const geo = new THREE.BufferGeometry();
             const fullGeo = (
-                child.isMesh ? child.parent.isLOD ? null : child.geometry :
+                child.isMesh ? child.parent?.isLOD ? null : child.geometry :
                 child.isLOD ? child.levels[child.levels.length - 1].object.geometry :
                 null
             );
@@ -76,7 +76,6 @@ class SgiUtils {
                 return;
 
             geo.setAttribute('position', fullGeo.getAttribute('position').clone());
-            console.log(fullGeo.index);
             geo.setIndex(fullGeo.index ? fullGeo.index.clone() : null);
 
             child.updateMatrixWorld();

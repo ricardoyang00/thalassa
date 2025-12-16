@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { TubeCoral } from '../corals/TubeCoral.js';
 import { BrainCoral } from '../corals/BrainCoral.js';
 import { LSystemCoral } from '../corals/LSystemCoral.js';
+import { SgiUtils } from '../../SgiUtils.js';
 
 class MyTerrain extends THREE.Object3D {
     #width;
@@ -15,6 +16,8 @@ class MyTerrain extends THREE.Object3D {
         this.app = contents.app;
         this.#width = size;
         this.#length = size;
+        this.displacementMap = null;
+        this.displacementScale = 5;
         this.buildTerrain();
     }
 
@@ -22,6 +25,14 @@ class MyTerrain extends THREE.Object3D {
         const terrainGeometry = new THREE.PlaneGeometry(this.#width, this.#length, 64, 64);
 
         let terrainMap = new THREE.TextureLoader().load('images/heightmap.jpg', () => {
+            this.displacementMap = terrainMap.image;
+            const geo = this.children[0].geometry;
+            const posArr = geo.attributes.position.array;
+            for (let i = 0; i < posArr.length; i+=3) {
+                posArr[i+2] += this.displacementAtXY(posArr[i], -posArr[i+1]);
+            }
+            geo.attributes.position.needsUpdate = true;
+            this.contents.colliders.push(SgiUtils.buildColliderGeo(this).boundsTree);
             const seafloorGroup = this.app.scene.getObjectByName("seafloorGroup");
             this.contents.corals.forEach((coral) => {
                 const x = coral.position.x;
@@ -102,8 +113,8 @@ class MyTerrain extends THREE.Object3D {
 
         const terrainMaterial = new THREE.MeshPhongMaterial({ 
             color: "#8B7355",
-            displacementMap: terrainMap,
-            displacementScale: 5, 
+            // displacementMap: terrainMap,
+            // displacementScale: 5,
             map: texture
         });
 
@@ -129,7 +140,7 @@ class MyTerrain extends THREE.Object3D {
     }
 
     displacementAtXY(x, y) {
-        const image = this.mesh.material.displacementMap.image;
+        const image = this.displacementMap;
         if (!this.#canvas) {
             // create a canvas so we can get pixel information
             this.#canvas = document.createElement('canvas');
@@ -149,7 +160,7 @@ class MyTerrain extends THREE.Object3D {
         y = (1 - v) * image.height;
         const pixel = ctx.getImageData(x, y, 1, 1).data;
         // displacement will depend on brightest color (usually doesn't matter because typically these maps are grayscaled)
-        return this.mesh.material.displacementScale * Math.max(...pixel.slice(0, 3)) / 255;
+        return this.displacementScale * Math.max(...pixel.slice(0, 3)) / 255;
     }
 
     toggleWireframe(wireframe) {

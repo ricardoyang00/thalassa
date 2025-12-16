@@ -185,14 +185,6 @@ class SubmarineControls {
             }
         }
 
-        if (this.submarine.position.y < this.submarine.minY) {
-            this.submarine.position.y = this.submarine.minY;
-            if (this.submarine.verticalSpeed < 0) this.submarine.verticalSpeed = 0;
-        } else if (this.submarine.position.y > this.submarine.maxY) {
-            this.submarine.position.y = this.submarine.maxY;
-            if (this.submarine.verticalSpeed > 0) this.submarine.verticalSpeed = 0;
-        }
-
                 try {
             const appContents = this.submarine.app && this.submarine.app.contents;
             const terrain = appContents && appContents.terrain;

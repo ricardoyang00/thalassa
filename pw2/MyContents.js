@@ -563,11 +563,7 @@ class MyContents  {
         const dt = this._lastUpdateTime ? Math.min(0.1, now - this._lastUpdateTime) : 0;
         this._lastUpdateTime = now;
 
-        if (!this._horsePositioned && 
-            this.terrain.mesh && 
-            this.terrain.mesh.material.displacementMap && 
-            this.terrain.mesh.material.displacementMap.image &&
-            this.terrain.mesh.material.displacementMap.image.width) {
+        if (!this._horsePositioned && this.terrain?.displacementMap) {
             
             this.groupHorsePillars.children.forEach((horse) => {
             const terrainHeight = this.terrain.displacementAtXY(horse.position.x, horse.position.z);
@@ -587,11 +583,7 @@ class MyContents  {
             this._clippingApplied = true;
         }
 
-        if (!this._vasePositioned && 
-            this.terrain.mesh && 
-            this.terrain.mesh.material.displacementMap && 
-            this.terrain.mesh.material.displacementMap.image &&
-            this.terrain.mesh.material.displacementMap.image.width) {
+        if (!this._vasePositioned && this.terrain?.displacementMap) {
             
             const terrainHeight = this.terrain.displacementAtXY(this.vase.position.x, this.vase.position.z);
             this.vase.position.y = terrainHeight;
