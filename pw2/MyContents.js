@@ -563,30 +563,42 @@ class MyContents  {
         // the lower the density, the further we can see
         this.app.scene.fog = new THREE.FogExp2(waterColor, 0.02);
 
+        const surfaceGeo = new THREE.PlaneGeometry(100, 100, 32, 32);
 
-        const waterTexture = new THREE.TextureLoader().load('textures/water.jpg');
-        if (waterTexture) {
-            waterTexture.wrapS = THREE.RepeatWrapping;
-            waterTexture.wrapT = THREE.RepeatWrapping;
-            waterTexture.repeat.set(10, 10);
-        }
-
-        const surfaceGeo = new THREE.PlaneGeometry(100, 100);
+        // Create water material with proper texture loading
         const surfaceMat = new THREE.MeshPhongMaterial({
             color: "#9dd9ff", 
             specular: 0xffffff,
             shininess: 100,
             opacity: 0.6,
             transparent: true,
-            side: THREE.DoubleSide,
-            normalMap: waterTexture || null
+            side: THREE.DoubleSide
         });
+
+        const textureLoader = new THREE.TextureLoader();
+        textureLoader.load('textures/water.jpg', (texture) => {
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(10, 10);
+            surfaceMat.normalMap = texture;
+            surfaceMat.needsUpdate = true;
+            this.waterTexture = texture;
+        });
+
+        // Keep a copy of the original vertex positions so we can displace them each frame
+        const posAttr = surfaceGeo.attributes.position;
+        this._waterOriginalPositions = new Float32Array(posAttr.array.length);
+        this._waterOriginalPositions.set(posAttr.array);
 
         const surface = new THREE.Mesh(surfaceGeo, surfaceMat);
         surface.rotation.x = -Math.PI / 2;
         surface.position.y = 40;
 
         this.app.scene.add(surface);
+
+        // Store references for animation
+        this.waterSurface = surface;
+        this.waterGeometry = surfaceGeo;
     }
 
     
@@ -890,6 +902,31 @@ class MyContents  {
             this.causticsLight.position.x = (Math.sin(deepTime) * 0.05) + (Math.cos(slowTime) * 0.02);
             this.causticsLight.position.y = 39 + Math.sin(slowTime) * 0.1;
             this.causticsLight.position.z = (Math.cos(deepTime * 0.07) * 0.05) + (Math.sin(slowTime) * 0.02);
+        }
+
+        if (this.waterSurface && this.waterGeometry && this._waterOriginalPositions) {
+            const positions = this.waterGeometry.attributes.position.array;
+            const orig = this._waterOriginalPositions;
+            const time = now;
+
+            // Wave parameters
+            const speed1 = 2.0;
+            const speed2 = 1.2;
+            const amp1 = 0.6;
+            const amp2 = 0.35;
+
+            for (let i = 0; i < positions.length; i += 3) {
+                const ox = orig[i];
+                const oy = orig[i + 1];
+
+                const wave = Math.sin(ox * 0.12 + time * speed1) * amp1
+                           + Math.cos(oy * 0.09 + time * speed2) * amp2;
+
+                positions[i + 2] = wave;
+            }
+
+            this.waterGeometry.attributes.position.needsUpdate = true;
+            this.waterGeometry.computeVertexNormals();
         }
     }
 
