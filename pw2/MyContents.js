@@ -907,22 +907,46 @@ class MyContents  {
         if (this.waterSurface && this.waterGeometry && this._waterOriginalPositions) {
             const positions = this.waterGeometry.attributes.position.array;
             const orig = this._waterOriginalPositions;
-            const time = now;
+            const t = now;
 
-            // Wave parameters
-            const speed1 = 2.0;
-            const speed2 = 1.2;
-            const amp1 = 0.6;
-            const amp2 = 0.35;
+            // Gernster waves
+            const waves = [
+                { dirDeg: 0,  steepness: 0.4, wavelength: 60 },
+                { dirDeg: 30, steepness: 0.4, wavelength: 30 },
+                { dirDeg: 60, steepness: 0.4, wavelength: 15 },
+            ];
+
+            const wparams = waves.map(w => {
+                const rad = (w.dirDeg * Math.PI) / 180.0;
+                const d = { x: Math.sin(rad), y: -Math.cos(rad) };
+                const k = (Math.PI * 2) / w.wavelength;
+                const c = Math.sqrt(9.8 / k);
+                const a = w.steepness / k;
+                return { d, k, c, a };
+            });
+
+            const amplitudeScale = 0.5;
 
             for (let i = 0; i < positions.length; i += 3) {
                 const ox = orig[i];
                 const oy = orig[i + 1];
+                let dx = 0, dy = 0, dz = 0;
 
-                const wave = Math.sin(ox * 0.12 + time * speed1) * amp1
-                           + Math.cos(oy * 0.09 + time * speed2) * amp2;
+                for (let wi = 0; wi < wparams.length; ++wi) {
+                    const wp = wparams[wi];
+                    const f = wp.k * (wp.d.x * ox + wp.d.y * oy - wp.c * t);
+                    const a = wp.a;
+                    const cosf = Math.cos(f);
+                    const sinf = Math.sin(f);
 
-                positions[i + 2] = wave;
+                    dx += wp.d.x * (a * cosf);
+                    dy += wp.d.y * (a * cosf);
+                    dz += a * sinf;
+                }
+
+                positions[i] = ox + dx * amplitudeScale;
+                positions[i + 1] = oy + dy * amplitudeScale;
+                positions[i + 2] = dz * amplitudeScale;
             }
 
             this.waterGeometry.attributes.position.needsUpdate = true;
