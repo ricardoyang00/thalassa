@@ -59,6 +59,9 @@ class MyApp  {
         // Periscope HUD
         this.periscopeComposer = null;
         this.periscopePass = null;
+
+        // FPV Control Panel Overlay
+        this.fpvOverlay = null;
     }
 
     /**
@@ -219,6 +222,44 @@ class MyApp  {
         // Output pass
         const outputPass = new OutputPass();
         this.periscopeComposer.addPass(outputPass);
+    }
+
+    /**
+     * Creates the FPV control panel overlay using Three.js
+     */
+    initFPVOverlay() {
+        if (!this.cameras['SubmarineFPV']) {
+            console.warn('FPV camera not found');
+            return;
+        }
+
+        const geometry = new THREE.PlaneGeometry(8, 2);
+
+        const textureLoader = new THREE.TextureLoader();
+        const controlPanelTexture = textureLoader.load('textures/control_panel.png', (texture) => {
+            const aspectRatio = texture.image.width / texture.image.height;
+            const newWidth = geometry.parameters.height * aspectRatio;
+            const newGeometry = new THREE.PlaneGeometry(newWidth, geometry.parameters.height);
+            
+            this.fpvOverlay.geometry.dispose();
+            this.fpvOverlay.geometry = newGeometry;
+        });
+        controlPanelTexture.colorSpace = THREE.SRGBColorSpace;
+        controlPanelTexture.magFilter = THREE.LinearFilter;
+        controlPanelTexture.minFilter = THREE.LinearFilter;
+
+        const material = new THREE.MeshBasicMaterial({
+            map: controlPanelTexture,
+            transparent: true,
+            opacity: 1.0,
+            depthTest: false,
+            depthWrite: false
+        });
+
+        this.fpvOverlay = new THREE.Mesh(geometry, material);
+        this.fpvOverlay.position.set(0, -0.5, -1.9);
+        this.fpvOverlay.visible = false;
+        // Don't add to scene - will be added as child of camera when needed
     }
 
     /**
@@ -385,6 +426,7 @@ class MyApp  {
         this.contents = contents;
         if (this.contents && this.contents.submarine && this.contents.submarine.fpvCamera) {
             this.cameras['SubmarineFPV'] = this.contents.submarine.fpvCamera;
+            this.initFPVOverlay();
         }
         if (this.contents && this.contents.submarine && this.contents.submarine.periscopeCamera) {
             this.cameras['SubmarinePeriscope'] = this.contents.submarine.periscopeCamera;
@@ -461,7 +503,23 @@ class MyApp  {
             
             const d = delta > 0 ? delta : 0.01;
             this.periscopeComposer.render(d);
+        } else if (this.activeCameraName === 'SubmarineFPV') {
+            // Attach FPV control panel to camera
+            if (this.fpvOverlay && this.activeCamera) {
+                // Attach overlay to camera so it moves with it
+                if (this.fpvOverlay.parent !== this.activeCamera) {
+                    this.activeCamera.add(this.fpvOverlay);
+                }
+                this.fpvOverlay.visible = true;
+            }
+            // Use standard renderer for FPV
+            this.renderer.render(this.scene, this.activeCamera);
         } else {
+            // Detach FPV overlay from camera for other cameras
+            if (this.fpvOverlay && this.fpvOverlay.parent) {
+                this.fpvOverlay.parent.remove(this.fpvOverlay);
+                this.fpvOverlay.visible = false;
+            }
             // Otherwise use the standard renderer
             this.renderer.render(this.scene, this.activeCamera);
         }
