@@ -563,17 +563,45 @@ class MyContents  {
         // the lower the density, the further we can see
         this.app.scene.fog = new THREE.FogExp2(waterColor, 0.02);
 
-        const surfaceGeo = new THREE.PlaneGeometry(100, 100, 32, 32);
+        const surfaceGeo = new THREE.PlaneGeometry(300, 300, 32, 32);
 
-        // Create water material with proper texture loading
+        // Create a radial alpha map so the water fades toward the edges
+        function createRadialAlphaTexture(size = 1024, inner = 0.55, outer = 0.95) {
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            const cx = size / 2, cy = size / 2;
+            const grad = ctx.createRadialGradient(cx, cy, inner * size / 2, cx, cy, outer * size / 2);
+            grad.addColorStop(0.0, 'rgba(255,255,255,1)');
+            grad.addColorStop(0.7, 'rgba(255,255,255,0.6)');
+            grad.addColorStop(1.0, 'rgba(255,255,255,0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, size, size);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+            tex.needsUpdate = true;
+            return tex;
+        }
+
+        const surfaceColor = waterColor.clone();
+        surfaceColor.offsetHSL(0, 0, 0.12);
+
         const surfaceMat = new THREE.MeshPhongMaterial({
-            color: "#9dd9ff", 
-            specular: 0xffffff,
-            shininess: 100,
+            color: surfaceColor,
+            specular: new THREE.Color(0x222222),
+            shininess: 30,
             opacity: 0.6,
             transparent: true,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            depthWrite: false
         });
+
+        // Assign a radial alpha map to fade edges
+        const alphaTex = createRadialAlphaTexture(1024, 0.55, 0.95);
+        surfaceMat.alphaMap = alphaTex;
+        surfaceMat.alphaMap.wrapS = surfaceMat.alphaMap.wrapT = THREE.ClampToEdgeWrapping;
 
         const textureLoader = new THREE.TextureLoader();
         textureLoader.load('textures/water.jpg', (texture) => {
