@@ -51,15 +51,16 @@ class MyApp  {
         this.composer = null;
         this.bokehPass = null;
         this.postProcessingParams = {
-            focus: 10.0,
-            aperture: 0.005, // Adjustable in UI
-            maxblur: 0.01
+            focus: 1.0,
+            aperture: 0.005,
+            maxblur: 0.005
         };
 
         // Periscope HUD
         this.periscopeComposer = null;
         this.periscopePass = null;
     }
+
     /**
      * initializes the application
      */
@@ -156,9 +157,9 @@ class MyApp  {
         this.composer.addPass(renderPass);
         // Bokeh Pass (Depth of Field)
         this.bokehPass = new BokehPass(this.scene, flyCamera, {
-            focus: 1.0,
-            aperture: 0.025,
-            maxblur: 0.01,
+            focus: this.postProcessingParams.focus,
+            aperture: this.postProcessingParams.aperture,
+            maxblur: this.postProcessingParams.maxblur,
             width: window.innerWidth,
             height: window.innerHeight
         });
@@ -241,6 +242,11 @@ class MyApp  {
     setActiveCamera(cameraName) {   
         this.activeCameraName = cameraName
         this.activeCamera = this.cameras[this.activeCameraName]
+        
+        // Notify contents about camera change for dynamic effects
+        if (this.contents && typeof this.contents.onCameraChange === 'function') {
+            this.contents.onCameraChange(cameraName);
+        }
     }
 
     /**
@@ -295,6 +301,11 @@ class MyApp  {
                     }
                 }
 
+                // Disable volumetric light cone for fly camera
+                if (this.contents && typeof this.contents.setVolumetricLightEnabled === 'function') {
+                    this.contents.setVolumetricLightEnabled(false);
+                }
+
                 if (this.bokehPass) {
                     this.bokehPass.camera = this.activeCamera;
                     // Bokeh pass internal material needs the camera projection matrix
@@ -337,6 +348,11 @@ class MyApp  {
                 // Re-enable coral bubbles for other cameras
                 if (this.contents) {
                     this.contents.coralBubblesEnabled = true;
+                }
+
+                // Re-enable volumetric light cone for non-fly cameras
+                if (this.contents && typeof this.contents.setVolumetricLightEnabled === 'function') {
+                    this.contents.setVolumetricLightEnabled(true);
                 }
             }
         }
@@ -425,6 +441,12 @@ class MyApp  {
 
         // If we are in Fly mode, use the Post-Processing Composer
         if (this.activeCameraName === 'Fly' && this.composer) {
+            // Update BokehPass uniforms with current postProcessingParams
+            if (this.bokehPass) {
+                this.bokehPass.uniforms['focus'].value = this.postProcessingParams.focus;
+                this.bokehPass.uniforms['aperture'].value = this.postProcessingParams.aperture;
+                this.bokehPass.uniforms['maxblur'].value = this.postProcessingParams.maxblur;
+            }
             // Check if delta is valid (prevent NaN issues on first frame)
             const d = delta > 0 ? delta : 0.01; 
             this.composer.render(d); 

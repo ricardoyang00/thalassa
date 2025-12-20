@@ -158,6 +158,9 @@ class MyContents  {
 
         this.bubble = new Bubble(this.app.scene);
         this.coralBubblesEnabled = true; // Toggle for coral bubbles
+
+        // Store reference to volumetric light cone
+        this.volumetricLightCone = null;
     }
 
     /**
@@ -688,7 +691,12 @@ class MyContents  {
         spot2.shadow.camera.near = 0.5;
         spot2.shadow.camera.far = 200;
         this.app.scene.add(spot2);
-        addVolumetricLight(this.app.scene, spot2);
+        
+        // Only add volumetric light if not in fly mode
+        if (this.app.activeCameraName !== 'Fly') {
+            this.volumetricLightCone = addVolumetricLight(this.app.scene, spot2);
+        }
+        
         const spotLightHelper2 = new THREE.SpotLightHelper(spot2);
         // this.app.scene.add(spotLightHelper2);
 
@@ -908,6 +916,56 @@ class MyContents  {
         }
 
         return new THREE.Vector3(x, 0, z);
+    }
+
+    /**
+     * Handle camera mode changes - show/hide volumetric light based on camera
+     * @param {string} cameraName - The new active camera name
+     */
+    onCameraChange(cameraName) {
+        // Find the spot2 light (temple spotlight)
+        const spot2 = this.app.scene.children.find(child => 
+            child.isSpotLight && child.position.x === -20 && child.position.z === -45
+        );
+        
+        if (spot2) {
+            if (cameraName === 'Fly') {
+                // Remove volumetric light when switching to fly mode
+                if (this.volumetricLightCone && this.volumetricLightCone.parent) {
+                    this.app.scene.remove(this.volumetricLightCone);
+                }
+            } else {
+                // Add volumetric light when switching away from fly mode
+                if (!this.volumetricLightCone || !this.volumetricLightCone.parent) {
+                    this.volumetricLightCone = addVolumetricLight(this.app.scene, spot2);
+                }
+            }
+        }
+    }
+
+    /**
+     * Enable or disable the volumetric light cone
+     * @param {boolean} enabled - Whether to show the volumetric light
+     */
+    setVolumetricLightEnabled(enabled) {
+        // Find the spot2 light (temple spotlight)
+        const spot2 = this.app.scene.children.find(child => 
+            child.isSpotLight && child.position.x === -20 && child.position.z === -45
+        );
+        
+        if (spot2) {
+            if (enabled) {
+                // Add volumetric light if not already present
+                if (!this.volumetricLightCone || !this.volumetricLightCone.parent) {
+                    this.volumetricLightCone = addVolumetricLight(this.app.scene, spot2);
+                }
+            } else {
+                // Remove volumetric light if present
+                if (this.volumetricLightCone && this.volumetricLightCone.parent) {
+                    this.app.scene.remove(this.volumetricLightCone);
+                }
+            }
+        }
     }
 
     /**
