@@ -13,6 +13,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 // Periscope HUD shader
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { createPeriscopeShader, createScratchesTexture, createCrosshairTexture } from './shaders/PeriscopeShader.js';
+import { createFPVShader } from './shaders/FPVShader.js';
 
 /**
  * This class contains the application object
@@ -188,8 +189,8 @@ class MyApp  {
         // Add Bokeh Pass (Depth of Field) for periscope
         const bokehPass = new BokehPass(this.scene, this.cameras['SubmarinePeriscope'], {
             focus: 10.0,
-            aperture: 0.0005,  // Much smaller aperture for deeper focus
-            maxblur: 0.001,     // Minimal blur
+            aperture: 0.0005,
+            maxblur: 0.001,
             width: window.innerWidth,
             height: window.innerHeight
         });
@@ -222,6 +223,39 @@ class MyApp  {
         // Output pass
         const outputPass = new OutputPass();
         this.periscopeComposer.addPass(outputPass);
+    }
+
+    /**
+     * Initializes the EffectComposer for FPV with dark tone filter and DOF
+     */
+    initFPVPostProcessing() {
+        if (!this.cameras['SubmarineFPV']) {
+            console.warn('FPV camera not found');
+            return;
+        }
+
+        this.fpvComposer = new EffectComposer(this.renderer);
+        this.fpvComposer.addPass(new RenderPass(this.scene, this.cameras['SubmarineFPV']));
+
+        const bokehPass = new BokehPass(this.scene, this.cameras['SubmarineFPV'], {
+            focus: 10.0,
+            aperture: 0.0005,
+            maxblur: 0.001,
+            width: window.innerWidth,
+            height: window.innerHeight
+        });
+        this.fpvComposer.addPass(bokehPass);
+
+        // Add FPV shader for dark tone filter
+        const fpvShader = createFPVShader();
+        fpvShader.uniforms.uAspect.value = window.innerWidth / window.innerHeight;
+
+        this.fpvPass = new ShaderPass(fpvShader);
+        this.fpvPass.renderToScreen = false;
+        this.fpvComposer.addPass(this.fpvPass);
+
+        const outputPass = new OutputPass();
+        this.fpvComposer.addPass(outputPass);
     }
 
     /**
@@ -259,6 +293,56 @@ class MyApp  {
         this.fpvOverlay = new THREE.Mesh(geometry, material);
         this.fpvOverlay.position.set(0, -0.5, -1.9);
         this.fpvOverlay.visible = false;
+
+        let videoTexture;
+        try {
+            const video = document.createElement('video');
+            video.src = 'textures/sonar.mp4';
+            video.crossOrigin = 'anonymous';
+            video.loop = true;
+            video.muted = true;
+            video.preload = 'auto';
+            
+            videoTexture = new THREE.VideoTexture(video);
+            videoTexture.colorSpace = THREE.SRGBColorSpace;
+            videoTexture.magFilter = THREE.LinearFilter;
+            videoTexture.minFilter = THREE.LinearFilter;
+            
+            video.play().catch(e => {
+                console.warn('Video autoplay failed:', e);
+                // Fallback to GIF if video fails
+                videoTexture = textureLoader.load('textures/sonar.gif');
+                videoTexture.colorSpace = THREE.SRGBColorSpace;
+                videoTexture.magFilter = THREE.LinearFilter;
+                videoTexture.minFilter = THREE.LinearFilter;
+                videoTexture.generateMipmaps = false;
+            });
+        } catch (e) {
+            console.warn('Video texture creation failed, using GIF:', e);
+            // Fallback to GIF
+            videoTexture = textureLoader.load('textures/sonar.gif');
+            videoTexture.colorSpace = THREE.SRGBColorSpace;
+            videoTexture.magFilter = THREE.LinearFilter;
+            videoTexture.minFilter = THREE.LinearFilter;
+            videoTexture.generateMipmaps = false;
+        }
+
+        const videoGeometry = new THREE.CircleGeometry(0.3, 32);
+
+        const videoMaterial = new THREE.MeshBasicMaterial({
+            map: videoTexture,
+            transparent: true,
+            depthTest: false,
+            depthWrite: false
+        });
+
+        this.fpvVideoDisplay = new THREE.Mesh(videoGeometry, videoMaterial);
+        this.fpvVideoDisplay.position.set(0, -0.5, -0.03);
+        this.fpvVideoDisplay.visible = true; // Will be controlled by parent visibility
+
+        // Add video display as child of the control panel so they move together
+        this.fpvOverlay.add(this.fpvVideoDisplay);
+
         // Don't add to scene - will be added as child of camera when needed
     }
 
@@ -416,6 +500,12 @@ class MyApp  {
                     this.periscopePass.uniforms.uAspect.value = window.innerWidth / window.innerHeight;
                 }
             }
+            if (this.fpvComposer) {
+                this.fpvComposer.setSize(window.innerWidth, window.innerHeight);
+                if (this.fpvPass && this.fpvPass.uniforms && this.fpvPass.uniforms.uAspect) {
+                    this.fpvPass.uniforms.uAspect.value = window.innerWidth / window.innerHeight;
+                }
+            }
         }
     }
     /**
@@ -427,6 +517,7 @@ class MyApp  {
         if (this.contents && this.contents.submarine && this.contents.submarine.fpvCamera) {
             this.cameras['SubmarineFPV'] = this.contents.submarine.fpvCamera;
             this.initFPVOverlay();
+            this.initFPVPostProcessing();
         }
         if (this.contents && this.contents.submarine && this.contents.submarine.periscopeCamera) {
             this.cameras['SubmarinePeriscope'] = this.contents.submarine.periscopeCamera;
@@ -512,8 +603,14 @@ class MyApp  {
                 }
                 this.fpvOverlay.visible = true;
             }
-            // Use standard renderer for FPV
-            this.renderer.render(this.scene, this.activeCamera);
+            // Use FPV composer with dark tone filter and DOF
+            if (this.fpvComposer) {
+                const d = delta > 0 ? delta : 0.01;
+                this.fpvComposer.render(d);
+            } else {
+                // Fallback to standard renderer
+                this.renderer.render(this.scene, this.activeCamera);
+            }
         } else {
             // Detach FPV overlay from camera for other cameras
             if (this.fpvOverlay && this.fpvOverlay.parent) {
