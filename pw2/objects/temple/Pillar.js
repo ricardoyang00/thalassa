@@ -106,7 +106,7 @@ class Pillar extends THREE.Object3D {
             }),
         );
         lod.addLevel(highDetail, 0);
-        lod.addLevel(mediumDetail, 50);
+        lod.addLevel(mediumDetail, 100);
         return lod;
     }
 

@@ -29,6 +29,11 @@ class SgiUtils {
     }
 
     static collideTestCounter = 0;
+    /**
+     * @brief Intersects two instances of my BVH implementation.
+     *        It was designed for a many-to-many intersection query.
+     * @returns A set with {a, b} pairs of objects that intersect
+     */
     static getCollidingObjects(a, b, result = new Set()) {
         this.collideTestCounter++;
 
@@ -60,7 +65,7 @@ class SgiUtils {
         return true;
     }
 
-    static buildColliderGeo(obj) {
+    static buildColliderGeo(obj, onLoad = (boundsTree) => {}) {
         obj.updateMatrixWorld();
 
         const geometries = [];
@@ -76,7 +81,12 @@ class SgiUtils {
                 return;
 
             geo.setAttribute('position', fullGeo.getAttribute('position').clone());
-            geo.setIndex(fullGeo.index ? fullGeo.index.clone() : null);
+
+            if (fullGeo.index) {
+                geo.setIndex(fullGeo.index);
+            } else {
+                // TODO: if mergeGeometries fails, this is likely the cause
+            }
 
             child.updateMatrixWorld();
             geo.applyMatrix4(child.matrixWorld);
@@ -85,6 +95,7 @@ class SgiUtils {
 
         const bvhGeo = BufferGeometryUtils.mergeGeometries(geometries);
         bvhGeo.boundsTree = new MeshBVH(bvhGeo);
+        onLoad(bvhGeo.boundsTree);
         return bvhGeo;
     }
 }

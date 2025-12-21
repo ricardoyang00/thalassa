@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 import { SgiUtils } from '../../SgiUtils.js';
+import { BrainCoral } from '../corals/BrainCoral.js';
+import { TubeCoral } from '../corals/TubeCoral.js';
 
 class SubmarineControls {
     constructor(submarine, colliders = []) {
         this.submarine = submarine;
         this.colliders = colliders;
-        this.collisionHelpers = [];
         
         this._keys = { 
             w: false, 
@@ -95,15 +96,13 @@ class SubmarineControls {
             this.submarine.rotation.y -= this.submarine.yawRate * dt;
         }
 
-        const dv = new THREE.Vector3(1, 0, 0)
+        const deltaPos = new THREE.Vector3(1, 0, 0)
             .applyQuaternion(this.submarine.quaternion) // rotate vector according to submarine's orientation
             .multiplyScalar(this.submarine.forwardSpeed * dt) // multiply by speed
             ;
-        dv.y += this.submarine.verticalSpeed * dt;
+        deltaPos.y += this.submarine.verticalSpeed * dt;
 
         const boundingSphere = this.submarine.userData?.boundingSphere?.clone();
-
-        this.collisionHelpers.forEach(line => this.submarine.app.scene.remove(line));
 
         if (!boundingSphere)
             return;
@@ -118,74 +117,77 @@ class SubmarineControls {
                 }),
             );
             this.submarine.boundingSphereHelper.visible = false;
-            this.submarine.boundingSphereHelper.material.wireframe = true;
             this.submarine.add(this.submarine.boundingSphereHelper);
         }
 
-        this.submarine.position.add(dv);
+        this.submarine.position.add(deltaPos);
         boundingSphere.center.add(this.submarine.position);
 
-        const trianglesIntersected = [];
+        const boundingBox = new THREE.Box3(
+            boundingSphere.center.clone().sub(new THREE.Vector3().setScalar(boundingSphere.radius)),
+            boundingSphere.center.clone().add(new THREE.Vector3().setScalar(boundingSphere.radius)),
+        );
+
+        // Get the normal of the first intersection
+        let intersected = false;
+        const normal = new THREE.Vector3();
+
+        [BrainCoral, TubeCoral].forEach(CoralType => {
+            if (intersected)
+                return;
+            CoralType.defaultOwner.bvh?.intersectBox(boundingBox, (id) => {
+                const coral = CoralType.defaultOwner.instances[id].userData.owner;
+                const distVec = coral.position.clone().sub(this.submarine.position);
+                if (distVec.length() <= coral.collisionRadius + boundingSphere.radius) {
+                    intersected = true;
+                    normal.copy(distVec).normalize();
+                }
+            });
+        });
+
         for (const collider of this.colliders) {
+            if (intersected)
+                break;
             collider.shapecast({
                 intersectsBounds: (box) => box.intersectsSphere(boundingSphere),
                 intersectsTriangle: (tri) => {
                     if (tri.intersectsSphere(boundingSphere)) {
-                        trianglesIntersected.push(tri);
-                        return true;
+                        tri.getNormal(normal);
+                        return intersected = true;
                     }
                     return false;
                 }
             });
         }
 
-        if (trianglesIntersected.length > 0) {
-            if (SgiUtils.debug) {
-                trianglesIntersected.forEach(tri => {
-                    const line = new THREE.Line(
-                        new THREE.BufferGeometry().setFromPoints([this.submarine.position.clone(), tri.getMidpoint(new THREE.Vector3())]),
-                        new THREE.LineBasicMaterial({color: 0xff0000}),
-                    );
-                    this.collisionHelpers.push(line);
-                    this.submarine.app.scene.add(line);
-                });
-            }
-
-            this.submarine.position.sub(dv);
-
-            const normal = new THREE.Vector3();
-            trianglesIntersected[0].getNormal(normal); // TODO: is it possible/common to get more than 1 triangle?
+        if (intersected) do {
+            this.submarine.position.sub(deltaPos);
 
             // vslide​=v−(v⋅n)n
-            const dotProduct = dv.clone().dot(normal);
-            const slide = dv.clone()
+            const dotProduct = deltaPos.clone().dot(normal);
+            const slide = deltaPos.clone()
                 .sub(normal.clone()
                 .multiplyScalar(
-                    Math.min(10, dv.length() / Math.abs(dotProduct)) // make normal stronger the bigger the angle between V and N is
+                    Math.min(10, deltaPos.length() / Math.abs(dotProduct)) // make normal stronger the bigger the angle between V and N is
                     *
                     dotProduct)
                 );
 
-            this.submarine.position.add(slide);
-            boundingSphere.center.sub(dv).add(slide);
+            if (isNaN(slide.x))
+                break;
 
-            // if (SgiUtils.debug) {
-            //     console.log(`dotProduct: ${dotProduct}/${dv.length()}`);
-            //     console.log('dv:', dv);
-            //     console.log('slide:', slide);
-            // }
+            this.submarine.position.add(slide);
+            boundingSphere.center.sub(deltaPos).add(slide);
 
             for (const collider of this.colliders) {
                 if (collider.intersectsSphere(boundingSphere)) {
                     this.submarine.position.sub(slide);
-                    // this.submarine.forwardSpeed = 0;
-                    // this.submarine.verticalSpeed = 0;
-                    return;
+                    break;
                 }
             }
-        }
+        } while(false);
 
-                try {
+        try {
             const appContents = this.submarine.app && this.submarine.app.contents;
             const terrain = appContents && appContents.terrain;
             if (terrain) {

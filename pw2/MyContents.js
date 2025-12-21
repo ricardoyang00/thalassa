@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
-import { MeshBVH, MeshBVHHelper, SAH, AVERAGE } from 'three-mesh-bvh';
+import { MeshBVH, MeshBVHHelper, acceleratedRaycast } from 'three-mesh-bvh';
 import { MyAxis } from './MyAxis.js';
 import { BrainCoral } from './objects/corals/BrainCoral.js';
 import { LSystemCoral } from './objects/corals/LSystemCoral.js';
@@ -21,6 +21,8 @@ import { MyRock } from './objects/terrain/MyRock.js';
 import { MyTerrain } from './objects/terrain/MyTerrain.js';
 import { SgiUtils } from './SgiUtils.js';
 
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
+
 /**
  *  This class contains the contents of out application
  */
@@ -32,7 +34,7 @@ class MyContents  {
     */ 
     constructor(app) {
         this.app = app
-        this.fastLoad = false;
+        this.fastLoad = true;
         this.mainRaycaster = new THREE.Raycaster();
         this.selectedObject = null;
         this.colliders = [];
@@ -163,7 +165,7 @@ class MyContents  {
         this.chest.position.set(1, 0, 18);
         this.chest.rotateY(-Math.PI/4);
         this.app.scene.add(this.chest);
-        this.affectedByTerrain.push(this.chest);
+        // this.affectedByTerrain.push(this.chest);
 
 
         
@@ -333,7 +335,9 @@ class MyContents  {
             this.fishByGroup.push(groupFishes);
 
             // create a FishFlock to govern the boids for this group
-            const flock = new FishFlock(groupFishes);
+            const flock = new FishFlock(groupFishes, {
+                colliders: this.colliders,
+            });
             flock.position.set((col - cx) * spacing, SgiUtils.rand(1, 6), (row - rz) * spacing);
             if (this.submarine) {
                 flock.addDanger(this.submarine);
@@ -341,14 +345,14 @@ class MyContents  {
             if (this.shark) {
                 flock.addDanger(this.shark);
             }
-            flock.addObstacle(this.coralsBVH, 1);
             this.flocks.push(flock);
             this.fishBVHHelper.add(new THREE.Box3Helper(flock._bvh.box));
             flock._bvh.children.forEach(fish => this.fishBVHHelper.add(new THREE.Box3Helper(fish.box, 0x00ffff)));
         }
         this.app.scene.add(this.fishBVHHelper);
         this.app.scene.add(Fish.defaultOwner);
-        this.allFishMesh = Fish.defaultOwner.updateInstances(() => {});
+        this.allFishMesh = Fish.defaultOwner.updateInstances((obj, i) => {Fish.defaultOwner.setBonesAt(i);});
+        // Fish.defaultOwner.computeBVH();
     }
 
     /**
@@ -506,7 +510,7 @@ class MyContents  {
         const templeScale = 0.75;
         this.temple.scale.setScalar(templeScale);
 
-        const templeBVHGeo = SgiUtils.buildColliderGeo(this.temple);
+        const templeBVHGeo = SgiUtils.buildColliderGeo(this.temple, (boundsTree) => boundsTree.isTempleBVH = true);
         const templeCollideMesh = new THREE.Mesh(templeBVHGeo);
         templeCollideMesh.visible = false;
         this.templeBVHHelper = new MeshBVHHelper(templeCollideMesh, 20);
@@ -581,7 +585,7 @@ class MyContents  {
             this.sharkController.update(dt);
         }
 
-        this.flocks.forEach(f => f.update(dt));
+        this.flocks.forEach(f => f.update(dt, this.app.activeCamera));
         this.allFishMesh.updateInstances(() => {});
 
         if (this.bubble) {
@@ -694,7 +698,7 @@ class MyContents  {
 
             this.mainRaycaster.setFromCamera(mouse, this.app.activeCamera);
             const intersects = this.mainRaycaster
-                .intersectObjects([this.allFishMesh, this.coralMeshes, this.rocks, this.vase, this.chest])
+                .intersectObjects([this.allFishMesh, this.coralMeshes, this.rocks])
                 .filter(x => SgiUtils.isObjectVisible(x.object))
                 ;
 
@@ -758,20 +762,20 @@ class MyContents  {
 
     afterTerrainLoads() {
         this.colliders.push(SgiUtils.buildColliderGeo(this.terrain).boundsTree);
-        const seafloorGroup = this.app.scene.getObjectByName("seafloorGroup");
-        this.affectedByTerrain.forEach((coral) => {
-            const x = coral.position.x;
-            const y = coral.position.z;
+        this.affectedByTerrain.forEach((obj) => {
+            const x = obj.position.x;
+            const y = obj.position.z;
 
-            coral.position.y += this.terrain.displacementAtXY(x, y);
+            obj.position.y += this.terrain.displacementAtXY(x, y);
             const rotation = this.terrain.inclinationAtXY(x, y);
-            coral.rotateX(rotation[1]);
-            coral.rotateZ(-rotation[0]);
+            obj.rotateX(rotation[1]);
+            obj.rotateZ(-rotation[0]);
         });
         TubeCoral.defaultOwner.updateInstances(() => {});
         BrainCoral.defaultOwner.updateInstances(() => {});
         LSystemCoral.defaultOwner.updateInstances(() => {});
-        seafloorGroup.getObjectByName("rocks").children.forEach((rock) => rock.position.y += this.terrain.displacementAtXY(rock.position.x, rock.position.z));
+        this.rocks.children.forEach((rock) => rock.position.y += this.terrain.displacementAtXY(rock.position.x, rock.position.z));
+        this.colliders.push(SgiUtils.buildColliderGeo(this.rocks).boundsTree);
 
         // calculate BVH only after terrain's displacement
         let xx1 = +Infinity, xx2 = -Infinity, yy1 = +Infinity, yy2 = -Infinity, zz1 = +Infinity, zz2 = -Infinity;
@@ -827,6 +831,7 @@ class MyContents  {
         );
         this.coralsBVH.children = grid;
         this.app.scene.add(this.coralsBVHHelper);
+        this.flocks.forEach(flock => flock.coralsAvoidanceBVH = this.coralsBVH);
     }
 }
 

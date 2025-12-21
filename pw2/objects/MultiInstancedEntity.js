@@ -111,6 +111,10 @@ export class MultiInstancedEntity {
         get z() {
             return this._z;
         }
+
+        clone() {
+            return new THREE.Vector3(this._x, this._y, this._z);
+        }
     }
 
     static Rotation = class extends THREE.Euler {
@@ -152,6 +156,10 @@ export class MultiInstancedEntity {
 
         get z() {
             return this._z;
+        }
+
+        clone() {
+            return new THREE.Euler(this._x, this._y, this._z, this.order);
         }
     }
 
@@ -203,6 +211,10 @@ export class MultiInstancedEntity {
         get w() {
             return this._w;
         }
+
+        clone() {
+            return new THREE.Quaternion(this._x, this._y, this._z, this._w);
+        }
     }
 
     static Scale = class extends THREE.Vector3 {
@@ -251,6 +263,10 @@ export class MultiInstancedEntity {
 
         get z() {
             return this._z;
+        }
+
+        clone() {
+            return new THREE.Vector3(this._x, this._y, this._z);
         }
     }
 }

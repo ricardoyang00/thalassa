@@ -18,17 +18,26 @@ export class BrainCoralsOwner extends InstancedMesh2 {
             displacementMap: this.#texture,
             displacementScale: 0.2,
     });
+    static _highDetailMat = this.#highDetailMat;
 
-    static #lowDetailMat = (() => {
+    static #mediumDetailMat = (() => {
         const mat = BrainCoralsOwner.#highDetailMat.clone();
         mat.displacementMap = null;
+        return mat;
+    })();
+
+    static #lowDetailMat = (() => {
+        const mat = BrainCoralsOwner.#mediumDetailMat.clone();
         mat.bumpMap = null;
         return mat;
     })();
 
     static #geo = [
         new THREE.SphereGeometry(1, 128, 128).rotateZ(Math.PI / 2),
-        new THREE.SphereGeometry(1, 16, 16).rotateZ(Math.PI / 2),
+        ((geo) => {
+            const scale = 1 + BrainCoralsOwner.#highDetailMat.displacementScale;
+            return geo.scale(scale, scale, scale);
+        })(new THREE.SphereGeometry(1, 12, 12).rotateZ(Math.PI / 2)),
         ((geo) => {
             const scale = 1 + BrainCoralsOwner.#highDetailMat.displacementScale;
             return geo.scale(scale, scale, scale);
@@ -38,7 +47,7 @@ export class BrainCoralsOwner extends InstancedMesh2 {
     constructor() {
         const geo = BrainCoralsOwner.#geo;
         super(geo[0], BrainCoralsOwner.#highDetailMat, {createEntities: true});
-        this.addLOD(geo[1], BrainCoralsOwner.#highDetailMat, 40);
+        this.addLOD(geo[1], BrainCoralsOwner.#mediumDetailMat, 40);
         this.addLOD(geo[2], BrainCoralsOwner.#lowDetailMat, 150);
         this.frustumCulled = false;
     }
@@ -50,6 +59,7 @@ export class BrainCoral extends MultiInstancedEntity {
     constructor(color = 0xffffff, size = 1, owner = BrainCoral.defaultOwner) {
         super(owner);
         const radius = size / 2;
+        this.collisionRadius = radius * (1 + this.owner.constructor._highDetailMat.displacementScale);
         this.addInstances(1, (obj, i) => {
             obj.scale.setScalar(radius);
             owner.setColorAt(i, color);

@@ -10,7 +10,7 @@ class FishFlock extends MultiInstancedEntityContainer {
      * @param {object} [options] - Configuration options for the flocking behavior.
      * @param {number} [options.maxSpeed=4] - Max speed a fish can travel.
      * @param {number} [options.maxForce=3.5] - Max steering force (prevents jerky turns).
-     * @param {number} [options.neighborRadius=4] - How far a fish "sees" to find flockmates (for alignment/cohesion).
+     * @param {number} [options.neighborRadius=10] - How far a fish "sees" to find flockmates (for alignment/cohesion).
      * @param {number} [options.separationRadius=2] - "Personal space" - fish steer away if others are this close.
      * @param {number} [options.alignmentWeight=1.2] - How strongly fish match neighbors' direction.
      * @param {number} [options.cohesionWeight=1] - How strongly fish move toward neighbors' center.
@@ -18,19 +18,22 @@ class FishFlock extends MultiInstancedEntityContainer {
      * @param {THREE.Vector3} [options.center] - The Vector3 anchor point the flock stays near.
      * @param {number} [options.keepRadius=30] - Max distance fish can stray from the center.
      * @param {number} [options.boundaryForce=3] - How strongly fish are pushed back to the center.
-     * @param {number} [options.minY=4] - Minimum vertical position (floor).
-     * @param {number} [options.maxY=30] - Maximum vertical position (surface).
+     * @param {number} [options.minY=5] - Minimum vertical position (floor).
+     * @param {number} [options.maxY=15] - Maximum vertical position (surface).
      * @param {number} [options.verticalWeight=0.8] - How strongly fish are pushed from floor/surface.
      * @param {number} [options.wanderIntensity=0.5] - Adds random jitter for a more natural look.
      * @param {number} [options.avoidanceRadius=10] - "Danger zone" - fish flee if a danger is this close.
      * @param {number} [options.avoidanceWeight=5] - How strongly fish flee dangers (higher = more panic).
+     * @param {any} [options.coralsAvoidanceBVH=undefined] - BVH for coral avoidance
+     * @param {any[]} [options.colliders=[]] - Objects the fish can collide with
     */
     constructor(fishArray = [], options = {}) {
         super(fishArray.slice());
         this.fish = this._instances;
         // this.boids = []; // internal state per fish
         this.dangers = [];
-        this.obstacles = [];
+        this.coralsAvoidanceBVH = options.coralsAvoidanceBVH;
+        this.colliders = options.colliders || [];
 
         // default parameters
         const defaults = {
@@ -45,8 +48,8 @@ class FishFlock extends MultiInstancedEntityContainer {
             keepRadius: 30,
             boundaryForce: 3,
             // vertical constraints
-            minY: 4,
-            maxY: 30,
+            minY: 5,
+            maxY: 15,
             verticalWeight: 0.8,
             wanderIntensity: 0.5,
 
@@ -102,10 +105,14 @@ class FishFlock extends MultiInstancedEntityContainer {
 
         this._bvh = {
             box: new THREE.Box3(),
-            children: this.fish.map(fish => {return {
-                box: new THREE.Box3(),
-                obj: fish,
-            };}),
+            children: this.fish.map(fish => {
+                const box = new THREE.Box3();
+                fish.boundingBox = box;
+                return {
+                    box: box,
+                    obj: fish,
+                };
+            }),
         };
         this.updateBVH();
     }
@@ -123,37 +130,48 @@ class FishFlock extends MultiInstancedEntityContainer {
         }
     }
 
-    // Similar to addDanger, but for non-dangerous objects (e.g. corals)
-    // (also it has to use BVH)
-    addObstacle(obj, avoidance) {
-        if (obj && !this.obstacles.includes(obj)) {
-            this.obstacles.push({
-                obj: obj,
-                avoidance: avoidance,
-            });
-        }
-    }
-
-    update(dt) {
+    update(dt, camera) {
         if (dt <= 0) return;
         const {
             maxSpeed, maxForce, neighborRadius, separationRadius,
             alignmentWeight, cohesionWeight, separationWeight,
             center, keepRadius, boundaryForce,
-            minY, maxY, verticalWeight, wanderIntensity,
+            verticalWeight, wanderIntensity,
             avoidanceRadius, avoidanceWeight
         } = this.opt;
+
+        let {minY, maxY} = this.opt;
+        const colliders = [];
+        for (const collider of this.colliders) {
+            if (collider.intersectsBox(this._bvh.box, new THREE.Matrix4().identity())) {
+                if (collider.isTempleBVH) {
+                    // this is a mitigation to avoid getting fish stuck on stairs/roof
+                    minY = 9;
+                    maxY = 14;
+                }
+                colliders.push(collider);
+            }
+        }
 
         // sync positions from fish objects to boids
         // for (let i = 0; i < this.boids.length; ++i) {
         //     this.boids[i].position.copy(this.boids[i].fish.position);
         // }
 
+        const cohesionCenter = this.fish.reduce((sum, fish) => sum.add(fish.position), new THREE.Vector3()).divideScalar(this.fish.length);
         for (let i = 0; i < this.fish.length; ++i) {
             const fish = this.fish[i];
             const bi = fish;
             const pos = bi.position;
             const vel = bi.velocity;
+
+            // teleport outliers back to their flock
+            // this is done both for performance and because fish can get stuck on collisions
+            const teleportThreshold = 20;
+            if (pos.distanceTo(cohesionCenter) > teleportThreshold) {
+                fish.position.copy(cohesionCenter);
+                continue;
+            }
 
             // accumulators
             let separation = new THREE.Vector3();
@@ -296,12 +314,11 @@ class FishFlock extends MultiInstancedEntityContainer {
         });
 
         SgiUtils.collideTestCounter = 0;
-        for (const {obj: bvh, avoidance: avoidance} of this.obstacles) {
-            for (const {a: fish, b: obj} of SgiUtils.getCollidingObjects(this._bvh, bvh)) {
+        if (this.coralsAvoidanceBVH) {
+            for (const {a: fish, b: obj} of SgiUtils.getCollidingObjects(this._bvh, this.coralsAvoidanceBVH)) {
                 const distVec = this._worldAvoidSteer.subVectors(fish.position, obj.position);
                 const d = distVec.length();
-                fish.avoidance.y += d*d/avoidance;
-                // fish.avoidance.add(distVec.divideScalar(d*d/weight)); // Weight by inverse distance
+                fish.avoidance.y += 3/d;
                 ++fish.totalAvoidance;
             }
         }
@@ -310,8 +327,7 @@ class FishFlock extends MultiInstancedEntityContainer {
         this.fish.forEach(fish => {
             if (fish.totalAvoidance > 0) {
                 fish.avoidance.divideScalar(fish.totalAvoidance);
-                fish.avoidance.normalize();
-                fish.avoidance.multiplyScalar(maxSpeed);
+                fish.avoidance.multiplyScalar(fish.velocity.length());
 
                 const avoidSteer = new THREE.Vector3().subVectors(fish.avoidance, fish.velocity);
                 this.limit(avoidSteer, maxForce * 2.0);
@@ -325,7 +341,56 @@ class FishFlock extends MultiInstancedEntityContainer {
             this.limit(bi.velocity, maxSpeed);
 
             // update position
-            bi.position.add(bi.velocity.clone().multiplyScalar(dt));
+            const deltaPos = bi.velocity.clone().multiplyScalar(dt);
+            bi.position.add(deltaPos);
+
+            const boundingBox = fish.boundingBox;
+            boundingBox.min.add(deltaPos);
+            boundingBox.max.add(deltaPos);
+
+            const trianglesIntersected = [];
+            for (const collider of colliders) {
+                collider.shapecast({
+                    intersectsBounds: (box) => box.intersectsBox(boundingBox),
+                    intersectsTriangle: (tri) => {
+                        if (tri.intersectsBox(boundingBox)) {
+                            trianglesIntersected.push(tri);
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+            }
+
+            if (trianglesIntersected.length > 0) {
+                const normal = new THREE.Vector3();
+                trianglesIntersected[0].getNormal(normal);
+                const dotProduct = deltaPos.clone().dot(normal);
+                // const newDeltaPos = deltaPos.clone()
+                //     .sub(normal.clone()
+                //     .multiplyScalar(
+                //         Math.min(10, deltaPos.length() / Math.abs(dotProduct)) // make normal stronger the bigger the angle between V and N is
+                //         *
+                //         dotProduct)
+                //     );
+
+                const newDeltaPos = normal.clone().multiplyScalar(2 * deltaPos.length());
+
+                fish.position.sub(deltaPos).add(newDeltaPos);
+                boundingBox.min.sub(deltaPos).add(newDeltaPos);
+                boundingBox.max.sub(deltaPos).add(newDeltaPos);
+
+                for (const collider of colliders) {
+                    if (collider.intersectsBox(boundingBox, new THREE.Matrix4().identity())) {
+                        fish.position.sub(newDeltaPos);
+                        boundingBox.min.sub(newDeltaPos);
+                        boundingBox.max.sub(newDeltaPos);
+                        break;
+                    }
+                }
+
+                // fish.position.add(normal.multiplyScalar(deltaPos.length()));
+            }
 
             // write back into fish local position
             fish.position.copy(bi.position);
@@ -336,11 +401,17 @@ class FishFlock extends MultiInstancedEntityContainer {
                 fish.lookAt(this._vec);
             }
 
-            // update dummy's bones and save changes
-            const dummy = Fish.defaultOwner.dummy;
-            const speedFactor = bi.velocity.length() / this.opt.maxSpeed;
-            dummy.animate(fish, dt, speedFactor);
-            Fish.defaultOwner.setBonesAt(fish._instances[0].id);
+            // reduce number of bones calculations
+            if (
+                fish.position.distanceTo(camera.position) < 30 && // ignore fish that are too far
+                fish.position.clone().sub(camera.position).dot(camera.getWorldDirection(new THREE.Vector3())) > 0 // ignore fish behind camera
+            ) {
+                // update dummy's bones and save changes
+                const dummy = Fish.defaultOwner.dummy;
+                const speedFactor = bi.velocity.length() / this.opt.maxSpeed;
+                dummy.animate(fish, dt, speedFactor);
+                Fish.defaultOwner.setBonesAt(fish._instances[0].id);
+            }
         })
 
         this.updateBVH();
@@ -349,7 +420,7 @@ class FishFlock extends MultiInstancedEntityContainer {
     updateBVH() {
         let x1 = +Infinity, x2 = -Infinity, y1 = +Infinity, y2 = -Infinity, z1 = +Infinity, z2 = -Infinity;
         const box = this._bvh.box;
-        const margin = 0.3;
+        const margin = 0.15;
         for (const fish of this._bvh.children) {
             const pos = fish.obj.position;
             x1 = x1 < pos.x ? x1 : pos.x;
