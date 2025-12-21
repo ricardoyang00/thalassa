@@ -1,7 +1,8 @@
 import * as THREE from 'three';
+import { MeshBVH, MeshBVHHelper } from 'three-mesh-bvh';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-class MySubmarine extends THREE.Object3D {
+class MySubmarine extends THREE.Group {
     constructor(app, {
         size = 1,
         assetsPath = 'models/submarine/',
@@ -29,13 +30,23 @@ class MySubmarine extends THREE.Object3D {
 
                 object.traverse((child) => {
                     if (child.isMesh) {
+                        child.geometry.scale(this.size * 0.01, this.size * 0.01, this.size * 0.01);
+                        child.geometry.computeBoundingSphere();
+                        this.userData.boundingSphere = child.geometry.boundingSphere.clone();
+                        this.userData.boundingSphere.radius *= 1.5; // for some mysterious reason, there is some "margin" when colliding with the temple
+                        this.userData.boundingSphere.center.set(0, 0, 0);
+
+                        this.bvh = new MeshBVH(child.geometry);
+                        this.bvhhelper = new MeshBVHHelper(this.bvh);
+                        this.bvhhelper.visible = false;
+                        child.add(this.bvhhelper)
+
                         child.castShadow = true;
                         child.receiveShadow = true;
                     }
                 });
 
                 this.add(object);
-                this.scale.set(this.size * 0.01, this.size * 0.01, this.size * 0.01);
                 
                 if (gltf.animations && gltf.animations.length) {
                     this.mixer = new THREE.AnimationMixer(object); 

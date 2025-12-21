@@ -109,6 +109,8 @@ export class TubeCoral extends MultiInstancedEntity {
             owner.setColorAt(j, color); // Using "obj.color" throws an error
             i++;
         });
+
+        this.collisionRadius = size;
     }
 
     setBubbleSystem(bubbleSystem) {

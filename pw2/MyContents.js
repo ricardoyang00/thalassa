@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
+import { MeshBVH, MeshBVHHelper, acceleratedRaycast } from 'three-mesh-bvh';
 import { MyAxis } from './MyAxis.js';
 import { BrainCoral } from './objects/corals/BrainCoral.js';
 import { LSystemCoral } from './objects/corals/LSystemCoral.js';
@@ -18,6 +20,8 @@ import { MyTerrain } from './objects/terrain/MyTerrain.js';
 import { SgiUtils } from './SgiUtils.js';
 import { addVolumetricLight } from './SGILightUtils.js';
 
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
+
 /**
  *  This class contains the contents of out application
  */
@@ -29,6 +33,10 @@ class MyContents  {
     */ 
     constructor(app) {
         this.app = app
+        this.fastLoad = false;
+        this.mainRaycaster = new THREE.Raycaster();
+        this.selectedObject = null;
+        this.colliders = [];
 
         this.axis = null;
 
@@ -36,13 +44,22 @@ class MyContents  {
         this.seafloorGroup = null;
         this.terrainSize = 100;
         this.terrain = new MyTerrain(this, this.terrainSize);
+        this.affectedByTerrain = []; // objects whose position depends on the terrain
         this.rocks = null;
         this.coralMeshes = null;
 
         // fish related attributes
+        this.allFishMesh = null;
         this.fishByGroup = [];              // array of arrays with fish references per group
         this.fish = [];                     // flat list of all fish
+        this.fishScale = 0.1;
         this.showFish = true;
+        this.fishBVHHelper = new THREE.Group();
+        this.fishBVHHelper.visible = false;
+
+        this.coralsBVH = {box: new THREE.Box3(), children: []};
+        this.coralsBVHHelper = new THREE.Group();
+        this.coralsBVHHelper.visible = false;
 
         this.flocks = [];
         this._lastUpdateTime = null;
@@ -50,7 +67,11 @@ class MyContents  {
         // this.aquaman = new MyAquaman(this.app);
         // this.app.scene.add(this.aquaman);
         // this.aquaman.position.set(0, 0, 0);
-        this.apollo = new Apollo(this.app);
+        this.apollo = this.fastLoad
+            ? new THREE.Mesh(new THREE.BoxGeometry())
+            : new Apollo(this.app, {
+                onLoad: () => this.colliders.push(SgiUtils.buildColliderGeo(this.apollo).boundsTree)
+            });
         this.apollo.name = "Apollo";
         this.apollo.castShadow = true;
         this.apollo.receiveShadow = true;
@@ -74,13 +95,17 @@ class MyContents  {
         ///// horse
         this.groupHorsePillars = new THREE.Group();
 
-        this.horse1 = new HorsePillar(this.app);
+        this.horse1 = this.fastLoad
+            ? new THREE.Mesh(new THREE.BoxGeometry())
+            : new HorsePillar(this.app, () => this.colliders.push(SgiUtils.buildColliderGeo(this.horse1).boundsTree));
         this.horse1.scale.setScalar(0.75);
         this.horse1.position.set(-15, 0, 22);
         this.horse1.rotateY(Math.PI/2);
         this.groupHorsePillars.add(this.horse1);
 
-        this.horse2 = new HorsePillar(this.app);
+        this.horse2 = this.fastLoad
+            ? new THREE.Mesh(new THREE.BoxGeometry())
+            : new HorsePillar(this.app, () => this.colliders.push(SgiUtils.buildColliderGeo(this.horse2).boundsTree));
         this.horse2.scale.setScalar(0.75);
         this.horse2.position.set(22, 0, -15);
         this.horse2.rotateY(-Math.PI);
@@ -92,6 +117,8 @@ class MyContents  {
                 child.receiveShadow = true;
             }
         });
+
+        this.affectedByTerrain.push(...this.groupHorsePillars.children);
 
         // this.horse3 = new HorsePillar(this.app);
         // this.horse3.position.set(-25, 0, -64);
@@ -124,15 +151,21 @@ class MyContents  {
 
         this._horsePositioned = false;
 
-        this.vase = new Vase(this.app);
+        this.vase = this.fastLoad
+            ? new THREE.Mesh(new THREE.BoxGeometry())
+            : new Vase(this.app);
         this.vase.position.set(10, 0, 10);
         this.app.scene.add(this.vase);
         this._vasePositioned = false;
+        this.affectedByTerrain.push(this.vase);
 
-        this.chest = new Chest(this.app);
+        this.chest = this.fastLoad
+            ? new THREE.Mesh(new THREE.BoxGeometry())
+            : new Chest(this.app);
         this.chest.position.set(3, 1.5, 15);
         this.chest.rotateY(-Math.PI/4);
         this.app.scene.add(this.chest);
+        // this.affectedByTerrain.push(this.chest);
 
         // Add golden light inside the chest
         const chestGoldenLight = new THREE.PointLight(0xFFD700, 8, 15);
@@ -377,6 +410,8 @@ class MyContents  {
 
                 attempts++;
             }
+            this.affectedByTerrain.push(coral);
+            this.corals.push(coral);
         }
 
         console.log(`Corals placed: ${coralsPlaced}/${coralCount}`);
@@ -392,6 +427,11 @@ class MyContents  {
         });
 
         this.seafloorGroup.add(this.coralMeshes);
+
+        TubeCoral.defaultOwner.computeBVH({margin: 0.5});
+        BrainCoral.defaultOwner.computeBVH({margin: 0.5});
+        LSystemCoral.defaultOwner.computeBVH({margin: 0.5});
+
         this.app.scene.add(this.seafloorGroup);
 
         // Verify no objects are in exclusion zones
@@ -440,7 +480,7 @@ class MyContents  {
         
         this.submarine.position.set(0, 10, -4);
         this.app.scene.add(this.submarine);
-        this.submarine.initControls();
+        this.submarine.initControls(this.colliders);
     }
 
     /**
@@ -534,14 +574,20 @@ class MyContents  {
             this.fishByGroup.push(groupFishes);
 
             // ... (Flock Logic unchanged) ...
-            const flock = new FishFlock(groupFishes);
+            const flock = new FishFlock(groupFishes, {
+                colliders: this.colliders,
+            });
             flock.position.set((col - cx) * spacing, SgiUtils.rand(1, 6), (row - rz) * spacing);
             if (this.submarine) flock.addDanger(this.submarine);
             if (this.shark) flock.addDanger(this.shark);
             this.flocks.push(flock);
+            this.fishBVHHelper.add(new THREE.Box3Helper(flock._bvh.box));
+            flock._bvh.children.forEach(fish => this.fishBVHHelper.add(new THREE.Box3Helper(fish.box, 0x00ffff)));
         }
+        this.app.scene.add(this.fishBVHHelper);
         this.app.scene.add(Fish.defaultOwner);
-        this.allFishMesh = Fish.defaultOwner.updateInstances(() => {});
+        this.allFishMesh = Fish.defaultOwner.updateInstances((obj, i) => {Fish.defaultOwner.setBonesAt(i);});
+        // Fish.defaultOwner.computeBVH();
     }
 
     /**
@@ -765,7 +811,7 @@ class MyContents  {
         spot4.penumbra = 0.5;
         spot4.decay = 2;
         spot4.distance = 150;
-        spot4.castShadow = true;
+        // spot4.castShadow = true;
         spot4.shadow.mapSize.set(2048, 2048);
         spot4.shadow.camera.near = 0.5;
         spot4.shadow.camera.far = 200;
@@ -777,8 +823,9 @@ class MyContents  {
 
         this.buildSeafloor();
         this.buildSubmarine();
-        this.buildShark();
-        this.buildFishGroups(15, 100, 200);
+        if (!this.fastLoad)
+            this.buildShark();
+        this.buildFishGroups(5, 100, 200);
         
 
         this.seafloorGroup.traverse((child) => {
@@ -794,12 +841,22 @@ class MyContents  {
             : 1;
         console.log("Max Anisotropy: ", maxAnisotropy);
 
-        this.temple = new MyTemple();
+        this.temple = this.fastLoad
+            ? new THREE.Mesh(new THREE.BoxGeometry())
+            : new MyTemple();
         this.temple.name = "Temple";
         this.temple.rotateY(-Math.PI / 4);
         this.temple.position.set(-15, 1, -15);
         const templeScale = 0.75;
         this.temple.scale.setScalar(templeScale);
+
+        const templeBVHGeo = SgiUtils.buildColliderGeo(this.temple, (boundsTree) => boundsTree.isTempleBVH = true);
+        const templeCollideMesh = new THREE.Mesh(templeBVHGeo);
+        templeCollideMesh.visible = false;
+        this.templeBVHHelper = new MeshBVHHelper(templeCollideMesh, 20);
+        this.templeBVHHelper.visible = false;
+        this.app.scene.add(this.templeBVHHelper);
+        this.colliders.push(templeBVHGeo.boundsTree);
 
         this.temple.traverse((child) => {
             if (child.isMesh) {
@@ -813,6 +870,12 @@ class MyContents  {
         if (this.submarine) {
             this.submarine.setBubbleSystem(this.bubble);
         }
+
+        this.setupClickHandler();
+
+        // ALWAYS leave this near near the end to ensure all necessary objects are already on the scene
+        this.terrain.loadDisplacement(this.afterTerrainLoads.bind(this));
+
         // // CLIPPING ///////////
         // // clipping plane at y = 0
         // const clippingPlanes = [
@@ -844,7 +907,8 @@ class MyContents  {
     }
 
     setFishesScale(s) {
-        this.fishGroup.scale.setScalar(s);
+        this.fish.forEach(fish => fish.scale.multiplyScalar(s / this.fishScale));
+        this.fishScale = s;
     }
 
     update(/* now, dt */) {
@@ -852,52 +916,16 @@ class MyContents  {
         const dt = this._lastUpdateTime ? Math.min(0.1, now - this._lastUpdateTime) : 0;
         this._lastUpdateTime = now;
 
-        if (!this._horsePositioned && 
-            this.terrain.mesh && 
-            this.terrain.mesh.material.displacementMap && 
-            this.terrain.mesh.material.displacementMap.image &&
-            this.terrain.mesh.material.displacementMap.image.width) {
-            
-            this.groupHorsePillars.children.forEach((horse) => {
-            const terrainHeight = this.terrain.displacementAtXY(horse.position.x, horse.position.z);
-            horse.position.y = terrainHeight;
-
-            // Apply terrain inclination to rotate horse with the terrain
-            const inclination = this.terrain.inclinationAtXY(horse.position.x, horse.position.z);
-                horse.rotateX(inclination[1]);
-                horse.rotateZ(-inclination[0]);
-            });
-            
-            this._horsePositioned = true;
-        }
-
         if (!this._clippingApplied && this.apollo.isLoaded && this.apollo.isLoaded()) {
             this.applyClipping();
             this._clippingApplied = true;
-        }
-
-        if (!this._vasePositioned && 
-            this.terrain.mesh && 
-            this.terrain.mesh.material.displacementMap && 
-            this.terrain.mesh.material.displacementMap.image &&
-            this.terrain.mesh.material.displacementMap.image.width) {
-            
-            const terrainHeight = this.terrain.displacementAtXY(this.vase.position.x, this.vase.position.z);
-            this.vase.position.y = terrainHeight;
-
-            // Apply terrain inclination to rotate vase with the terrain
-            const inclination = this.terrain.inclinationAtXY(this.vase.position.x, this.vase.position.z);
-            this.vase.rotateX(inclination[1]);
-            this.vase.rotateZ(-inclination[0]);
-            
-            this._vasePositioned = true;
         }
                                                                             
         if (this.sharkController) {
             this.sharkController.update(dt);
         }
 
-        this.flocks.forEach(f => f.update(dt));
+        this.flocks.forEach(f => f.update(dt, this.app.activeCamera));
         this.allFishMesh.updateInstances(() => {});
 
         // Update tube corals for bubble spawning
@@ -1160,6 +1188,57 @@ class MyContents  {
         this.shark.quaternion.slerp(this._sharkTargetQuaternion, this.sharkTurnSpeed * dt);
     }
 
+    setupClickHandler() {
+        const clickStart = new THREE.Vector2();
+        let clickTime;
+
+        window.addEventListener('mousedown', (e) => {
+            clickStart.set(e.clientX, e.clientY);
+            clickTime = performance.now();
+        });
+
+        window.addEventListener('mouseup', (e) => {
+            if (e.target.tagName != 'CANVAS')
+                return;
+
+            const dx = e.clientX - clickStart.x;
+            const dy = e.clientY - clickStart.y;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d >= 5 || (performance.now() - clickTime) >= 500)
+                return;
+
+            const mouse = new THREE.Vector2(
+                (e.clientX / window.innerWidth) * 2 - 1,
+                -(e.clientY / window.innerHeight) * 2 + 1,
+            );
+
+            this.mainRaycaster.setFromCamera(mouse, this.app.activeCamera);
+            const intersects = this.mainRaycaster
+                .intersectObjects([this.allFishMesh, this.coralMeshes, this.rocks])
+                .filter(x => SgiUtils.isObjectVisible(x.object))
+                ;
+
+            if (this.selectedObject) {
+                this.selectedObject.scale.divideScalar(5);
+                this.selectedObject.updateMatrix();
+            }
+
+            if (intersects.length === 0) {
+                this.selectedObject = null;
+                return;
+            }
+
+            let obj = intersects[0];
+            obj = obj.object.isInstancedMesh
+                ? obj.object.instances[obj.instanceId].userData.owner
+                : obj.object;
+
+            obj.scale.multiplyScalar(5);
+            obj.updateMatrix();
+            this.selectedObject = obj;
+        })
+    }
+
     applyClipping() {
     const clippingPlanes = [
         new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
@@ -1196,6 +1275,80 @@ class MyContents  {
         }
     });
 }
+
+    afterTerrainLoads() {
+        this.colliders.push(SgiUtils.buildColliderGeo(this.terrain).boundsTree);
+        this.affectedByTerrain.forEach((obj) => {
+            const x = obj.position.x;
+            const y = obj.position.z;
+
+            obj.position.y += this.terrain.displacementAtXY(x, y);
+            const rotation = this.terrain.inclinationAtXY(x, y);
+            obj.rotateX(rotation[1]);
+            obj.rotateZ(-rotation[0]);
+        });
+        TubeCoral.defaultOwner.updateInstances(() => {});
+        BrainCoral.defaultOwner.updateInstances(() => {});
+        LSystemCoral.defaultOwner.updateInstances(() => {});
+        this.rocks.children.forEach((rock) => rock.position.y += this.terrain.displacementAtXY(rock.position.x, rock.position.z));
+        this.colliders.push(SgiUtils.buildColliderGeo(this.rocks).boundsTree);
+
+        // calculate BVH only after terrain's displacement
+        let xx1 = +Infinity, xx2 = -Infinity, yy1 = +Infinity, yy2 = -Infinity, zz1 = +Infinity, zz2 = -Infinity;
+        this.corals.forEach(coral => {
+            let x1 = +Infinity, x2 = -Infinity, y1 = +Infinity, y2 = -Infinity, z1 = +Infinity, z2 = -Infinity;
+            coral._instances.forEach(obj => {
+                const box = obj.owner.bvh.nodesMap.get(obj.id).box;
+                x1 = Math.min(x1, box[0]);
+                x2 = Math.max(x2, box[1]);
+                y1 = Math.min(y1, box[2]);
+                y2 = Math.max(y2, box[3]);
+                z1 = Math.min(z1, box[4]);
+                z2 = Math.max(z2, box[5]);
+            });
+            xx1 = Math.min(xx1, x1);
+            xx2 = Math.max(xx2, x2);
+            yy1 = Math.min(yy1, y1);
+            yy2 = Math.max(yy2, y2);
+            zz1 = Math.min(zz1, z1);
+            zz2 = Math.max(zz2, z2);
+
+            coral.box = new THREE.Box3(
+                new THREE.Vector3(x1, y1, z1),
+                new THREE.Vector3(x2, y2, z2),
+            );
+
+            this.coralsBVHHelper.add(new THREE.Box3Helper(coral.box));
+        });
+
+        const grid = [];
+        const gridSize = 6;
+        const dx = (xx2 - xx1) / gridSize, dz = (zz2 - zz1) / gridSize;
+        for (let i = 0; i < gridSize; ++i) {
+            for (let j = 0; j < gridSize; ++j) {
+                const child = {
+                    box: new THREE.Box3(
+                        new THREE.Vector3(xx1 + i * dx, yy1, zz1 + j * dz),
+                        new THREE.Vector3(xx1 + (i+1) * dx, yy2, zz1 + (j+1) * dz),
+                    ),
+                };
+                child.children = this.corals
+                    .filter(coral => coral.box.intersectsBox(child.box))
+                    .map(coral => {return {box: coral.box, obj: coral}})
+
+                grid.push(child);
+                this.coralsBVHHelper.add(new THREE.Box3Helper(child.box, 0x00ff00));
+            }
+        }
+
+        this.coralsBVH.box = new THREE.Box3(
+            new THREE.Vector3(xx1, yy1, zz1),
+            new THREE.Vector3(xx2, yy2, zz2),
+        );
+        this.coralsBVH.children = grid;
+        this.app.scene.add(this.coralsBVHHelper);
+        this.flocks.forEach(flock => flock.coralsAvoidanceBVH = this.coralsBVH);
+    }
 }
 
 export { MyContents };

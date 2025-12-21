@@ -1,8 +1,12 @@
 import * as THREE from 'three';
+import { SgiUtils } from '../../SgiUtils.js';
+import { BrainCoral } from '../corals/BrainCoral.js';
+import { TubeCoral } from '../corals/TubeCoral.js';
 
 class SubmarineControls {
-    constructor(submarine) {
+    constructor(submarine, colliders = []) {
         this.submarine = submarine;
+        this.colliders = colliders;
         
         this._keys = { 
             w: false, 
@@ -102,11 +106,11 @@ class SubmarineControls {
             this.submarine.rotation.y -= this.submarine.yawRate * dt;
         }
 
-        const localForward = new THREE.Vector3(1, 0, 0);
-        localForward.applyQuaternion(this.submarine.quaternion);
-        
-        this.submarine.position.addScaledVector(localForward, this.submarine.forwardSpeed * dt);
-        this.submarine.position.y += this.submarine.verticalSpeed * dt;
+        const deltaPos = new THREE.Vector3(1, 0, 0)
+            .applyQuaternion(this.submarine.quaternion) // rotate vector according to submarine's orientation
+            .multiplyScalar(this.submarine.forwardSpeed * dt) // multiply by speed
+            ;
+        deltaPos.y += this.submarine.verticalSpeed * dt;
 
         // Handle turning bubbles (A/D keys without W)
         this.submarine.turningBubbleDirection = null;
@@ -118,15 +122,99 @@ class SubmarineControls {
             }
         }
 
-        if (this.submarine.position.y < this.submarine.minY) {
-            this.submarine.position.y = this.submarine.minY;
-            if (this.submarine.verticalSpeed < 0) this.submarine.verticalSpeed = 0;
-        } else if (this.submarine.position.y > this.submarine.maxY) {
-            this.submarine.position.y = this.submarine.maxY;
-            if (this.submarine.verticalSpeed > 0) this.submarine.verticalSpeed = 0;
+        // if (this.submarine.position.y < this.submarine.minY) {
+        //     this.submarine.position.y = this.submarine.minY;
+        //     if (this.submarine.verticalSpeed < 0) this.submarine.verticalSpeed = 0;
+        // } else if (this.submarine.position.y > this.submarine.maxY) {
+        //     this.submarine.position.y = this.submarine.maxY;
+        //     if (this.submarine.verticalSpeed > 0) this.submarine.verticalSpeed = 0;
+        // }
+
+        const boundingSphere = this.submarine.userData?.boundingSphere?.clone();
+        // Collisions
+        if (boundingSphere) {
+            if (!this.submarine.boundingSphereHelper) {
+                this.submarine.boundingSphereHelper = new THREE.Mesh(
+                    new THREE.SphereGeometry(boundingSphere.radius),
+                    new THREE.MeshBasicMaterial({
+                        wireframe: true,
+                        transparent: true,
+                        opacity: 0.1,
+                    }),
+                );
+                this.submarine.boundingSphereHelper.visible = false;
+                this.submarine.add(this.submarine.boundingSphereHelper);
+            }
+
+            this.submarine.position.add(deltaPos);
+            boundingSphere.center.add(this.submarine.position);
+
+            const boundingBox = new THREE.Box3(
+                boundingSphere.center.clone().sub(new THREE.Vector3().setScalar(boundingSphere.radius)),
+                boundingSphere.center.clone().add(new THREE.Vector3().setScalar(boundingSphere.radius)),
+            );
+
+            // Get the normal of the first intersection
+            let intersected = false;
+            const normal = new THREE.Vector3();
+
+            [BrainCoral, TubeCoral].forEach(CoralType => {
+                if (intersected)
+                    return;
+                CoralType.defaultOwner.bvh?.intersectBox(boundingBox, (id) => {
+                    const coral = CoralType.defaultOwner.instances[id].userData.owner;
+                    const distVec = coral.position.clone().sub(this.submarine.position);
+                    if (distVec.length() <= coral.collisionRadius + boundingSphere.radius) {
+                        intersected = true;
+                        normal.copy(distVec).normalize();
+                    }
+                });
+            });
+
+            for (const collider of this.colliders) {
+                if (intersected)
+                    break;
+                collider.shapecast({
+                    intersectsBounds: (box) => box.intersectsSphere(boundingSphere),
+                    intersectsTriangle: (tri) => {
+                        if (tri.intersectsSphere(boundingSphere)) {
+                            tri.getNormal(normal);
+                            return intersected = true;
+                        }
+                        return false;
+                    }
+                });
+            }
+
+            if (intersected) do {
+                this.submarine.position.sub(deltaPos);
+
+                // vslide​=v−(v⋅n)n
+                const dotProduct = deltaPos.clone().dot(normal);
+                const slide = deltaPos.clone()
+                    .sub(normal.clone()
+                    .multiplyScalar(
+                        Math.min(10, deltaPos.length() / Math.abs(dotProduct)) // make normal stronger the bigger the angle between V and N is
+                        *
+                        dotProduct)
+                    );
+
+                if (isNaN(slide.x))
+                    break;
+
+                this.submarine.position.add(slide);
+                boundingSphere.center.sub(deltaPos).add(slide);
+
+                for (const collider of this.colliders) {
+                    if (collider.intersectsSphere(boundingSphere)) {
+                        this.submarine.position.sub(slide);
+                        break;
+                    }
+                }
+            } while(false);
         }
 
-                try {
+        try {
             const appContents = this.submarine.app && this.submarine.app.contents;
             const terrain = appContents && appContents.terrain;
             if (terrain) {

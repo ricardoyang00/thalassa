@@ -48,6 +48,9 @@ class MySubmarineLOD extends THREE.LOD {
             gltfFile,
             onLoad: () => {
                 self.highDetailModel.rotation.y = -Math.PI / 2;
+                self.bvh = self.highDetailModel.bvh;
+                self.bvhhelper = self.highDetailModel.bvhhelper;
+                self.userData.boundingSphere = self.highDetailModel.userData.boundingSphere;
                 
                 setTimeout(() => {
                     self.#alignModels();
@@ -162,9 +165,9 @@ class MySubmarineLOD extends THREE.LOD {
         }
     }
 
-    initControls() {
+    initControls(colliders = []) {
         if (!this.controls) {
-            this.controls = new SubmarineControls(this);
+            this.controls = new SubmarineControls(this, colliders);
             this.controlsEnabled = true;
         }
     }

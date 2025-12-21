@@ -3,7 +3,7 @@ import { Pillar } from './Pillar.js';
 import { SUBTRACTION, ADDITION, Brush, Evaluator } from 'https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.17/+esm';
 import { createMossMaterial } from '../../shaders/MossShader.js';
 
-class MyTemple extends THREE.Object3D {
+class MyTemple extends THREE.Group {
     constructor(maxAnisotropy = 1) {
         super();
 
@@ -197,6 +197,10 @@ class MyTemple extends THREE.Object3D {
 
         mainSlabBrush = evaluator.evaluate(mainSlabBrush, cuttingBrush, SUBTRACTION);
 
+        let lowDetailSlabBrush = new Brush(mainSlabBrush.geometry.clone()
+            .scale(1, 2.7, 1)
+            .translate(0, 1.35 * slabThickness, 0)
+        );
 
         let combinedRoofBrush = null;
 
@@ -357,12 +361,17 @@ class MyTemple extends THREE.Object3D {
         
         combinedRoofBrush = evaluator.evaluate(combinedRoofBrush, largeCutterBrush, SUBTRACTION);
         prismBrush = evaluator.evaluate(prismBrush, largeCutterBrush, SUBTRACTION);
+        lowDetailSlabBrush = evaluator.evaluate(lowDetailSlabBrush, largeCutterBrush, SUBTRACTION);
 
-        const finalSlabMesh = new THREE.Mesh(combinedRoofBrush.geometry, largeStoneMat);
-        finalSlabMesh.geometry.computeVertexNormals();
-        roofGroup.add(finalSlabMesh);
+        const slabLOD = new THREE.LOD();
+        slabLOD.addLevel(new THREE.Mesh(combinedRoofBrush.geometry, largeStoneMat), 0);
+        slabLOD.addLevel(new THREE.Mesh(lowDetailSlabBrush.geometry, largeStoneMat), 300); // mainly just useful for BVH
+        slabLOD.levels.forEach(level => level.object.geometry.computeVertexNormals());
+        roofGroup.add(slabLOD);
 
-        const finalPrismMesh = new THREE.Mesh(prismBrush.geometry, largeStoneMat);
+        const finalPrismMesh = new THREE.Mesh(prismBrush.geometry, largeStoneMat, {
+            maxLeafTris: 1,
+        });
         finalPrismMesh.geometry.computeVertexNormals();
         roofGroup.add(finalPrismMesh);
 
@@ -470,7 +479,7 @@ class MyTemple extends THREE.Object3D {
 
 
         // groups
-        const templeGroup = new THREE.Group();
+        const templeGroup = this;
         templeGroup.add(pillarGroup);
         templeGroup.add(roofGroup);
         templeGroup.add(baseGroup);
@@ -485,10 +494,6 @@ class MyTemple extends THREE.Object3D {
         const pillarScaleY = 1;
         
         roofGroup.position.set(0, baseHeight + (perfectPillarHeight * pillarScaleY), 0);
-
-        //templeGroup.translateY(-2*individualStairHeight);
-        this.add(templeGroup);
-
     }
 }
 

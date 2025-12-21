@@ -1,6 +1,7 @@
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { MyApp } from './MyApp.js';
 import { MyContents } from './MyContents.js';
+import { SgiUtils } from './SgiUtils.js';
 
 /**
     This class customizes the gui interface for the app
@@ -87,6 +88,20 @@ class MyGuiInterface  {
 
         const submarineFolder = this.datgui.addFolder('Submarine Lights');
         const submarine = this.contents.submarine;
+
+        // const submarineOpt = {
+        //     showBVH: false,
+        //     showBoundingSphere: false,
+        // };
+        // submarineFolder.add(submarineOpt, 'showBVH').name("Show BVH").onChange((val) => {
+        //     if (this.contents.submarine.bvhhelper) {
+        //         this.contents.submarine.bvhhelper.visible = val;
+        //     }
+        // });
+        // submarineFolder.add(submarineOpt, 'showBoundingSphere').name('Show Bounding Sphere').onChange((val) => {
+        //     if (this.contents.submarine.boundingSphereHelper)
+        //         this.contents.submarine.boundingSphereHelper.visible = val;
+        // });
         
         if (submarine && submarine.frontLight) {
             const frontLightFolder = submarineFolder.addFolder('Front Light');
@@ -178,16 +193,24 @@ class MyGuiInterface  {
         const coralsFolder = this.datgui.addFolder('Corals');
         coralsFolder.add(this.contents.coralMeshes, 'visible').name('Show Corals');
         coralsFolder.add(this.contents, 'coralBubblesEnabled').name('Show Coral Bubbles');
+        coralsFolder.add(this.contents.coralsBVHHelper, 'visible').name('Show BVH');
         coralsFolder.close();
 
         const fishesFolder = this.datgui.addFolder('Fishes');
         fishesFolder.add(this.contents.allFishMesh, 'visible').name('Show Fishes');
-        const initialScale = (this.contents && this.contents.fishGroup) ? this.contents.fishGroup.scale.x : 1;
-        const fishParams = { scale: initialScale };
-        fishesFolder.add(fishParams, 'scale', 0.1, 3, 0.01).name('Scale').onChange((value) => {
-            if (this.contents) this.contents.setFishesScale(value);
+        fishesFolder.add(this.contents.fishBVHHelper, 'visible').name('Show BVH');
+        const fishParams = {scale: this.contents.fishScale};
+        fishesFolder.add(fishParams, 'scale', 0.05, 0.5, 0.01).name('Scale').onChange((value) => {
+            this.contents.setFishesScale(value);
         });
         fishesFolder.close();
+
+        const templeFolder = this.datgui.addFolder('Temple');
+        templeFolder.add(this.contents.templeBVHHelper, 'visible').name('Show BVH');
+        templeFolder.add(this.contents.templeBVHHelper, 'depth', 1, 20, 1).name('BVH Helper Depth').onChange(() => {
+            this.contents.templeBVHHelper.update();
+        });
+        templeFolder.close();
 
         if (this.contents.flocks && this.contents.flocks[0]?.opt) {
             const defaultOpts = this.contents.flocks[0].opt;
@@ -228,6 +251,8 @@ class MyGuiInterface  {
             avoidanceFolder.close();
 
             flockFolder.close();
+
+            this.datgui.add(SgiUtils, 'debug').name('Debug');
         }
 
         // Exclusion Zones Controls

@@ -1,7 +1,4 @@
 import * as THREE from 'three';
-import { TubeCoral } from '../corals/TubeCoral.js';
-import { BrainCoral } from '../corals/BrainCoral.js';
-import { LSystemCoral } from '../corals/LSystemCoral.js';
 
 class MyTerrain extends THREE.Object3D {
     #width;
@@ -9,38 +6,35 @@ class MyTerrain extends THREE.Object3D {
     #canvas;
     #canvasCtx;
 
-    constructor(contents, size = 100) {
+    constructor(contents, size = 100, autoLoadDisplacement = false, onLoad = () => {}) {
         super();
-        this.contents = contents;
-        this.app = contents.app;
         this.#width = size;
         this.#length = size;
+        if (autoLoadDisplacement)
+            this.loadDisplacement(onLoad);
+        this.displacementScale = 5; // displacement calculated manually to allow coiso e tal
         this.buildTerrain();
+    }
+
+    loadDisplacement(onLoad = () => {}) {
+        if (!this.displacementMap) {
+            const terrainMap = new THREE.TextureLoader().load('images/heightmap.jpg', () => {
+                this.displacementMap = terrainMap.image;
+                const geo = this.children[0].geometry;
+                const posArr = geo.attributes.position.array;
+                for (let i = 0; i < posArr.length; i+=3) {
+                    posArr[i+2] += this.displacementAtXY(posArr[i], -posArr[i+1]);
+                }
+                geo.attributes.position.needsUpdate = true;
+                onLoad();
+            });
+            terrainMap.wrapS = terrainMap.wrapT = THREE.RepeatWrapping;
+            terrainMap.repeat.set(1, 1);
+        }
     }
 
     buildTerrain() {
         const terrainGeometry = new THREE.PlaneGeometry(this.#width, this.#length, 64, 64);
-
-        let terrainMap = new THREE.TextureLoader().load('images/heightmap.jpg', () => {
-            const seafloorGroup = this.app.scene.getObjectByName("seafloorGroup");
-            this.contents.corals.forEach((coral) => {
-                const x = coral.position.x;
-                const y = coral.position.z;
-
-                coral.position.y += this.displacementAtXY(x, y);
-                const rotation = this.inclinationAtXY(x, y);
-                coral.rotateX(rotation[1]);
-                coral.rotateZ(-rotation[0]);
-            });
-            TubeCoral.defaultOwner.updateInstances(() => {});
-            BrainCoral.defaultOwner.updateInstances(() => {});
-            LSystemCoral.defaultOwner.updateInstances(() => {});
-            seafloorGroup.getObjectByName("rocks").children.forEach((rock) => rock.position.y += this.displacementAtXY(rock.position.x, rock.position.z));
-            this.#canvas = undefined;
-        });
-
-        terrainMap.wrapS = terrainMap.wrapT = THREE.RepeatWrapping;
-        terrainMap.repeat.set(1, 1);
 
         const texture = new THREE.TextureLoader().load('textures/sand.jpg');
         texture.wrapT = texture.wrapS = THREE.RepeatWrapping;
@@ -48,9 +42,7 @@ class MyTerrain extends THREE.Object3D {
 
         const terrainMaterial = new THREE.MeshPhongMaterial({ 
             color: "#8B7355",
-            displacementMap: terrainMap,
-            displacementScale: 5, 
-            map: texture
+            map: texture,
         });
 
         const terrainMesh = new THREE.Mesh(terrainGeometry, terrainMaterial);
@@ -75,7 +67,7 @@ class MyTerrain extends THREE.Object3D {
     }
 
     displacementAtXY(x, y) {
-        const image = this.mesh.material.displacementMap.image;
+        const image = this.displacementMap;
         if (!this.#canvas) {
             // create a canvas so we can get pixel information
             this.#canvas = document.createElement('canvas');
@@ -94,8 +86,8 @@ class MyTerrain extends THREE.Object3D {
         x = u * image.width;
         y = (1 - v) * image.height;
         const pixel = ctx.getImageData(x, y, 1, 1).data;
-        // displacement will depend on brightest color (usually doesn't matter because typically these maps are grayscaled)
-        return this.mesh.material.displacementScale * Math.max(...pixel.slice(0, 3)) / 255;
+        // assuming map is grayscaled
+        return this.displacementScale * Math.max(pixel[0]) / 255;
     }
 
     toggleWireframe(wireframe) {
