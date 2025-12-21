@@ -20,6 +20,7 @@ import { MyTerrain } from './objects/terrain/MyTerrain.js';
 import { SandPuffManager } from './objects/terrain/SandPuff.js';
 import { SgiUtils } from './SgiUtils.js';
 import { addVolumetricLight } from './SGILightUtils.js';
+import { MarineSnow } from './MarineSnow.js';
 
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
@@ -198,6 +199,7 @@ class MyContents  {
 
         // Store reference to volumetric light cone
         this.volumetricLightCone = null;
+        this.marineSnow = null;
     }
 
     /**
@@ -824,6 +826,15 @@ class MyContents  {
         //this.app.scene.add(spotLightHelper4);
 
         this.buildWater();
+        
+        this.marineSnow = new MarineSnow(this.app.scene, {
+            count: 2000,
+            area: 100,
+            topY: 38,
+            bottomY: 1,
+            size: 0.25,
+            color: 0xccddff
+        }, this);
 
         this.buildSeafloor();
         this.buildSubmarine();
@@ -946,6 +957,10 @@ class MyContents  {
 
         if (this.sandPuff) {
             this.sandPuff.update(dt);
+        }
+
+        if (this.marineSnow) {
+            this.marineSnow.update(dt);
         }
 
         if (this.submarine && typeof this.submarine.update === 'function') {
@@ -1373,6 +1388,7 @@ class MyContents  {
         this.coralsBVH.children = grid;
         this.app.scene.add(this.coralsBVHHelper);
         this.flocks.forEach(flock => flock.coralsAvoidanceBVH = this.coralsBVH);
+        if (this.marineSnow) this.marineSnow.reset();
     }
 }
 
