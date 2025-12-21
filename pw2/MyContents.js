@@ -191,7 +191,8 @@ class MyContents  {
 
         this.sharkController = null;
 
-        this.bubble = new Bubble(this.app.scene);
+        this.bubble = new Bubble(this.app.scene, this.app);
+        this.bubbleLodEnabled = true;
         this.coralBubblesEnabled = true; // Toggle for coral bubbles
 
         // sand puff particle system

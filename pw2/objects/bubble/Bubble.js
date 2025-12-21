@@ -1,21 +1,35 @@
 import * as THREE from 'three';
 
 class Bubble {
-    constructor(scene) {
+    constructor(scene, app = null) {
         this.scene = scene;
+        this.app = app;
         this.bubbleGroups = [];  // Array of particle systems for each bubble spawn
         this.ambientLight = null;
         this.ambientLightCached = false;
         this.clock = new THREE.Clock();
+
+        // LOD: reduce particle count when viewer is far
+        this.lodDistance = 60;
+        this.lodMultiplier = 0.25; // particle count multiplier when far
+        this.lodEnabled = true; // whether LOD is active (config switch)
+        this.isReduced = false; // runtime state: true when particles should be reduced (viewer far)
     }
 
     spawnBubble(position, scale = 0.2, initVelY = 0, glowIntensity = 0.0, particleCount = 1000, lifetime = 3.0, acceleration = 0.0, isCoralBubble = false) {
+        // Choose effective particle count depending on LOD state
+        let effectiveCount = particleCount;
+        if (this.lodEnabled && this.isReduced) {
+            effectiveCount = Math.max(8, Math.floor(particleCount * this.lodMultiplier));
+        }
+
         const geometry = new THREE.BufferGeometry();
-        
-        const positions = new Float32Array(particleCount * 3);
-        const initialOffsets = new Float32Array(particleCount * 4);
-        
-        for (let i = 0; i < particleCount; i++) {
+
+        // Allocate arrays sized to the effective particle count so unused entries don't render
+        const positions = new Float32Array(effectiveCount * 3);
+        const initialOffsets = new Float32Array(effectiveCount * 4);
+
+        for (let i = 0; i < effectiveCount; i++) {
             const i3 = i * 3;
             const i4 = i * 4;
             const randomScale = scale * (0.8 + Math.random() * 0.5);
@@ -48,6 +62,8 @@ class Bubble {
         
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         geometry.setAttribute('aOffset', new THREE.BufferAttribute(initialOffsets, 4));
+        // Ensure only the effective number of points are drawn
+        geometry.setDrawRange(0, effectiveCount);
 
         const uniforms = {
             uTime: { value: 0.0 },
@@ -217,6 +233,22 @@ class Bubble {
         }
         
         const ambientIntensity = this.ambientLight ? this.ambientLight.intensity : 0.3;
+
+        if (this.app && this.app.activeCamera && this.lodEnabled) {
+            try {
+                const camPos = new THREE.Vector3();
+                this.app.activeCamera.getWorldPosition(camPos);
+                const dist = camPos.length();
+                // Compute whether we should reduce particle count based on distance
+                this.isReduced = this.lodEnabled && (dist > this.lodDistance);
+                if (this.app.contents) {
+                    // Show whether LOD reduction is active
+                    this.app.contents.bubbleLodEnabled = this.isReduced;
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
         
         for (let i = this.bubbleGroups.length - 1; i >= 0; i--) {
             const bubble = this.bubbleGroups[i];
