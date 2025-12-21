@@ -125,10 +125,11 @@ class SubmarineControls {
         // if (this.submarine.position.y < this.submarine.minY) {
         //     this.submarine.position.y = this.submarine.minY;
         //     if (this.submarine.verticalSpeed < 0) this.submarine.verticalSpeed = 0;
-        // } else if (this.submarine.position.y > this.submarine.maxY) {
-        //     this.submarine.position.y = this.submarine.maxY;
-        //     if (this.submarine.verticalSpeed > 0) this.submarine.verticalSpeed = 0;
-        // }
+        // } else
+        if (this.submarine.position.y > this.submarine.maxY) {
+            this.submarine.position.y = this.submarine.maxY;
+            if (this.submarine.verticalSpeed > 0) this.submarine.verticalSpeed = 0;
+        }
 
         const boundingSphere = this.submarine.userData?.boundingSphere?.clone();
         // Collisions
