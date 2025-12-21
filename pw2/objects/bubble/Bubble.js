@@ -9,7 +9,7 @@ class Bubble {
         this.clock = new THREE.Clock();
     }
 
-    spawnBubble(position, scale = 0.2, initVelY = 0, glowIntensity = 0.0, particleCount = 1000, lifetime = 3.0, isCoralBubble = false) {
+    spawnBubble(position, scale = 0.2, initVelY = 0, glowIntensity = 0.0, particleCount = 1000, lifetime = 3.0, acceleration = 0.0, isCoralBubble = false) {
         const geometry = new THREE.BufferGeometry();
         
         const positions = new Float32Array(particleCount * 3);
@@ -56,6 +56,7 @@ class Bubble {
             uSpawnTime: { value: this.clock.getElapsedTime() },
             uRiseSpeed: { value: 1.0 + Math.random() * 0.5 },
             uExternalVelY: { value: initVelY },
+            uAcceleration: { value: acceleration },
             uLifeTime: { value: lifetime },
             uAmbientLightIntensity: { value: 0.5 },
             uGlowIntensity: { value: glowIntensity }
@@ -69,6 +70,7 @@ class Bubble {
                 uniform float uSpawnTime;
                 uniform float uRiseSpeed;
                 uniform float uExternalVelY;
+                uniform float uAcceleration;
                 uniform float uLifeTime;
                 
                 attribute vec4 aOffset;
@@ -86,8 +88,9 @@ class Bubble {
                         return;
                     }
                     
+                    // vertical motion: base rise speed + external vertical velocity + 1/2 * acceleration * t^2
                     float totalRiseSpeed = uRiseSpeed + uExternalVelY;
-                    float verticalDisplacement = totalRiseSpeed * age;
+                    float verticalDisplacement = totalRiseSpeed * age + 0.5 * uAcceleration * age * age;
                     
                     // More natural wobble with randomness
                     float wobbleSpeed = 2.0 + aOffset.z * 3.0;
@@ -192,11 +195,11 @@ class Bubble {
         });
     }
 
-    spawnFromObject(object, offset = new THREE.Vector3(0, 0, 0), scale = 0.2, initVelY = 0, glowIntensity = 0.0, particleCount = 1000, lifetime = 3.0, isCoralBubble = false) {
+    spawnFromObject(object, offset = new THREE.Vector3(0, 0, 0), scale = 0.2, initVelY = 0, glowIntensity = 0.0, particleCount = 1000, lifetime = 3.0, acceleration = 0.0, isCoralBubble = false) {
         const localOffset = offset.clone();
         localOffset.applyQuaternion(object.quaternion);
         const spawnPos = object.position.clone().add(localOffset);
-        this.spawnBubble(spawnPos, scale, initVelY, glowIntensity, particleCount, lifetime, isCoralBubble);
+        this.spawnBubble(spawnPos, scale, initVelY, glowIntensity, particleCount, lifetime, acceleration, isCoralBubble);
     }
 
     update(dt) {
