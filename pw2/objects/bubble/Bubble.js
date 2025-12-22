@@ -206,7 +206,7 @@ class Bubble {
 
     spawnBubble(position, scale = 0.2, initVelY = 0, glowIntensity = 0.0, particleCount = 1000, lifetime = 3.0, isCoralBubble = false) {
         let idx = Math.min(...this.freeInstances); // TODO: sorted data structure
-        if (idx < 0) {
+        if (idx === Infinity) {
             // I could make a dynamic size thingy but it's more work ;-;
             console.warn(`Reached maximum amount of bubble groups (${this.maxInstances})`);
             return;
