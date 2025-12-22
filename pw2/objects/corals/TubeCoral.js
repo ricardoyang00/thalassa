@@ -4,7 +4,7 @@ import { InstancedMesh2 } from '@three.ez/instanced-mesh';
 import { SgiUtils } from '../../SgiUtils.js';
 import { MultiInstancedEntity } from '../MultiInstancedEntity.js';
 
-function tubeGeoGen(radialSegments) {
+function tubeGeoGen(radialSegments, cheap = false) {
     const size = 1;
     const radiusTop = size / 8;
     const radiusBottom = radiusTop / 2;
@@ -12,6 +12,8 @@ function tubeGeoGen(radialSegments) {
     const thickness = 0.25;
 
     const outerCylinderGeo = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, radialSegments, 1, true);
+    if (cheap)
+        return outerCylinderGeo.translate(0, height/2, 0);
 
     const innerScale = 1.0 - thickness;
     const innerCylinderGeo = outerCylinderGeo.clone().scale(innerScale, 1, innerScale);
@@ -27,9 +29,9 @@ function tubeGeoGen(radialSegments) {
 // Mesh that groups all tube corals for performance reasons
 export class TubeCoralsOwner extends InstancedMesh2 {
     static #tubeGeo = [
-        tubeGeoGen(32),
+        tubeGeoGen(14),
         tubeGeoGen(8),
-        tubeGeoGen(4),
+        tubeGeoGen(4, true),
     ];
     static #texture = new THREE.TextureLoader().load('textures/tube-coral.png');
     static #highDetailMat = new THREE.MeshPhongMaterial({
@@ -48,8 +50,10 @@ export class TubeCoralsOwner extends InstancedMesh2 {
         const tubeGeo = TubeCoralsOwner.#tubeGeo;
         // createEntities needed for updateInstances()
         super(tubeGeo[0], TubeCoralsOwner.#highDetailMat, {createEntities: true});
-        this.addLOD(tubeGeo[1], TubeCoralsOwner.#mediumDetailMat, 30);
-        this.addLOD(tubeGeo[2], TubeCoralsOwner.#mediumDetailMat, 60);
+        this.addLOD(tubeGeo[1], TubeCoralsOwner.#mediumDetailMat, 20);
+        this.addLOD(tubeGeo[2], TubeCoralsOwner.#mediumDetailMat, 55);
+        this.addShadowLOD(tubeGeo[1], 0);
+        this.addShadowLOD(tubeGeo[2], 10)
         this.frustumCulled = false;
     }
 }
@@ -91,9 +95,9 @@ export class TubeCoral extends MultiInstancedEntity {
                         x: layer * SgiUtils.rand(Math.PI / 20, Math.PI / 10),
                     },
                     pos: new THREE.Vector3(
-                        layer * size * Math.sin(ang) / 48,
+                        layer * size * Math.sin(ang) / 8,
                         0,
-                        layer * size * Math.cos(ang) / 48,
+                        layer * size * Math.cos(ang) / 8,
                     ),
                 })
             }

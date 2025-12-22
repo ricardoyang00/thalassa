@@ -324,8 +324,8 @@ class MyContents  {
         let coralsPlaced = 0;
 
         const coralTypes = [
-            // TubeCoral,
-            LSystemCoral,
+            TubeCoral,
+            // LSystemCoral,
             // BrainCoral,
         ];
 
