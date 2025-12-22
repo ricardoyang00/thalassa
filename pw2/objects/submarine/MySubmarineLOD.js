@@ -4,6 +4,8 @@ import { SubmarineControls } from './SubmarineControls.js';
 import { createLowDetailSubmarine } from './SubmarineGeometry.js';
 import { createShieldMaterial } from '../../shaders/ShieldShader.js';
 class MySubmarineLOD extends THREE.LOD {
+    #spice = new THREE.Vector3();
+
     constructor(app, {
         size = 1,
         assetsPath = 'models/submarine/',
@@ -224,8 +226,9 @@ class MySubmarineLOD extends THREE.LOD {
                     if (Math.random() > 0.5) {
                         let baseSize = 0.1 * this.scale.x;
                         let finalSize = baseSize * emitter.sizeMult;
+                        this.#spice.set(Math.random()-.5, Math.random()-.5, Math.random()-.5);
                         // Submarine bubbles: more intense with higher glow and concentrated particles
-                        // this.bubbleSystem.spawnFromObject(this, emitter.pos, finalSize, 0, 0.7, 2500);
+                        this.bubbleSystem.spawnFromObject(this, this.#spice.add(emitter.pos), 0, 0.7);
                     }
                 });
             } else {
@@ -235,8 +238,9 @@ class MySubmarineLOD extends THREE.LOD {
                             let baseSize = 0.1 * this.scale.x + (speed * 0.015);
                         
                             let finalSize = baseSize * emitter.sizeMult;
+                            this.#spice.set(Math.random()-.5, Math.random()-.5, Math.random()-.5);
                             // Submarine bubbles: more intense glow and concentrated particles
-                            // this.bubbleSystem.spawnFromObject(this, emitter.pos, finalSize, verticalPush, 0.8, 2500);                    
+                            this.bubbleSystem.spawnFromObject(this, this.#spice.add(emitter.pos), verticalPush, 0.8);
                         }
                     }
                 });
