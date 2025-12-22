@@ -17,8 +17,10 @@ import { SharkController } from './objects/shark/SharkController.js';
 import { Bubble } from './objects/bubble/Bubble.js';
 import { MyRock } from './objects/terrain/MyRock.js';
 import { MyTerrain } from './objects/terrain/MyTerrain.js';
+import { SandPuffManager } from './objects/terrain/SandPuff.js';
 import { SgiUtils } from './SgiUtils.js';
 import { addVolumetricLight } from './SGILightUtils.js';
+import { MarineSnow } from './MarineSnow.js';
 
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
@@ -189,11 +191,16 @@ class MyContents  {
 
         this.sharkController = null;
 
-        this.bubble = new Bubble(this.app.scene);
+        this.bubble = new Bubble(this.app.scene, this.app);
+        this.bubbleLodEnabled = true;
         this.coralBubblesEnabled = true; // Toggle for coral bubbles
+
+        // sand puff particle system
+        this.sandPuff = new SandPuffManager(this.app.scene);
 
         // Store reference to volumetric light cone
         this.volumetricLightCone = null;
+        this.marineSnow = null;
     }
 
     /**
@@ -821,6 +828,15 @@ class MyContents  {
         //this.app.scene.add(spotLightHelper4);
 
         this.buildWater();
+        
+        this.marineSnow = new MarineSnow(this.app.scene, {
+            count: 2000,
+            area: 100,
+            topY: 38,
+            bottomY: 1,
+            size: 0.25,
+            color: 0xccddff
+        }, this);
 
         this.buildSeafloor();
         this.buildSubmarine();
@@ -939,6 +955,14 @@ class MyContents  {
 
         if (this.bubble) {
             this.bubble.update(dt); 
+        }
+
+        if (this.sandPuff) {
+            this.sandPuff.update(dt);
+        }
+
+        if (this.marineSnow) {
+            this.marineSnow.update(dt);
         }
 
         if (this.submarine && typeof this.submarine.update === 'function') {
@@ -1214,10 +1238,12 @@ class MyContents  {
             );
 
             this.mainRaycaster.setFromCamera(mouse, this.app.activeCamera);
+            const targetObjects = [this.allFishMesh, this.coralMeshes, this.rocks];
+            if (this.terrain && this.terrain.terrainMesh) targetObjects.push(this.terrain.terrainMesh);
             const intersects = this.mainRaycaster
-                .intersectObjects([this.allFishMesh, this.coralMeshes, this.rocks])
-                .filter(x => SgiUtils.isObjectVisible(x.object))
-                ;
+                .intersectObjects(targetObjects)
+                .filter(x => SgiUtils.isObjectVisible(x.object));
+            ;
 
             if (this.selectedObject) {
                 this.selectedObject.scale.divideScalar(5);
@@ -1230,6 +1256,21 @@ class MyContents  {
             }
 
             let obj = intersects[0];
+            // if the first hit is the terrain mesh -> spawn sand puff
+            if (obj.object === this.terrain?.terrainMesh) {
+                const point = obj.point.clone();
+                // derive world-space normal for the hit (fallback to up if missing)
+                let normal = new THREE.Vector3(0, 1, 0);
+                if (obj.face && obj.face.normal) {
+                    normal.copy(obj.face.normal).transformDirection(obj.object.matrixWorld).normalize();
+                }
+                // spawn a puff at intersection point on seabed
+                if (this.sandPuff) {
+                    this.sandPuff.spawn(point, { count: 160, spread: 1.6, speed: 4.2, life: 1.6, size: 5.5, normal });
+                }
+                // do not select the terrain as an object
+                return;
+            }
             obj = obj.object.isInstancedMesh
                 ? obj.object.instances[obj.instanceId].userData.owner
                 : obj.object;
@@ -1349,6 +1390,7 @@ class MyContents  {
         this.coralsBVH.children = grid;
         this.app.scene.add(this.coralsBVHHelper);
         this.flocks.forEach(flock => flock.coralsAvoidanceBVH = this.coralsBVH);
+        if (this.marineSnow) this.marineSnow.reset();
     }
 }
 

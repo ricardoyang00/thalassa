@@ -196,6 +196,17 @@ class MyGuiInterface  {
         coralsFolder.add(this.contents.coralsBVHHelper, 'visible').name('Show BVH');
         coralsFolder.close();
 
+        // Bubble LOD indicator
+        if (this.contents && typeof this.contents.bubbleLodEnabled !== 'undefined') {
+            const bubbleLodObj = { Bubble_LOD: this.contents.bubbleLodEnabled ? 'ON' : 'OFF' };
+            const lodController = this.datgui.add(bubbleLodObj, 'Bubble_LOD').name('Bubble LOD').listen();
+            // Keep it in sync by polling the contents flag each second
+            setInterval(() => {
+                lodController.object.Bubble_LOD = this.contents.bubbleLodEnabled ? 'ON' : 'OFF';
+                lodController.updateDisplay();
+            }, 800);
+        }
+
         const fishesFolder = this.datgui.addFolder('Fishes');
         fishesFolder.add(this.contents.allFishMesh, 'visible').name('Show Fishes');
         fishesFolder.add(this.contents.fishBVHHelper, 'visible').name('Show BVH');

@@ -63,6 +63,7 @@ class MyApp  {
 
         // FPV Control Panel Overlay
         this.fpvOverlay = null;
+        this.fpvVideoElement = null;
     }
 
     /**
@@ -295,8 +296,9 @@ class MyApp  {
         this.fpvOverlay.visible = false;
 
         let videoTexture;
+        let video = null;
         try {
-            const video = document.createElement('video');
+            video = document.createElement('video');
             video.src = 'textures/sonar.mp4';
             video.crossOrigin = 'anonymous';
             video.loop = true;
@@ -325,7 +327,11 @@ class MyApp  {
             videoTexture.magFilter = THREE.LinearFilter;
             videoTexture.minFilter = THREE.LinearFilter;
             videoTexture.generateMipmaps = false;
+            video = null;
         }
+
+        // Save reference to the underlying HTMLVideoElement (may be null if fallback GIF used)
+        this.fpvVideoElement = video;
 
         const videoGeometry = new THREE.CircleGeometry(0.3, 32);
 
@@ -602,6 +608,11 @@ class MyApp  {
                     this.activeCamera.add(this.fpvOverlay);
                 }
                 this.fpvOverlay.visible = true;
+                // Ensure video playback starts when overlay becomes visible
+                if (this.fpvVideoElement) {
+                    // Attempt to play; browsers may block autoplay without user gesture
+                    this.fpvVideoElement.play().catch(() => {});
+                }
             }
             // Use FPV composer with dark tone filter and DOF
             if (this.fpvComposer) {
@@ -615,8 +626,19 @@ class MyApp  {
             // Detach FPV overlay from camera for other cameras
             if (this.fpvOverlay && this.fpvOverlay.parent) {
                 this.fpvOverlay.parent.remove(this.fpvOverlay);
+            }
+            if (this.fpvOverlay) {
                 this.fpvOverlay.visible = false;
             }
+            // Pause FPV video if present to avoid rendering/updating when not visible
+            if (this.fpvVideoElement) {
+                try {
+                    this.fpvVideoElement.pause();
+                } catch (e) {
+                    // ignore
+                }
+            }
+
             // Otherwise use the standard renderer
             this.renderer.render(this.scene, this.activeCamera);
         }

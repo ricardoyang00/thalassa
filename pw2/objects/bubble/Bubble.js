@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import { SgiUtils } from '../../SgiUtils.js';
 
 class Bubble {
-    constructor(scene, maxInstances = 6000) {
-        const scale = 0.2, initVelY = 1.5, glowIntensity = 1.5, particleCount = 100, isCoralBubble = true;
+    constructor(scene, app = null, maxInstances = 6000) {
+        this.app = app;
+        const scale = 0.2, initVelY = 1.5, glowIntensity = 1.5, particleCount = 100, isCoralBubble = true, acceleration = 0.0;
 
         this.maxInstances = maxInstances;
         this.activeInstances = new Set();
@@ -18,6 +19,35 @@ class Bubble {
         const initialOffsets = new Float32Array(particleCount * 4);
 
         for (let i = 0; i < particleCount; i++) {
+    // constructor(scene, app = null) {
+    //     this.scene = scene;
+    //     this.app = app;
+    //     this.bubbleGroups = [];  // Array of particle systems for each bubble spawn
+    //     this.ambientLight = null;
+    //     this.ambientLightCached = false;
+    //     this.clock = new THREE.Clock();
+
+    //     // LOD: reduce particle count when viewer is far
+    //     this.lodDistance = 60;
+    //     this.lodMultiplier = 0.25; // particle count multiplier when far
+    //     this.lodEnabled = true; // whether LOD is active (config switch)
+    //     this.isReduced = false; // runtime state: true when particles should be reduced (viewer far)
+    // }
+
+    // spawnBubble(position, scale = 0.2, initVelY = 0, glowIntensity = 0.0, particleCount = 1000, lifetime = 3.0, acceleration = 0.0, isCoralBubble = false) {
+    //     // Choose effective particle count depending on LOD state
+    //     let effectiveCount = particleCount;
+    //     if (this.lodEnabled && this.isReduced) {
+    //         effectiveCount = Math.max(8, Math.floor(particleCount * this.lodMultiplier));
+    //     }
+
+    //     const geometry = new THREE.BufferGeometry();
+
+    //     // Allocate arrays sized to the effective particle count so unused entries don't render
+    //     const positions = new Float32Array(effectiveCount * 3);
+    //     const initialOffsets = new Float32Array(effectiveCount * 4);
+
+    //     for (let i = 0; i < effectiveCount; i++) {
             const i3 = i * 3;
             const i4 = i * 4;
             const randomScale = scale * (0.8 + Math.random() * 0.5);
@@ -50,6 +80,8 @@ class Bubble {
         
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         geometry.setAttribute('aOffset', new THREE.BufferAttribute(initialOffsets, 4));
+        // Ensure only the effective number of points are drawn
+        // geometry.setDrawRange(0, effectiveCount);
 
         geometry.setAttribute('iSpawnTime', new THREE.InstancedBufferAttribute(new Float32Array(maxInstances), 1));
         geometry.setAttribute('iLifeTime', new THREE.InstancedBufferAttribute(new Float32Array(maxInstances), 1));
@@ -64,6 +96,7 @@ class Bubble {
             uRiseSpeed: { value: 1.0 + Math.random() * 0.5 },
             // uExternalVelY: { value: initVelY },
             // uLifeTime: { value: lifetime },
+            uAcceleration: { value: acceleration },
             uAmbientLightIntensity: { value: 0.5 },
             uGlowIntensity: { value: glowIntensity },
         };
@@ -74,6 +107,7 @@ class Bubble {
                 uniform float uTime;
                 uniform float uSize;
                 uniform float uRiseSpeed;
+                uniform float uAcceleration;
                 
                 attribute vec4 aOffset;
 
@@ -100,8 +134,9 @@ class Bubble {
                         return;
                     }
                     
+                    // vertical motion: base rise speed + external vertical velocity + 1/2 * acceleration * t^2
                     float totalRiseSpeed = uRiseSpeed + iInitVelY;
-                    float verticalDisplacement = totalRiseSpeed * age;
+                    float verticalDisplacement = totalRiseSpeed * age + 0.5 * uAcceleration * age * age;
                     
                     // More natural wobble with randomness
                     float wobbleSpeed = 2.0 + aOffset.z * 3.0;
@@ -205,7 +240,7 @@ class Bubble {
     }
 
     spawnBubble(position, scale = 0.2, initVelY = 0, glowIntensity = 0.0, particleCount = 1000, lifetime = 3.0, isCoralBubble = false) {
-        let idx = Math.min(...this.freeInstances); // TODO: sorted data structure
+        let idx = Math.min(...this.freeInstances); // TODO (optional): sorted data structure
         if (idx === Infinity) {
             // I could make a dynamic size thingy but it's more work ;-;
             console.warn(`Reached maximum amount of bubble groups (${this.maxInstances})`);
@@ -262,11 +297,11 @@ class Bubble {
         // });
     }
 
-    spawnFromObject(object, offset = new THREE.Vector3(0, 0, 0), scale = 0.2, initVelY = 0, glowIntensity = 0.0, particleCount = 1000, lifetime = 3.0, isCoralBubble = false) {
+    spawnFromObject(object, offset = new THREE.Vector3(0, 0, 0), scale = 0.2, initVelY = 0, glowIntensity = 0.0, particleCount = 1000, lifetime = 3.0, acceleration = 0.0, isCoralBubble = false) {
         const localOffset = offset.clone();
         localOffset.applyQuaternion(object.quaternion);
         const spawnPos = object.position.clone().add(localOffset);
-        this.spawnBubble(spawnPos, scale, initVelY, glowIntensity, particleCount, lifetime, isCoralBubble);
+        this.spawnBubble(spawnPos, scale, initVelY, glowIntensity, particleCount, lifetime, acceleration, isCoralBubble);
     }
 
     update(dt) {
@@ -302,7 +337,7 @@ class Bubble {
                 this.freeInstances.add(i);
                 this.activeInstances.delete(i);
                 if (i+1 >= this.mesh.geometry.instanceCount)
-                    this.mesh.geometry.instanceCount = Math.max(0, 1+Math.max(...this.activeInstances)); // TODO: sorted data structure
+                    this.mesh.geometry.instanceCount = Math.max(0, 1+Math.max(...this.activeInstances)); // TODO (optional): sorted data structure
             }
         }
 
