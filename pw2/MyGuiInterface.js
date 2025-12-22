@@ -192,20 +192,30 @@ class MyGuiInterface  {
 
         const coralsFolder = this.datgui.addFolder('Corals');
         coralsFolder.add(this.contents.coralMeshes, 'visible').name('Show Corals');
-        coralsFolder.add(this.contents, 'coralBubblesEnabled').name('Spawn Bubbles');
         coralsFolder.add(this.contents.coralsBVHHelper, 'visible').name('Show BVH');
+        const coralBubblesFolder = coralsFolder.addFolder('Coral Bubbles');
+        coralBubblesFolder.add(this.contents, 'coralBubblesEnabled').name('Spawn Bubbles');
+        coralBubblesFolder.add(this.contents.bubble, 'lodEnabled').name('Enable LOD').onChange(value => {
+            if (!value) {
+                const iEffectiveCount = this.contents.bubble.mesh.geometry.getAttribute("iEffectiveCount");
+                iEffectiveCount.array.forEach((_, i, arr) => arr[i] = this.contents.bubble.instanceParticleCount);
+                iEffectiveCount.needsUpdate = true;
+            }
+        });
+        coralBubblesFolder.add(this.contents.bubble, 'lodDistance').name('LOD Threshold');
+        coralBubblesFolder.add(this.contents.bubble, 'lodMultiplier').name('LOD Multiplier');
         coralsFolder.close();
 
-        // Bubble LOD indicator
-        if (this.contents && typeof this.contents.bubbleLodEnabled !== 'undefined') {
-            const bubbleLodObj = { Bubble_LOD: this.contents.bubbleLodEnabled ? 'ON' : 'OFF' };
-            const lodController = this.datgui.add(bubbleLodObj, 'Bubble_LOD').name('Bubble LOD').listen();
-            // Keep it in sync by polling the contents flag each second
-            setInterval(() => {
-                lodController.object.Bubble_LOD = this.contents.bubbleLodEnabled ? 'ON' : 'OFF';
-                lodController.updateDisplay();
-            }, 800);
-        }
+        // // Bubble LOD indicator
+        // if (this.contents && typeof this.contents.bubbleLodEnabled !== 'undefined') {
+        //     const bubbleLodObj = { Bubble_LOD: this.contents.bubbleLodEnabled ? 'ON' : 'OFF' };
+        //     const lodController = this.datgui.add(bubbleLodObj, 'Bubble_LOD').name('Bubble LOD').listen();
+        //     // Keep it in sync by polling the contents flag each second
+        //     setInterval(() => {
+        //         lodController.object.Bubble_LOD = this.contents.bubbleLodEnabled ? 'ON' : 'OFF';
+        //         lodController.updateDisplay();
+        //     }, 800);
+        // }
 
         const fishesFolder = this.datgui.addFolder('Fishes');
         fishesFolder.add(this.contents.allFishMesh, 'visible').name('Show Fishes');

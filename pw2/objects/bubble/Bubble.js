@@ -2,9 +2,15 @@ import * as THREE from 'three';
 import { SgiUtils } from '../../SgiUtils.js';
 
 class Bubble {
-    constructor(scene, app = null, maxInstances = 6000) {
+    constructor(scene, app = null, maxInstances = 6000, instanceParticleCount = 1000) {
         this.app = app;
-        const scale = 0.2, initVelY = 1.5, glowIntensity = 1.5, particleCount = 100, isCoralBubble = true, acceleration = 0.0;
+        this.lodDistance = 40;
+        this.lodMultiplier = 0.25; // particle count multiplier when far
+        this.lodEnabled = true; // whether LOD is active (config switch)
+
+        const scale = 0.2,/* initVelY = 1.5,*/ glowIntensity = 1.5, particleCount = instanceParticleCount, isCoralBubble = true, acceleration = 0.0;
+
+        this.instanceParticleCount = particleCount;
 
         this.maxInstances = maxInstances;
         this.activeInstances = new Set();
@@ -19,35 +25,6 @@ class Bubble {
         const initialOffsets = new Float32Array(particleCount * 4);
 
         for (let i = 0; i < particleCount; i++) {
-    // constructor(scene, app = null) {
-    //     this.scene = scene;
-    //     this.app = app;
-    //     this.bubbleGroups = [];  // Array of particle systems for each bubble spawn
-    //     this.ambientLight = null;
-    //     this.ambientLightCached = false;
-    //     this.clock = new THREE.Clock();
-
-    //     // LOD: reduce particle count when viewer is far
-    //     this.lodDistance = 60;
-    //     this.lodMultiplier = 0.25; // particle count multiplier when far
-    //     this.lodEnabled = true; // whether LOD is active (config switch)
-    //     this.isReduced = false; // runtime state: true when particles should be reduced (viewer far)
-    // }
-
-    // spawnBubble(position, scale = 0.2, initVelY = 0, glowIntensity = 0.0, particleCount = 1000, lifetime = 3.0, acceleration = 0.0, isCoralBubble = false) {
-    //     // Choose effective particle count depending on LOD state
-    //     let effectiveCount = particleCount;
-    //     if (this.lodEnabled && this.isReduced) {
-    //         effectiveCount = Math.max(8, Math.floor(particleCount * this.lodMultiplier));
-    //     }
-
-    //     const geometry = new THREE.BufferGeometry();
-
-    //     // Allocate arrays sized to the effective particle count so unused entries don't render
-    //     const positions = new Float32Array(effectiveCount * 3);
-    //     const initialOffsets = new Float32Array(effectiveCount * 4);
-
-    //     for (let i = 0; i < effectiveCount; i++) {
             const i3 = i * 3;
             const i4 = i * 4;
             const randomScale = scale * (0.8 + Math.random() * 0.5);
@@ -87,18 +64,17 @@ class Bubble {
         geometry.setAttribute('iLifeTime', new THREE.InstancedBufferAttribute(new Float32Array(maxInstances), 1));
         geometry.setAttribute('iInitVelY', new THREE.InstancedBufferAttribute(new Float32Array(maxInstances), 1));
         geometry.setAttribute('iPosition', new THREE.InstancedBufferAttribute(new Float32Array(maxInstances*3), 3));
+        geometry.setAttribute('iAcceleration', new THREE.InstancedBufferAttribute(new Float32Array(maxInstances), 1));
+        geometry.setAttribute('iEffectiveCount', new THREE.InstancedBufferAttribute(new Uint16Array(maxInstances), 1));
 
         const uniforms = {
             uTime: { value: 0.0 },
             uSize: { value: 30.0 },
             uColor: { value: new THREE.Color(0x6eb3d6) },
-            // uSpawnTime: { value: this.clock.getElapsedTime() },
             uRiseSpeed: { value: 1.0 + Math.random() * 0.5 },
-            // uExternalVelY: { value: initVelY },
-            // uLifeTime: { value: lifetime },
-            uAcceleration: { value: acceleration },
             uAmbientLightIntensity: { value: 0.5 },
             uGlowIntensity: { value: glowIntensity },
+            uParticleCount: { value: particleCount },
         };
 
         const material = new THREE.ShaderMaterial({
@@ -107,7 +83,7 @@ class Bubble {
                 uniform float uTime;
                 uniform float uSize;
                 uniform float uRiseSpeed;
-                uniform float uAcceleration;
+                uniform float uParticleCount;
                 
                 attribute vec4 aOffset;
 
@@ -115,13 +91,16 @@ class Bubble {
                 attribute float iLifeTime;
                 attribute float iInitVelY;
                 attribute vec3 iPosition;
+                attribute float iAcceleration;
+                attribute float iEffectiveCount;
                 
                 varying float vAlpha;
                 varying float vDistance;
                 
                 void main() {
-                    // iLifeTime == 0.0 means inactive instance
-                    if (iLifeTime == 0.0) {
+                    if (mod(float(gl_VertexID), uParticleCount) >= iEffectiveCount) {
+                        gl_Position = vec4(0.0, 0.0, 0.0, 0.0);
+                        gl_PointSize = 0.0;
                         return;
                     }
 
@@ -130,13 +109,14 @@ class Bubble {
                     
                     if (lifeFraction > 1.0) {
                         gl_Position = vec4(0.0, 0.0, 0.0, 0.0);
+                        gl_PointSize = 0.0;
                         vAlpha = 0.0;
                         return;
                     }
                     
                     // vertical motion: base rise speed + external vertical velocity + 1/2 * acceleration * t^2
                     float totalRiseSpeed = uRiseSpeed + iInitVelY;
-                    float verticalDisplacement = totalRiseSpeed * age + 0.5 * uAcceleration * age * age;
+                    float verticalDisplacement = totalRiseSpeed * age + 0.5 * iAcceleration * age * age;
                     
                     // More natural wobble with randomness
                     float wobbleSpeed = 2.0 + aOffset.z * 3.0;
@@ -239,7 +219,7 @@ class Bubble {
         this.scene.add(this.mesh);
     }
 
-    spawnBubble(position, scale = 0.2, initVelY = 0, glowIntensity = 0.0, particleCount = 1000, lifetime = 3.0, isCoralBubble = false) {
+    spawnBubble(position, scale = 0.2, initVelY = 0, glowIntensity = 0.0, particleCount = 1000, lifetime = 3.0, acceleration = 0.0, isCoralBubble = false) {
         let idx = Math.min(...this.freeInstances); // TODO (optional): sorted data structure
         if (idx === Infinity) {
             // I could make a dynamic size thingy but it's more work ;-;
@@ -284,6 +264,14 @@ class Bubble {
         iInitVelY.array[idx] = initVelY;
         iInitVelY.needsUpdate = true;
 
+        const iEffectiveCount = this.mesh.geometry.getAttribute("iEffectiveCount");
+        iEffectiveCount.array[idx] = this.instanceParticleCount;
+        iEffectiveCount.needsUpdate = true;
+
+        const iAcceleration = this.mesh.geometry.getAttribute("iAcceleration");
+        iAcceleration.array[idx] = acceleration;
+        iAcceleration.needsUpdate = true;
+
         // const mesh = new THREE.Points(geometry, material);
         // mesh.position.copy(position);
         // this.scene.add(mesh);
@@ -324,22 +312,31 @@ class Bubble {
 
         const iSpawnTime = this.mesh.geometry.getAttribute("iSpawnTime");
         const iLifeTime = this.mesh.geometry.getAttribute("iLifeTime");
+        const iEffectiveCount = this.mesh.geometry.getAttribute("iEffectiveCount");
+        const iPosition = this.mesh.geometry.getAttribute("iPosition");
+
+        const camera = this.app.activeCamera;
+        const camPos = camera.getWorldPosition(new THREE.Vector3());
+        const camDir = camera.getWorldDirection(new THREE.Vector3());
+        const pos = new THREE.Vector3();
 
         for (let i = 0; i < this.mesh.geometry.instanceCount; ++i) {
             if (currentTime - iSpawnTime.array[i] >= iLifeTime.array[i]) {
-                iLifeTime.array[i] = 0; // mark as inactive
-                // if (!iLifeTime.needsUpdate) {
-                //     iLifeTime.clearUpdateRanges();
-                //     iLifeTime.needsUpdate = true;
-                // }
-                // iLifeTime.addUpdateRange(i, 1);
-                iLifeTime.needsUpdate = true;
+                iEffectiveCount.array[i] = 0; // mark as inactive
                 this.freeInstances.add(i);
                 this.activeInstances.delete(i);
                 if (i+1 >= this.mesh.geometry.instanceCount)
                     this.mesh.geometry.instanceCount = Math.max(0, 1+Math.max(...this.activeInstances)); // TODO (optional): sorted data structure
+            } else if (this.lodEnabled) {
+                pos.fromBufferAttribute(iPosition, i);
+                iEffectiveCount.array[i] = camDir.dot(pos.clone().sub(camPos)) < 0
+                    ? 0 // lazy culling
+                    : camPos.distanceTo(pos) > this.lodDistance
+                        ? this.lodMultiplier * this.instanceParticleCount
+                        : this.instanceParticleCount;
             }
         }
+        iEffectiveCount.needsUpdate = true;
 
         // for (let i = this.bubbleGroups.length - 1; i >= 0; i--) {
         //     const bubble = this.bubbleGroups[i];

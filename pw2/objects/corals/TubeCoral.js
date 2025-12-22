@@ -154,6 +154,7 @@ export class TubeCoral extends MultiInstancedEntity {
                     glowIntensity,
                     1000, // More particles for better visibility
                     8.0, // Much longer lifetime so bubbles spread more before disappearing
+                    0.5, // Y acceleration
                     true // isCoralBubble - use continuous distribution
                 );
             }
