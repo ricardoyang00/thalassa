@@ -35,7 +35,7 @@ class MyContents  {
     */ 
     constructor(app) {
         this.app = app
-        this.fastLoad = false;
+        this.fastLoad = true;
         this.mainRaycaster = new THREE.Raycaster();
         this.selectedObject = null;
         this.colliders = [];
@@ -324,8 +324,8 @@ class MyContents  {
         let coralsPlaced = 0;
 
         const coralTypes = [
-            TubeCoral,
-            LSystemCoral,
+            // TubeCoral,
+            // LSystemCoral,
             BrainCoral,
         ];
 
@@ -429,7 +429,7 @@ class MyContents  {
 
         this.coralMeshes.traverse((child) => {
             if (child.isMesh) {
-                child.castShadow = true;
+                child.castShadow = false;
             }
         });
 
@@ -1248,6 +1248,8 @@ class MyContents  {
                 this.selectedObject.scale.divideScalar(5);
                 this.selectedObject.updateMatrix();
             }
+
+            this.selectedObject = null;
 
             if (intersects.length === 0) {
                 this.selectedObject = null;

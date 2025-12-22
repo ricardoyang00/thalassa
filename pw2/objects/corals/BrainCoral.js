@@ -33,7 +33,7 @@ export class BrainCoralsOwner extends InstancedMesh2 {
     })();
 
     static #geo = [
-        new THREE.SphereGeometry(1, 128, 128).rotateZ(Math.PI / 2),
+        new THREE.SphereGeometry(1, 64, 64).rotateZ(Math.PI / 2),
         ((geo) => {
             const scale = 1 + BrainCoralsOwner.#highDetailMat.displacementScale;
             return geo.scale(scale, scale, scale);
@@ -41,14 +41,14 @@ export class BrainCoralsOwner extends InstancedMesh2 {
         ((geo) => {
             const scale = 1 + BrainCoralsOwner.#highDetailMat.displacementScale;
             return geo.scale(scale, scale, scale);
-        })(new THREE.SphereGeometry(1, 4, 4).rotateZ(Math.PI / 2)),
+        })(new THREE.SphereGeometry(1, 6, 6, .5*Math.PI, Math.PI).rotateZ(Math.PI / 2)),
     ];
 
     constructor() {
         const geo = BrainCoralsOwner.#geo;
         super(geo[0], BrainCoralsOwner.#highDetailMat, {createEntities: true});
-        this.addLOD(geo[1], BrainCoralsOwner.#mediumDetailMat, 40);
-        this.addLOD(geo[2], BrainCoralsOwner.#lowDetailMat, 150);
+        this.addLOD(geo[1], BrainCoralsOwner.#mediumDetailMat, 20);
+        this.addLOD(geo[2], BrainCoralsOwner.#lowDetailMat, 50);
         this.frustumCulled = false;
     }
 }

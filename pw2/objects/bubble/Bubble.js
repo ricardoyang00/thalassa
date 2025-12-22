@@ -248,6 +248,7 @@ class Bubble {
     }
 
     spawnBubble(position, initVelY = 0, glowIntensity = 0.0, lifetime = 3.0, acceleration = 0.0, isCoralBubble = false) {
+        return;
         const manager = this.managers[isCoralBubble ? Bubble.#type.Coral : Bubble.#type.Submarine];
 
         let idx = Math.min(...manager.freeInstances); // TODO (optional): sorted data structure
