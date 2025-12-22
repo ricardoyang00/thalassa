@@ -3,7 +3,7 @@ import { SgiUtils } from '../../SgiUtils.js';
 
 class Bubble {
     constructor(scene, maxInstances = 6000) {
-        const scale = 0.2, initVelY = 1.5, glowIntensity = 1.5, particleCount = 1000, isCoralBubble = true;
+        const scale = 0.2, initVelY = 1.5, glowIntensity = 1.5, particleCount = 100, isCoralBubble = true;
 
         this.maxInstances = maxInstances;
         this.activeInstances = new Set();
@@ -53,6 +53,7 @@ class Bubble {
 
         geometry.setAttribute('iSpawnTime', new THREE.InstancedBufferAttribute(new Float32Array(maxInstances), 1));
         geometry.setAttribute('iLifeTime', new THREE.InstancedBufferAttribute(new Float32Array(maxInstances), 1));
+        geometry.setAttribute('iInitVelY', new THREE.InstancedBufferAttribute(new Float32Array(maxInstances), 1));
         geometry.setAttribute('iPosition', new THREE.InstancedBufferAttribute(new Float32Array(maxInstances*3), 3));
 
         const uniforms = {
@@ -61,10 +62,10 @@ class Bubble {
             uColor: { value: new THREE.Color(0x6eb3d6) },
             // uSpawnTime: { value: this.clock.getElapsedTime() },
             uRiseSpeed: { value: 1.0 + Math.random() * 0.5 },
-            uExternalVelY: { value: initVelY },
+            // uExternalVelY: { value: initVelY },
             // uLifeTime: { value: lifetime },
             uAmbientLightIntensity: { value: 0.5 },
-            uGlowIntensity: { value: glowIntensity }
+            uGlowIntensity: { value: glowIntensity },
         };
 
         const material = new THREE.ShaderMaterial({
@@ -73,12 +74,12 @@ class Bubble {
                 uniform float uTime;
                 uniform float uSize;
                 uniform float uRiseSpeed;
-                uniform float uExternalVelY;
                 
                 attribute vec4 aOffset;
 
                 attribute float iSpawnTime;
                 attribute float iLifeTime;
+                attribute float iInitVelY;
                 attribute vec3 iPosition;
                 
                 varying float vAlpha;
@@ -99,7 +100,7 @@ class Bubble {
                         return;
                     }
                     
-                    float totalRiseSpeed = uRiseSpeed + uExternalVelY;
+                    float totalRiseSpeed = uRiseSpeed + iInitVelY;
                     float verticalDisplacement = totalRiseSpeed * age;
                     
                     // More natural wobble with randomness
@@ -242,6 +243,10 @@ class Bubble {
         // }
         // iPosition.addUpdateRange(3*idx, 3);
         iPosition.needsUpdate = true;
+
+        const iInitVelY = this.mesh.geometry.getAttribute("iInitVelY");
+        iInitVelY.array[idx] = initVelY;
+        iInitVelY.needsUpdate = true;
 
         // const mesh = new THREE.Points(geometry, material);
         // mesh.position.copy(position);
