@@ -33,7 +33,7 @@ class MyContents  {
     */ 
     constructor(app) {
         this.app = app
-        this.fastLoad = false;
+        this.fastLoad = true;
         this.mainRaycaster = new THREE.Raycaster();
         this.selectedObject = null;
         this.colliders = [];
@@ -312,6 +312,7 @@ class MyContents  {
 
         // Spawn corals across entire terrain
         this.coralMeshes = new THREE.Group();
+        this.coralMeshes.visible = false;
         this.coralMeshes.name = "corals";
         this.corals = [];
         let coralsPlaced = 0;

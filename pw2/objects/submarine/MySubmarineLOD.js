@@ -225,7 +225,7 @@ class MySubmarineLOD extends THREE.LOD {
                         let baseSize = 0.1 * this.scale.x;
                         let finalSize = baseSize * emitter.sizeMult;
                         // Submarine bubbles: more intense with higher glow and concentrated particles
-                        this.bubbleSystem.spawnFromObject(this, emitter.pos, finalSize, 0, 0.7, 2500);
+                        // this.bubbleSystem.spawnFromObject(this, emitter.pos, finalSize, 0, 0.7, 2500);
                     }
                 });
             } else {
@@ -236,7 +236,7 @@ class MySubmarineLOD extends THREE.LOD {
                         
                             let finalSize = baseSize * emitter.sizeMult;
                             // Submarine bubbles: more intense glow and concentrated particles
-                            this.bubbleSystem.spawnFromObject(this, emitter.pos, finalSize, verticalPush, 0.8, 2500);                    
+                            // this.bubbleSystem.spawnFromObject(this, emitter.pos, finalSize, verticalPush, 0.8, 2500);                    
                         }
                     }
                 });
