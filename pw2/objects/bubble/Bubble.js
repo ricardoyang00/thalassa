@@ -200,6 +200,7 @@ class Bubble {
         this.clock = new THREE.Clock();
 
         this.mesh = new THREE.Points(geometry, material);
+        this.mesh.frustumCulled = false;
         this.scene.add(this.mesh);
     }
 
