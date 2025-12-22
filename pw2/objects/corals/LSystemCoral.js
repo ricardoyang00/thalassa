@@ -3,8 +3,8 @@ import { SgiUtils } from '../../SgiUtils.js';
 import { InstancedMesh2 } from '@three.ez/instanced-mesh';
 import { MultiInstancedEntity } from '../MultiInstancedEntity.js';
 
-function branchGeoGen(radialSegments) {
-    return new THREE.CylinderGeometry(0.15, 0.15, 1, radialSegments, 1).translate(0, 0.5, 0);
+function branchGeoGen(radialSegments, openEnded = false) {
+    return new THREE.CylinderGeometry(0.15, 0.15, 1, radialSegments, 1, openEnded).translate(0, 0.5, 0);
 }
 
 function matGen() {
@@ -52,7 +52,7 @@ function matGen() {
 
 export class LSystemCoralsOwner extends InstancedMesh2 {
     static #geo = [
-        branchGeoGen(16),
+        branchGeoGen(10),
         branchGeoGen(5),
         branchGeoGen(3),
     ];
@@ -60,14 +60,15 @@ export class LSystemCoralsOwner extends InstancedMesh2 {
     constructor() {
         const geo = LSystemCoralsOwner.#geo;
         super(geo[0], matGen(), {createEntities: true});
-        this.addLOD(geo[1], matGen(), 20);
-        this.addLOD(geo[2], matGen(), 50);
+        this.addLOD(geo[1], matGen(), 15);
+        this.addLOD(geo[2], matGen(), 30);
         this.initUniformsPerInstance({
             vertex: {
                 timeBias: 'float',
                 baseY: 'float',
             },
         });
+        this.addShadowLOD(branchGeoGen(3, true));
         this.frustumCulled = false;
     }
 }

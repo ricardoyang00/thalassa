@@ -325,8 +325,8 @@ class MyContents  {
 
         const coralTypes = [
             // TubeCoral,
-            // LSystemCoral,
-            BrainCoral,
+            LSystemCoral,
+            // BrainCoral,
         ];
 
         const naturalCoralPalette = [
@@ -429,7 +429,7 @@ class MyContents  {
 
         this.coralMeshes.traverse((child) => {
             if (child.isMesh) {
-                child.castShadow = false;
+                child.castShadow = true;
             }
         });
 
