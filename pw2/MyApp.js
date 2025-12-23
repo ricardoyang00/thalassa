@@ -447,15 +447,12 @@ class MyApp  {
                     this.contents.submarine.setControlsEnabled(true);
                 }
 
-                // Disable coral bubbles for periscope camera
-                if (this.activeCameraName === 'SubmarinePeriscope' && this.contents) {
+                // Disable coral bubbles for both FPV and Periscope cameras
+                if (this.contents) {
                     this.contents.coralBubblesEnabled = false;
                     if (this.contents.bubble && typeof this.contents.bubble.clearCoralBubbles === 'function') {
                         this.contents.bubble.clearCoralBubbles();
                     }
-                } else if (this.contents) {
-                    // Re-enable for FPV
-                    this.contents.coralBubblesEnabled = true;
                 }
             } else {
                 // Disable fly controls for other cameras (handled by Three.js FlyControls)
