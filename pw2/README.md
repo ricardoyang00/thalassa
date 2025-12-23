@@ -15,7 +15,7 @@ Our project aimed to push the limits of what could be rendered on today's averag
 
 ## Scene
 
-![Scene](screenshots/scene.png)
+![Scene](screenshots/scene.jpeg)
 
 ### Elements
 - A temple

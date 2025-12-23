@@ -18,5 +18,7 @@ Detailed description click [here](pw1/README.md).
 
 -----
 
-### [PW2 - ...](pw2)
-- (items briefly describing main strong points)
+### [PW2 - Thalassa](pw2)
+![](pw2/screenshots/scene.jpeg)
+
+Detailed description click [here](pw2/README.md).
