@@ -132,6 +132,8 @@ class SubmarineControls {
         }
 
         const boundingSphere = this.submarine.userData?.boundingSphere?.clone();
+        if (this.submarine.shieldActive)
+            boundingSphere.radius += 1.25;
         // Collisions
         if (boundingSphere) {
             if (!this.submarine.boundingSphereHelper) {
