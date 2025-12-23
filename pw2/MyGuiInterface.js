@@ -111,7 +111,7 @@ class MyGuiInterface  {
             const folder = heavyModelsFolder.addFolder(name);
             folder.add(model, 'visible').name('Visible');
             folder.add(model, 'castShadow').name('Cast Shadows').onChange(value => model.traverse(child => {
-                if (!child.isLight)
+                if (!child.isLight && child != this.contents.submarine?.shieldMesh)
                     child.castShadow = value;
             }));
             folder.add(model, 'receiveShadow').name('Receive Shadows').onChange(value => model.traverse(child => child.receiveShadow = value));
@@ -126,7 +126,7 @@ class MyGuiInterface  {
             .onChange(value => Object.values(heavyModels).forEach(model => {if (model) model.visible = value}));
         allHeavyModelsFolder.add(allHeavyModelsOpt, 'castShadow').name('Cast Shadows')
             .onChange(value => Object.values(heavyModels).forEach(model => {if (model) model.traverse(child => {
-                if (!child.isLight)
+                if (!child.isLight && child != this.contents.submarine?.shieldMesh)
                     child.castShadow = value;
             })}));
         allHeavyModelsFolder.add(allHeavyModelsOpt, 'receiveShadow').name('Receive Shadows')

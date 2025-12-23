@@ -54,6 +54,17 @@ Our project aimed to push the limits of what could be rendered on today's averag
 - Submarine shield
   - Affects collisions
 
+### Extra screenshots
+
+Different LODs visible when increasing coral size (clicking):
+
+<img src="screenshots/lod1.png" alt="LOD 1" height="150"/>
+<img src="screenshots/lod2.png" alt="LOD 2" height="150"/>
+<img src="screenshots/lod3.png" alt="LOD 3" height="150"/>
+
+Fish swimming away from submarine:
+
+<img src="screenshots/avoidance.png" alt="drawing"/>
 
 ----
 ## Issues/Problems
