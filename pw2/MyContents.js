@@ -324,8 +324,8 @@ class MyContents  {
         let coralsPlaced = 0;
 
         const coralTypes = [
-            // TubeCoral,
-            // LSystemCoral,
+            TubeCoral,
+            LSystemCoral,
             BrainCoral,
         ];
 
@@ -430,6 +430,7 @@ class MyContents  {
         this.coralMeshes.traverse((child) => {
             if (child.isMesh) {
                 child.castShadow = true;
+                child.receiveShadow = true;
             }
         });
 

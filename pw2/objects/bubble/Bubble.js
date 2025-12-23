@@ -11,7 +11,7 @@ class Bubble {
     static #material = new THREE.ShaderMaterial({
         uniforms: {
             uTime: { value: 0 },
-            uSize: { value: 50.0 },
+            uSize: { value: 60.0 },
             uColor: { value: new THREE.Color(0x6eb3d6) },
             uRiseSpeed: { value: 1.5 },
             uAmbientLightIntensity: { value: 0.5 },
@@ -234,6 +234,7 @@ class Bubble {
             mat.uniforms.uParticleCount.value = particleCount;
 
             const points = new THREE.Points(geometry, mat);
+            points.renderOrder = 1; // always render after sand puff particles
             points.frustumCulled = false;
             this.sceneGroup.add(points);
 
@@ -248,7 +249,6 @@ class Bubble {
     }
 
     spawnBubble(position, initVelY = 0, glowIntensity = 0.0, lifetime = 3.0, acceleration = 0.0, isCoralBubble = false) {
-        return;
         const manager = this.managers[isCoralBubble ? Bubble.#type.Coral : Bubble.#type.Submarine];
 
         let idx = Math.min(...manager.freeInstances); // TODO (optional): sorted data structure

@@ -190,20 +190,38 @@ class MyGuiInterface  {
         rocksFolder.add(this.contents.rocks, 'visible').name("Show Rocks");
         rocksFolder.close();
 
+        const coralOpt = {
+            castShadow: true,
+            receiveShadow: true,
+        };
         const coralsFolder = this.datgui.addFolder('Corals');
         coralsFolder.add(this.contents.coralMeshes, 'visible').name('Show Corals');
         coralsFolder.add(this.contents.coralsBVHHelper, 'visible').name('Show BVH');
-        const coralBubblesFolder = coralsFolder.addFolder('Coral Bubbles');
-        coralBubblesFolder.add(this.contents, 'coralBubblesEnabled').name('Spawn Bubbles');
-        coralBubblesFolder.add(this.contents.bubble, 'lodEnabled').name('Enable LOD').onChange(value => {
-            if (!value) {
-                const iEffectiveCount = this.contents.bubble.mesh.geometry.getAttribute("iEffectiveCount");
-                iEffectiveCount.array.forEach((_, i, arr) => arr[i] = this.contents.bubble.instanceParticleCount);
-                iEffectiveCount.needsUpdate = true;
-            }
+        coralsFolder.add(coralOpt, 'castShadow').name('Cast Shadows').onChange((value) => {
+            this.contents.coralMeshes?.traverse(child => {
+                if (child.isMesh)
+                    child.castShadow = value;
+            })
         });
-        coralBubblesFolder.add(this.contents.bubble, 'lodDistance').name('LOD Threshold');
-        coralBubblesFolder.add(this.contents.bubble, 'lodMultiplier').name('LOD Multiplier');
+        coralsFolder.add(coralOpt, 'receiveShadow').name('Receive Shadows').onChange((value) => {
+            this.contents.coralMeshes?.traverse(child => {
+                if (child.isMesh)
+                    child.receiveShadow = value;
+            })
+        });
+        if (this.contents.bubble) {
+            const coralBubblesFolder = coralsFolder.addFolder('Coral Bubbles');
+            coralBubblesFolder.add(this.contents, 'coralBubblesEnabled').name('Spawn Bubbles');
+            coralBubblesFolder.add(this.contents.bubble, 'lodEnabled').name('Enable LOD').onChange(value => {
+                if (!value) {
+                    const iEffectiveCount = this.contents.bubble.mesh.geometry.getAttribute("iEffectiveCount");
+                    iEffectiveCount.array.forEach((_, i, arr) => arr[i] = this.contents.bubble.instanceParticleCount);
+                    iEffectiveCount.needsUpdate = true;
+                }
+            });
+            coralBubblesFolder.add(this.contents.bubble, 'lodDistance').name('LOD Threshold');
+            coralBubblesFolder.add(this.contents.bubble, 'lodMultiplier').name('LOD Multiplier');
+        }
         coralsFolder.close();
 
         // // Bubble LOD indicator
