@@ -218,6 +218,8 @@ export class LSystemCoralsOwner extends InstancedMesh2 {
         this.addLOD(lod[2], mat, 30);
         this.addShadowLOD(lod[2]);
 
+        this.frustumCulled = false;
+
         // super(LSystemCoralsOwner.#branchGeo[0], LSystemCoralsOwner.#mat.clone());
 
         this.initUniformsPerInstance({
