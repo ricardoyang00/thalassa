@@ -35,7 +35,7 @@ class MyContents  {
     */ 
     constructor(app) {
         this.app = app
-        this.fastLoad = false;
+        this.fastLoad = true;
         this.mainRaycaster = new THREE.Raycaster();
         this.selectedObject = null;
         this.colliders = [];
@@ -324,9 +324,9 @@ class MyContents  {
         let coralsPlaced = 0;
 
         const coralTypes = [
-            TubeCoral,
+            // TubeCoral,
             LSystemCoral,
-            BrainCoral,
+            // BrainCoral,
         ];
 
         const naturalCoralPalette = [

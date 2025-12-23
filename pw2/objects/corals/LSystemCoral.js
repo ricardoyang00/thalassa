@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { SgiUtils } from '../../SgiUtils.js';
 import { InstancedMesh2 } from '@three.ez/instanced-mesh';
 import { MultiInstancedEntity } from '../MultiInstancedEntity.js';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 
 function branchGeoGen(radialSegments, openEnded = false) {
     return new THREE.CylinderGeometry(0.15, 0.15, 1, radialSegments, 1, openEnded).translate(0, 0.5, 0);
@@ -20,16 +21,35 @@ function matGen() {
 
         // Manual vertex projection, might not work on different/future versions
         shader.vertexShader =
+            // `
+            // uniform float time;
+            // uniform float timeBias;
+            // `
+            // + shader.vertexShader.replace(
+            // '#include <project_vertex>',
+            // `
+            // vec4 mvPosition = vec4( transformed, 1.0 );
+            // mvPosition = instanceMatrix * mvPosition;
+
+            // float coralAlpha = time + timeBias;
+            // float sway = 0.2 + 0.1 * (
+            //     sin(2.0 * mod(coralAlpha, PI))
+            //     +
+            //     cos(mod(coralAlpha, 2.0 * PI))
+            // );
+            // mvPosition.x += mvPosition.y * sway;
+
+            // mvPosition = modelViewMatrix * mvPosition;
+            // gl_Position = projectionMatrix * mvPosition;
+            // `
             `
             uniform float time;
             uniform float timeBias;
-            uniform float baseY;
             `
             + shader.vertexShader.replace(
-            '#include <project_vertex>',
+            '#include <begin_vertex>',
             `
-            vec4 mvPosition = vec4( transformed, 1.0 );
-            mvPosition = instanceMatrix * mvPosition;
+            #include <begin_vertex>
 
             float coralAlpha = time + timeBias;
             float sway = 0.2 + 0.1 * (
@@ -37,10 +57,17 @@ function matGen() {
                 +
                 cos(mod(coralAlpha, 2.0 * PI))
             );
-            mvPosition.x += (mvPosition.y - baseY) * sway;
+            transformed.x += transformed.y * sway;
 
-            mvPosition = modelViewMatrix * mvPosition;
-            gl_Position = projectionMatrix * mvPosition;
+            // vec4 mvPosition = vec4( transformed, 1.0 );
+            // mvPosition = instanceMatrix * mvPosition;
+
+            // float coralAlpha = time + timeBias;
+            
+            // mvPosition.x += mvPosition.y * sway;
+
+            // mvPosition = modelViewMatrix * mvPosition;
+            // gl_Position = projectionMatrix * mvPosition;
             `
         );
 
@@ -51,35 +78,15 @@ function matGen() {
 }
 
 export class LSystemCoralsOwner extends InstancedMesh2 {
-    static #geo = [
+    static #branchGeo = [
         branchGeoGen(10),
         branchGeoGen(5),
         branchGeoGen(3),
     ];
 
+    static #mat = matGen();
+
     constructor() {
-        const geo = LSystemCoralsOwner.#geo;
-        super(geo[0], matGen(), {createEntities: true});
-        this.addLOD(geo[1], matGen(), 15);
-        this.addLOD(geo[2], matGen(), 30);
-        this.initUniformsPerInstance({
-            vertex: {
-                timeBias: 'float',
-                baseY: 'float',
-            },
-        });
-        this.addShadowLOD(branchGeoGen(3, true));
-        this.frustumCulled = false;
-    }
-}
-
-export class LSystemCoral extends MultiInstancedEntity {
-    static defaultOwner = new LSystemCoralsOwner();
-
-    constructor(color = 0xffffff, size = 1, owner = LSystemCoral.defaultOwner) {
-        super(owner);
-        this.position = new LSystemCoral.Position(this);
-        this.size = size;
         const iterations = 3;
 
         const low = 0.3, high = 1-low;
@@ -125,7 +132,7 @@ export class LSystemCoral extends MultiInstancedEntity {
                 nextString += rules[char] !== undefined
                     ? typeof(rules[char]) == "string"
                         ? rules[char]
-                        : this.#chooseNextRule(rules[char])
+                        : LSystemCoralsOwner.#chooseNextRule(rules[char])
                     : char;
             }
             currentString = nextString;
@@ -214,33 +221,58 @@ export class LSystemCoral extends MultiInstancedEntity {
             }
         }
 
-        let i = 0;
-        const timeBias = SgiUtils.rand(0, 69420);
-        this.addInstances(branchMatrices.length, (obj, j) => {
-            // obj.applyMatrix4(branchMatrices[i]);
-            const t = transformations[i];
-            obj.scale = t.scale;
-            obj.quaternion = t.quaternion;
-            obj.position = t.position;
-            obj.setUniform("timeBias", timeBias);
+        const lod = [];
+        for (const branchGeo of LSystemCoralsOwner.#branchGeo) {
+            const branches = [];
+            for (const matrix of branchMatrices) {
+                const branch = branchGeo.clone();
+                branch.applyMatrix4(matrix);
+                branches.push(branch);
+            }
+            lod.push(BufferGeometryUtils.mergeGeometries(branches));
+        }
 
-            owner.setColorAt(j, color); // Using "obj.color" throws an error
-            i++;
+        const mat = LSystemCoralsOwner.#mat;
+
+        super(lod[0], matGen(), {createEntities: true});
+        this.addLOD(lod[1], matGen(), 15);
+        this.addLOD(lod[2], matGen(), 30);
+        this.addShadowLOD(lod[2]);
+
+        // super(LSystemCoralsOwner.#branchGeo[0], LSystemCoralsOwner.#mat.clone());
+
+        this.initUniformsPerInstance({
+            vertex: {
+                timeBias: 'float',
+            },
         });
 
-        // if (leafMatrices.length > 0) {
-        //     const leafGeo = new THREE.IcosahedronGeometry(0.2, 0);
-        //     const leafMat = new THREE.MeshStandardMaterial({ color: 0x228B22, metalness: 0, roughness: 0.8 });
-        //     const leafMesh = new THREE.InstancedMesh(leafGeo, leafMat, leafMatrices.length);
-        //     leafMesh.name = "leaves";
-        //     for (let i = 0; i < leafMatrices.length; i++) {
-        //         leafMesh.setMatrixAt(i, leafMatrices[i]);
-        //     }
-        //     group.add(leafMesh);
-        // }
+        // this.addInstances(branchMatrices.length, (obj, j) => {
+        //     // obj.applyMatrix4(branchMatrices[i]);
+        //     const t = transformations[i];
+        //     obj.scale = t.scale;
+        //     obj.quaternion = t.quaternion;
+        //     obj.position = t.position;
+        //     obj.setUniform("timeBias", timeBias);
+
+        //     owner.setColorAt(j, color); // Using "obj.color" throws an error
+        //     i++;
+        // });
+
+        // super(branchGeo[0], matGen(), {createEntities: true});
+        // this.addLOD(branchGeo[1], matGen(), 15);
+        // this.addLOD(branchGeo[2], matGen(), 30);
+        // this.initUniformsPerInstance({
+        //     vertex: {
+        //         timeBias: 'float',
+        //         baseY: 'float',
+        //     },
+        // });
+        // this.addShadowLOD(branchGeoGen(3, true)); // TODO: this causes a shader compilation error, but it still works...?
+        // this.frustumCulled = false;
     }
 
-    #chooseNextRule(options) {
+    static #chooseNextRule(options) {
         //Sum the weights (probabilities) of all options.
         const total = options.reduce((sum, o) => sum + o.prob, 0);
 
@@ -257,50 +289,45 @@ export class LSystemCoral extends MultiInstancedEntity {
         //default: return the last option.
         return options[options.length - 1].rule;
     }
+}
+
+export class LSystemCoral extends MultiInstancedEntity {
+    static defaultOwner = new LSystemCoralsOwner();
+
+    constructor(color = 0xffffff, size = 1, owner = LSystemCoral.defaultOwner) {
+        super(owner);
+        this.size = size;
+        const timeBias = SgiUtils.rand(0, 69420);
+
+        this.addInstances(1, (obj, i) => {
+            obj.scale.multiplyScalar(size);
+            // // obj.applyMatrix4(branchMatrices[i]);
+            // const t = transformations[i];
+            // obj.scale = t.scale;
+            // obj.quaternion = t.quaternion;
+            // obj.position = t.position;
+            obj.setUniform("timeBias", timeBias);
+            owner.setColorAt(i, color); // Using "obj.color" throws an error
+            i++;
+        });
+
+        // if (leafMatrices.length > 0) {
+        //     const leafGeo = new THREE.IcosahedronGeometry(0.2, 0);
+        //     const leafMat = new THREE.MeshStandardMaterial({ color: 0x228B22, metalness: 0, roughness: 0.8 });
+        //     const leafMesh = new THREE.InstancedMesh(leafGeo, leafMat, leafMatrices.length);
+        //     leafMesh.name = "leaves";
+        //     for (let i = 0; i < leafMatrices.length; i++) {
+        //         leafMesh.setMatrixAt(i, leafMatrices[i]);
+        //     }
+        //     group.add(leafMesh);
+        // }
+    }
 
     dispose(object) {
         object.children.forEach(child => {
             if (child.geometry) child.geometry.dispose();
             if (child.material) child.material.dispose();
         });
-    }
-
-    // JS seems to shit itself if I try to override the Y setter so I'm just reimplementing the class here
-    static Position = class extends THREE.Vector3 {
-        constructor(entity, x = 0, y = 0, z = 0) {
-            super(x, y, z);
-            this.entity = entity;
-        }
-
-        set x(val) {
-            this.entity?._instances.forEach((obj) => obj.position.x += val - this._x);
-            this._x = val;
-        }
-
-        set y(val) {
-            this.entity?._instances.forEach((obj) => {
-                obj.position.y += val - this._y;
-                obj.setUniform("baseY", val);
-            });
-            this._y = val;
-        }
-
-        set z(val) {
-            this.entity?._instances.forEach((obj) => obj.position.z += val - this._z);
-            this._z = val;
-        }
-
-        get x() {
-            return this._x;
-        }
-
-        get y() {
-            return this._y;
-        }
-
-        get z() {
-            return this._z;
-        }
     }
 }
 
