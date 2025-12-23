@@ -211,7 +211,15 @@ class MyGuiInterface  {
         });
         if (this.contents.bubble) {
             const coralBubblesFolder = coralsFolder.addFolder('Coral Bubbles');
-            coralBubblesFolder.add(this.contents, 'coralBubblesEnabled').name('Spawn Bubbles');
+            coralBubblesFolder.add(this.contents, 'coralBubblesEnabled').name('Spawn Bubbles').onChange((value) => {
+                if (!value) {
+                    const manager = this.contents.bubble.managers[0];
+                    manager.object.geometry.instanceCount = 0;
+                    manager.activeInstances.clear();
+                    for (let i = 0; i < manager.maxInstances; ++i)
+                        manager.freeInstances.add(i);
+                }
+            });
             coralBubblesFolder.add(this.contents.bubble, 'lodEnabled').name('Enable LOD').onChange(value => {
                 if (!value) {
                     const iEffectiveCount = this.contents.bubble.mesh.geometry.getAttribute("iEffectiveCount");
