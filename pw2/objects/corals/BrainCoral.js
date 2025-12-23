@@ -49,6 +49,10 @@ export class BrainCoralsOwner extends InstancedMesh2 {
         super(geo[0], BrainCoralsOwner.#highDetailMat, {createEntities: true});
         this.addLOD(geo[1], BrainCoralsOwner.#mediumDetailMat, 20);
         this.addLOD(geo[2], BrainCoralsOwner.#lowDetailMat, 50);
+
+        // if not multiplied by ~0.9, there will be a small line of missing shadow around the highest LOD due to displacement
+        const scale = 0.9 * (1 + BrainCoralsOwner.#highDetailMat.displacementScale);
+        this.addShadowLOD(new THREE.SphereGeometry(1, 16, 16).scale(scale, scale, scale));
         this.frustumCulled = false;
     }
 }

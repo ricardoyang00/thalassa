@@ -324,9 +324,9 @@ class MyContents  {
         let coralsPlaced = 0;
 
         const coralTypes = [
-            TubeCoral,
+            // TubeCoral,
             // LSystemCoral,
-            // BrainCoral,
+            BrainCoral,
         ];
 
         const naturalCoralPalette = [
