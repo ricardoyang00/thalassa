@@ -344,8 +344,6 @@ class Bubble {
         const ambientIntensity = this.ambientLight ? this.ambientLight.intensity : 0.3;
 
         for (const manager of this.managers) {
-            if (SgiUtils.debug)
-                console.log(manager.activeInstances.size)
             manager.object.material.uniforms.uTime.value = currentTime;
             manager.object.material.uniforms.uAmbientLightIntensity.value = ambientIntensity;
 

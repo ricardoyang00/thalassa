@@ -87,6 +87,43 @@ class MyGuiInterface  {
         renderFolder.add(this.app, 'wireframeMode', false).name("Wireframe Mode").onChange( (value) => { this.app.setWireframeMode(value) } );
         renderFolder.close()
 
+        const heavyModelsFolder = this.datgui.addFolder('Heavy Models');
+        const allHeavyModelsFolder = heavyModelsFolder.addFolder("All");
+        const heavyModels = {
+            "Apollo": this.contents.apollo,
+            "Shark": this.contents.shark,
+            "Horse Pillars": this.contents.groupHorsePillars,
+            "Temple": this.contents.temple,
+            // "Vase": this.contents.vase,
+            // "Chest": this.contents.chest,
+        };
+
+        for (const [name, model] of Object.entries(heavyModels)) {
+            if (!model)
+                continue;
+
+            model.traverse(child => {if (child.castShadow) model.castShadow = true;});
+            model.traverse(child => {if (child.receiveShadow) model.receiveShadow = true;});
+
+            const folder = heavyModelsFolder.addFolder(name);
+            folder.add(model, 'visible').name('Visible');
+            folder.add(model, 'castShadow').name('Cast Shadows').onChange(value => model.traverse(child => child.castShadow = value));
+            folder.add(model, 'receiveShadow').name('Receive Shadows').onChange(value => model.traverse(child => child.receiveShadow = value));
+            folder.close();
+        }
+        const allHeavyModelsOpt = {
+            visible: true,
+            castShadow: true,
+            receiveShadow: true,
+        };
+        allHeavyModelsFolder.add(allHeavyModelsOpt, 'visible').name('Visible')
+            .onChange(value => Object.values(heavyModels).forEach(model => {if (model) model.visible = value}));
+        allHeavyModelsFolder.add(allHeavyModelsOpt, 'castShadow').name('Cast Shadows')
+            .onChange(value => Object.values(heavyModels).forEach(model => {if (model) model.traverse(child => child.castShadow = value)}));
+        allHeavyModelsFolder.add(allHeavyModelsOpt, 'receiveShadow').name('Receive Shadows')
+            .onChange(value => Object.values(heavyModels).forEach(model => {if (model) model.traverse(child => child.receiveShadow = value)}));
+        heavyModelsFolder.close();
+
         const submarineFolder = this.datgui.addFolder('Submarine Lights');
         const submarine = this.contents.submarine;
 
@@ -300,8 +337,6 @@ class MyGuiInterface  {
             avoidanceFolder.close();
 
             flockFolder.close();
-
-            this.datgui.add(SgiUtils, 'debug').name('Debug');
         }
 
         // Exclusion Zones Controls
@@ -345,8 +380,12 @@ class MyGuiInterface  {
                     });
                 });
             }
-            
             exclusionZonesFolder.close();
+
+            this.datgui.add(this.contents.skylight, 'castShadow').name('Skylight Shadows');
+
+            // I just use it to toggle console.log() calls when debugging to avoid flooding the console
+            this.datgui.add(SgiUtils, 'debug').name('Debug');
         }
     }
 }

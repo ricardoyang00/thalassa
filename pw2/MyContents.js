@@ -35,7 +35,7 @@ class MyContents  {
     */ 
     constructor(app) {
         this.app = app
-        this.fastLoad = true;
+        this.fastLoad = false;
         this.mainRaycaster = new THREE.Raycaster();
         this.selectedObject = null;
         this.colliders = [];
@@ -819,12 +819,13 @@ class MyContents  {
         spot4.penumbra = 0.5;
         spot4.decay = 2;
         spot4.distance = 150;
-        // spot4.castShadow = true;
+        spot4.castShadow = true;
         spot4.shadow.mapSize.set(2048, 2048);
         spot4.shadow.camera.near = 0.5;
         spot4.shadow.camera.far = 200;
         this.app.scene.add(spot4);
         const spotLightHelper4 = new THREE.SpotLightHelper(spot4);
+        this.skylight = spot4;
         //this.app.scene.add(spotLightHelper4);
 
         this.buildWater();
