@@ -72,4 +72,10 @@ Our project aimed to push the limits of what could be rendered on today's averag
   - To mitigate this problem, each instance is given an "effective count" of particles and the rest of them are skipped. However, this barely causes any performance improvement (even for a high count of particles per instance), as it only really avoids generating fragments.
   - Similarly, culling is also a problem: we had to disable frustum culling, because otherwise particles would be culled if the camera turned its back to the scene origin (0,0,0)
   - **Potential Solution**: subdivide the particle system into different areas/clusters (uniform grid?) and apply LOD/culling per area/cluster, rather than per instance
+
 - **Shadows**: Heavy models (e.g. temple, shark) don't have a dedicated shadow mesh/LOD
+
+- **Temple Generation Time**
+  - If you run our project, you will notice it takes a couple (or even a few) seconds to load the scene. This is because the temple is generated using boolean operations on geometries, which take quite a while.
+  - **Potential Solution**: use workers
+  - **Potential Solution**: generate temple beforehand
