@@ -260,9 +260,11 @@ class MyGuiInterface  {
             });
             coralBubblesFolder.add(this.contents.bubble, 'lodEnabled').name('Enable LOD').onChange(value => {
                 if (!value) {
-                    const iEffectiveCount = this.contents.bubble.mesh.geometry.getAttribute("iEffectiveCount");
-                    iEffectiveCount.array.forEach((_, i, arr) => arr[i] = this.contents.bubble.instanceParticleCount);
-                    iEffectiveCount.needsUpdate = true;
+                    for (const manager of this.contents.bubble.managers) {
+                        const iEffectiveCount = manager.object.geometry.getAttribute("iEffectiveCount");
+                        iEffectiveCount.array.forEach((_, i, arr) => arr[i] = this.contents.bubble.instanceParticleCount);
+                        iEffectiveCount.needsUpdate = true;
+                    }
                 }
             });
             coralBubblesFolder.add(this.contents.bubble, 'lodDistance').name('LOD Threshold');

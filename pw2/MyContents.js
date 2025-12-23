@@ -425,7 +425,7 @@ class MyContents  {
 
         this.coralMeshes.add(TubeCoral.defaultOwner);
         this.coralMeshes.add(BrainCoral.defaultOwner);
-        this.coralMeshes.add(LSystemCoral.defaultOwner);
+        LSystemCoral.defaultOwners.forEach(owner => this.coralMeshes.add(owner));
 
         this.coralMeshes.traverse((child) => {
             if (child.isMesh) {
@@ -438,7 +438,7 @@ class MyContents  {
 
         TubeCoral.defaultOwner.computeBVH({margin: 0.5});
         BrainCoral.defaultOwner.computeBVH({margin: 0.5});
-        LSystemCoral.defaultOwner.computeBVH({margin: 0.5});
+        LSystemCoral.defaultOwners.forEach(owner => owner.computeBVH({margin: 0.5}));
 
         this.app.scene.add(this.seafloorGroup);
 
@@ -971,11 +971,11 @@ class MyContents  {
         }
 
         const alpha = now % (2 * Math.PI);
-        LSystemCoral.defaultOwner.LODinfo.objects.forEach((lod) => {
+        LSystemCoral.defaultOwners.forEach(owner => owner.LODinfo.objects.forEach((lod) => {
             const time = lod.material.userData?.shader?.uniforms.time;
             if (time)
                 time.value = alpha;
-        });
+        }));
 
         if (this.causticsLight) {
             const deepTime = now * 0.0002; 
@@ -1334,7 +1334,7 @@ class MyContents  {
         });
         TubeCoral.defaultOwner.updateInstances(() => {});
         BrainCoral.defaultOwner.updateInstances(() => {});
-        LSystemCoral.defaultOwner.updateInstances(() => {});
+        LSystemCoral.defaultOwners.forEach(owner => owner.updateInstances(() => {}));
         this.rocks.children.forEach((rock) => rock.position.y += this.terrain.displacementAtXY(rock.position.x, rock.position.z));
         this.colliders.push(SgiUtils.buildColliderGeo(this.rocks).boundsTree);
 

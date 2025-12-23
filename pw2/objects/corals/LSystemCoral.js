@@ -21,27 +21,6 @@ function matGen() {
 
         // Manual vertex projection, might not work on different/future versions
         shader.vertexShader =
-            // `
-            // uniform float time;
-            // uniform float timeBias;
-            // `
-            // + shader.vertexShader.replace(
-            // '#include <project_vertex>',
-            // `
-            // vec4 mvPosition = vec4( transformed, 1.0 );
-            // mvPosition = instanceMatrix * mvPosition;
-
-            // float coralAlpha = time + timeBias;
-            // float sway = 0.2 + 0.1 * (
-            //     sin(2.0 * mod(coralAlpha, PI))
-            //     +
-            //     cos(mod(coralAlpha, 2.0 * PI))
-            // );
-            // mvPosition.x += mvPosition.y * sway;
-
-            // mvPosition = modelViewMatrix * mvPosition;
-            // gl_Position = projectionMatrix * mvPosition;
-            // `
             `
             uniform float time;
             uniform float timeBias;
@@ -292,9 +271,19 @@ export class LSystemCoralsOwner extends InstancedMesh2 {
 }
 
 export class LSystemCoral extends MultiInstancedEntity {
-    static defaultOwner = new LSystemCoralsOwner();
+    static defaultOwners = (() => {
+        const n_variants = 10;
+        const result = [];
+        for (let i = 0; i < n_variants; ++i) {
+            result.push(new LSystemCoralsOwner());
+        }
+        return result;
+    })();
 
-    constructor(color = 0xffffff, size = 1, owner = LSystemCoral.defaultOwner) {
+    constructor(color = 0xffffff, size = 1, owner = null) {
+        if (!owner)
+            owner = LSystemCoral.defaultOwners[SgiUtils.randInt(0, LSystemCoral.defaultOwners.length)];
+
         super(owner);
         this.size = size;
         const timeBias = SgiUtils.rand(0, 69420);
