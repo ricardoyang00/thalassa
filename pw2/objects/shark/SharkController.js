@@ -38,12 +38,13 @@ class SharkController {
         this._built = false;
     }
 
-    buildShark() {
+    buildShark(onLoad = null) {
         if (this._built) return;
 
         this.shark = new MySharkLOD(this.app, {
             size: this.size,
-            assetsPath: this.assetsPath
+            assetsPath: this.assetsPath,
+            onLoad: onLoad,
         });
 
         this.shark.position.copy(this.sharkPatrolCenter)

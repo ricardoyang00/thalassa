@@ -93,6 +93,7 @@ class MyGuiInterface  {
             "Apollo": this.contents.apollo,
             "Shark": this.contents.shark,
             "Horse Pillars": this.contents.groupHorsePillars,
+            "Submarine": this.contents.submarine,
             "Temple": this.contents.temple,
             // "Vase": this.contents.vase,
             // "Chest": this.contents.chest,
@@ -102,24 +103,32 @@ class MyGuiInterface  {
             if (!model)
                 continue;
 
-            model.traverse(child => {if (child.castShadow) model.castShadow = true;});
-            model.traverse(child => {if (child.receiveShadow) model.receiveShadow = true;});
+            model.castShadow = false;
+            model.receiveShadow = false;
+            // model.traverse(child => {if (child.castShadow) model.castShadow = true;});
+            // model.traverse(child => {if (child.receiveShadow) model.receiveShadow = true;});
 
             const folder = heavyModelsFolder.addFolder(name);
             folder.add(model, 'visible').name('Visible');
-            folder.add(model, 'castShadow').name('Cast Shadows').onChange(value => model.traverse(child => child.castShadow = value));
+            folder.add(model, 'castShadow').name('Cast Shadows').onChange(value => model.traverse(child => {
+                if (!child.isLight)
+                    child.castShadow = value;
+            }));
             folder.add(model, 'receiveShadow').name('Receive Shadows').onChange(value => model.traverse(child => child.receiveShadow = value));
             folder.close();
         }
         const allHeavyModelsOpt = {
             visible: true,
-            castShadow: true,
-            receiveShadow: true,
+            castShadow: false,
+            receiveShadow: false,
         };
         allHeavyModelsFolder.add(allHeavyModelsOpt, 'visible').name('Visible')
             .onChange(value => Object.values(heavyModels).forEach(model => {if (model) model.visible = value}));
         allHeavyModelsFolder.add(allHeavyModelsOpt, 'castShadow').name('Cast Shadows')
-            .onChange(value => Object.values(heavyModels).forEach(model => {if (model) model.traverse(child => child.castShadow = value)}));
+            .onChange(value => Object.values(heavyModels).forEach(model => {if (model) model.traverse(child => {
+                if (!child.isLight)
+                    child.castShadow = value;
+            })}));
         allHeavyModelsFolder.add(allHeavyModelsOpt, 'receiveShadow').name('Receive Shadows')
             .onChange(value => Object.values(heavyModels).forEach(model => {if (model) model.traverse(child => child.receiveShadow = value)}));
         heavyModelsFolder.close();
@@ -229,8 +238,8 @@ class MyGuiInterface  {
         rocksFolder.close();
 
         const coralOpt = {
-            castShadow: true,
-            receiveShadow: true,
+            castShadow: false,
+            receiveShadow: false,
         };
         const coralsFolder = this.datgui.addFolder('Corals');
         coralsFolder.add(this.contents.coralMeshes, 'visible').name('Show Corals');

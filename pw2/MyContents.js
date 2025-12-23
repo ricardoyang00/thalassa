@@ -72,17 +72,15 @@ class MyContents  {
         this.apollo = this.fastLoad
             ? new THREE.Mesh(new THREE.BoxGeometry())
             : new Apollo(this.app, {
-                onLoad: () => this.colliders.push(SgiUtils.buildColliderGeo(this.apollo).boundsTree)
+                onLoad: () => {
+                    this.colliders.push(SgiUtils.buildColliderGeo(this.apollo).boundsTree);
+                    this.apollo.traverse(child => {
+                        child.castShadow = false;
+                        child.receiveShadow = false;
+                    });
+                }
             });
         this.apollo.name = "Apollo";
-        this.apollo.castShadow = true;
-        this.apollo.receiveShadow = true;
-        this.apollo.traverse((child) => {
-            if (child.isMesh) {
-                child.castShadow = true;
-                child.receiveShadow = true;
-            }
-        });
 
         this.app.scene.add(this.apollo);
     
@@ -99,7 +97,13 @@ class MyContents  {
 
         this.horse1 = this.fastLoad
             ? new THREE.Mesh(new THREE.BoxGeometry())
-            : new HorsePillar(this.app, () => this.colliders.push(SgiUtils.buildColliderGeo(this.horse1).boundsTree));
+            : new HorsePillar(this.app, () => {
+                this.colliders.push(SgiUtils.buildColliderGeo(this.horse1).boundsTree);
+                this.horse1.traverse(child => {
+                    child.castShadow = false;
+                    child.receiveShadow = false;
+                })
+            });
         this.horse1.scale.setScalar(0.75);
         this.horse1.position.set(-15, 0, 22);
         this.horse1.rotateY(Math.PI/2);
@@ -107,7 +111,13 @@ class MyContents  {
 
         this.horse2 = this.fastLoad
             ? new THREE.Mesh(new THREE.BoxGeometry())
-            : new HorsePillar(this.app, () => this.colliders.push(SgiUtils.buildColliderGeo(this.horse2).boundsTree));
+            : new HorsePillar(this.app, () => {
+                this.colliders.push(SgiUtils.buildColliderGeo(this.horse2).boundsTree);
+                this.horse2.traverse(child => {
+                    child.castShadow = false;
+                    child.receiveShadow = false;
+                });
+            });
         this.horse2.scale.setScalar(0.75);
         this.horse2.position.set(22, 0, -15);
         this.horse2.rotateY(-Math.PI);
@@ -429,8 +439,8 @@ class MyContents  {
 
         this.coralMeshes.traverse((child) => {
             if (child.isMesh) {
-                child.castShadow = true;
-                child.receiveShadow = true;
+                child.castShadow = false;
+                child.receiveShadow = false;
             }
         });
 
@@ -483,7 +493,15 @@ class MyContents  {
         this.submarine = new MySubmarineLOD(this.app, {
             size: 2,
             assetsPath: 'models/submarine/',
-            gltfFile: 'scene.gltf'
+            gltfFile: 'scene.gltf',
+            onLoad: () => {
+                this.submarine.traverse(child => {
+                    if (child.isLight)
+                        return;
+                    child.castShadow = false;
+                    child.receiveShadow = false;
+                })
+            }
         });
         
         this.submarine.position.set(0, 10, -4);
@@ -606,7 +624,12 @@ class MyContents  {
             size: 1,
             assetsPath: 'models/shark/'
         });
-        this.sharkController.buildShark();
+        this.sharkController.buildShark(() => {
+            this.shark.traverse(child => {
+                child.castShadow = false;
+                child.receiveShadow = false;
+            })
+        });
         this.shark = this.sharkController.shark;
     }
 
@@ -819,7 +842,7 @@ class MyContents  {
         spot4.penumbra = 0.5;
         spot4.decay = 2;
         spot4.distance = 150;
-        spot4.castShadow = true;
+        spot4.castShadow = false;
         spot4.shadow.mapSize.set(2048, 2048);
         spot4.shadow.camera.near = 0.5;
         spot4.shadow.camera.far = 200;
@@ -877,10 +900,8 @@ class MyContents  {
         this.colliders.push(templeBVHGeo.boundsTree);
 
         this.temple.traverse((child) => {
-            if (child.isMesh) {
-                child.receiveShadow = true;
-                child.castShadow = true;
-            }
+            child.receiveShadow = false;
+            child.castShadow = false;
         });
 
         this.app.scene.add(this.temple);
@@ -1327,7 +1348,7 @@ class MyContents  {
             const x = obj.position.x;
             const y = obj.position.z;
 
-            obj.position.y += this.terrain.displacementAtXY(x, y);
+            obj.position.y += this.terrain.displacementAtXY(x, y) -.05;
             const rotation = this.terrain.inclinationAtXY(x, y);
             obj.rotateX(rotation[1]);
             obj.rotateZ(-rotation[0]);

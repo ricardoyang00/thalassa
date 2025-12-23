@@ -213,9 +213,9 @@ export class LSystemCoralsOwner extends InstancedMesh2 {
 
         const mat = LSystemCoralsOwner.#mat;
 
-        super(lod[0], matGen(), {createEntities: true});
-        this.addLOD(lod[1], matGen(), 15);
-        this.addLOD(lod[2], matGen(), 30);
+        super(lod[0], mat, {createEntities: true});
+        this.addLOD(lod[1], mat, 15);
+        this.addLOD(lod[2], mat, 30);
         this.addShadowLOD(lod[2]);
 
         // super(LSystemCoralsOwner.#branchGeo[0], LSystemCoralsOwner.#mat.clone());
