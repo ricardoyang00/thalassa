@@ -28,6 +28,7 @@ Our project aimed to push the limits of what could be rendered on today's averag
 - A submarine with a front (yellowish) light, and a red intermittent light
 - 5 flocks of fish with 100-200 fish each
 - A shark
+- Animated water surface ([image](#scene-viewed-from-above-the-water-surface))
 
 ### Effects
 - Bubbles emitted by tube corals (in bursts) and by submarine (when moving)
@@ -36,7 +37,7 @@ Our project aimed to push the limits of what could be rendered on today's averag
 - Caustic effect
 
 ### Features
-- Flock avoidance
+- Flock avoidance ([image](#fish-swimming-away-from-submarine))
   - The submarine and shark are considered a danger and strongly avoided
   - Corals are also avoided, though not as strongly
 - Collisions
@@ -45,30 +46,14 @@ Our project aimed to push the limits of what could be rendered on today's averag
   - Fish collide with temple and terrain
 - Sand "puff" when the user clicks on the terrain
 - Corals, fish and rocks increase in size when clicked
-  - Good for seeing LOD in action
+  - Good for seeing LOD in action ([image](#different-lods-visible-when-increasing-coral-size-clicking))
 - 4 (relevant) camera modes:
   - Perspective: the default camera
-  - Submarine Periscope with a cool visual effect and coordinates indicator
+  - Submarine Periscope ([image](#periscope-camera-mode)) with a cool visual effect and coordinates indicator
   - Submarine FPV with a video
   - Fly mode, with blurred vision
 - Submarine shield
   - Affects collisions
-
-### Extra screenshots
-
-Different LODs visible when increasing coral size (clicking):
-
-<img src="screenshots/lod1.png" alt="LOD 1" width="32%"/>
-<img src="screenshots/lod2.png" alt="LOD 2" width="32%"/>
-<img src="screenshots/lod3.png" alt="LOD 3" width="32%"/>
-
-Fish swimming away from submarine:
-
-<img src="screenshots/avoidance.png" alt="Fish avoidance"/>
-
-Periscope camera mode:
-
-<img src="screenshots/periscope.png" alt="Periscope camera mode">
 
 ----
 ## Issues/Problems
@@ -99,3 +84,39 @@ Periscope camera mode:
   - Objects can get stuck on edges and/or complex surfaces
     - Especially annoying for fish, because they don't just pick another direction, unlike the submarine which is controlled by the user
   - Was mitigated by making the surface normal stronger, but the issue is still prevalent and slide is not as smooth
+
+## Extra screenshots
+
+### Periscope camera mode
+<img src="screenshots/periscope.png" alt="Periscope camera mode">
+
+---
+
+### Scene viewed from above the water surface
+<img src="screenshots/surface.png" alt="Water surface">
+
+---
+
+### Fish swimming away from submarine
+<img src="screenshots/avoidance.png" alt="Fish avoidance"/>
+
+---
+
+### Different LODs visible when increasing coral size (clicking)
+<img src="screenshots/lod1.png" alt="LOD 1" width="32%"/>
+<img src="screenshots/lod2.png" alt="LOD 2" width="32%"/>
+<img src="screenshots/lod3.png" alt="LOD 3" width="32%"/>
+
+---
+
+### A better look at the temple
+<img src="./screenshots/temple.png" alt="Temple">
+
+---
+
+### A longer shot of the scene
+<img src="./screenshots/longshot.png" alt="Long Shot">
+
+## Conclusions
+
+very cool project
