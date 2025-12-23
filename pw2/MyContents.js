@@ -582,7 +582,7 @@ class MyContents  {
             this.fishByGroup.push(groupFishes);
 
             // ... (Flock Logic unchanged) ...
-            const flock = new FishFlock(groupFishes, {
+            const flock = new FishFlock(this, groupFishes, {
                 colliders: this.colliders,
             });
             flock.position.set((col - cx) * spacing, SgiUtils.rand(1, 6), (row - rz) * spacing);

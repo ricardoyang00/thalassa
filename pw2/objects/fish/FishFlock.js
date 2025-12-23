@@ -4,6 +4,8 @@ import { MultiInstancedEntityContainer } from '../MultiInstancedEntity.js';
 import { Fish } from './Fish.js';
 
 class FishFlock extends MultiInstancedEntityContainer {
+    static useCoralsBVH = true;
+
     /**
      * Creates a FishFlock simulation.
      * @param {THREE.Object3D[]} fishArray - Array of fish objects to control.
@@ -27,8 +29,9 @@ class FishFlock extends MultiInstancedEntityContainer {
      * @param {any} [options.coralsAvoidanceBVH=undefined] - BVH for coral avoidance
      * @param {any[]} [options.colliders=[]] - Objects the fish can collide with
     */
-    constructor(fishArray = [], options = {}) {
+    constructor(contents, fishArray = [], options = {}) {
         super(fishArray.slice());
+        this.contents = contents;
         this.fish = this._instances;
         // this.boids = []; // internal state per fish
         this.dangers = [];
@@ -314,12 +317,22 @@ class FishFlock extends MultiInstancedEntityContainer {
         });
 
         SgiUtils.collideTestCounter = 0;
-        if (this.coralsAvoidanceBVH) {
+        if (this.coralsAvoidanceBVH && FishFlock.useCoralsBVH) {
             for (const {a: fish, b: obj} of SgiUtils.getCollidingObjects(this._bvh, this.coralsAvoidanceBVH)) {
                 const distVec = this._worldAvoidSteer.subVectors(fish.position, obj.position);
                 const d = distVec.length();
                 fish.avoidance.y += 3/d;
                 ++fish.totalAvoidance;
+            }
+        } else { // brute force
+            for (const fish of this.fish) {
+                for (const coral of this.contents.corals) {
+                    const d = fish.position.manhattanDistanceTo(coral.position);
+                    if (d < 1.5) {
+                        fish.avoidance.y += 3/d;
+                        ++fish.totalAvoidance;
+                    }
+                }
             }
         }
         // console.log(SgiUtils.collideTestCounter);

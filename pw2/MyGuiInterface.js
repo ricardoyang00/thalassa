@@ -2,6 +2,7 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { MyApp } from './MyApp.js';
 import { MyContents } from './MyContents.js';
 import { SgiUtils } from './SgiUtils.js';
+import { FishFlock } from './objects/fish/FishFlock.js';
 
 /**
     This class customizes the gui interface for the app
@@ -246,6 +247,7 @@ class MyGuiInterface  {
         const fishesFolder = this.datgui.addFolder('Fishes');
         fishesFolder.add(this.contents.allFishMesh, 'visible').name('Show Fishes');
         fishesFolder.add(this.contents.fishBVHHelper, 'visible').name('Show BVH');
+        fishesFolder.add(FishFlock, 'useCoralsBVH').name('Use Corals BVH');
         const fishParams = {scale: this.contents.fishScale};
         fishesFolder.add(fishParams, 'scale', 0.05, 0.5, 0.01).name('Scale').onChange((value) => {
             this.contents.setFishesScale(value);

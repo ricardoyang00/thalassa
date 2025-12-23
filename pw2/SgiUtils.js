@@ -5,6 +5,7 @@ import { MeshBVH, MeshBVHHelper, SAH, AVERAGE } from 'three-mesh-bvh';
 class SgiUtils {
     static #seed = 0;
     static debug = false;
+    static useBVH = true;
 
     static setSeed(seed) {
         this.#seed = seed;
