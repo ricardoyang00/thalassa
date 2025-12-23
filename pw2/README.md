@@ -64,7 +64,11 @@ Different LODs visible when increasing coral size (clicking):
 
 Fish swimming away from submarine:
 
-<img src="screenshots/avoidance.png" alt="drawing"/>
+<img src="screenshots/avoidance.png" alt="Fish avoidance"/>
+
+Periscope camera mode:
+
+<img src="screenshots/periscope.png" alt="Periscope camera mode">
 
 ----
 ## Issues/Problems
@@ -90,3 +94,8 @@ Fish swimming away from submarine:
   - If you run our project, you will notice it takes a couple (or even a few) seconds to load the scene. This is because the temple is generated using boolean operations on geometries, which take quite a while.
   - **Potential Solution**: use workers
   - **Potential Solution**: generate temple beforehand
+
+- **Collisions**
+  - Objects can get stuck on edges and/or complex surfaces
+    - Especially annoying for fish, because they don't just pick another direction, unlike the submarine which is controlled by the user
+  - Was mitigated by making the surface normal stronger, but the issue is still prevalent and slide is not as smooth
