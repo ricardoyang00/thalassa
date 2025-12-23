@@ -1,4 +1,4 @@
-# SGI 2025/2026 - PW2
+# SGI 2025/2026 - PW2 - Thalassa
 
 ## Group: T05G05
 
