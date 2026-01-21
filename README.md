@@ -1,11 +1,17 @@
 # Thalassa θάλασσα
 
-[![Three.js](https://img.shields.io/badge/Three.js-black?style=flat&logo=three.js&logoColor=white)](https://threejs.org/)
- 
+<p align="center">
+  <a href="https://threejs.org/"><img alt="Three.js" src="https://img.shields.io/badge/Three.js-black?style=flat&logo=three.js&logoColor=white"></a>
+  <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript"><img alt="JavaScript" src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black"></a>
+  <a href="https://webglfundamentals.org/"><img alt="WebGL" src="https://img.shields.io/badge/WebGL-990000?style=flat&logo=webgl&logoColor=white"></a>
+</p>
+
 Explore a sunken ancient temple, navigate through corals, evade a lurking shark, and witness dynamic caustics, fog, and marine life.
 
 
-[![Demo video](images/demo.webp)](https://youtu.be/8Q-V7P8k5Qs)
+<p align="center">
+  <a href="https://youtu.be/8Q-V7P8k5Qs"><img src="images/demo.webp" width="600" alt="Demo video"></a>
+</p>
 
 ---
 
