@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/trident.svg" alt="Thalassa Logo" width="120">
+</p>
+
 <h1 align="center">Thalassa θάλασσα</h1>
 
 <p align="center">
