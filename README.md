@@ -15,7 +15,7 @@ Explore a sunken ancient temple, navigate through corals, evade a lurking shark,
 
 ---
 
-## Group: T05G05
+## SGI 2025/2026 Group: T05G05
 
 | Name          | Number    | E-Mail             |
 | ------------- | --------- | ------------------ |
@@ -140,4 +140,4 @@ Our project aimed to push the limits of what could be rendered on today's averag
 very cool project
 
 ---
-@SGI-2526-T05G05
+@ SGI-2526-T05G05
