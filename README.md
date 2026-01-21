@@ -1,4 +1,4 @@
-# Thalassa θάλασσα
+<h1 align="center">Thalassa θάλασσα</h1>
 
 <p align="center">
   <a href="https://threejs.org/"><img alt="Three.js" src="https://img.shields.io/badge/Three.js-black?style=flat&logo=three.js&logoColor=white"></a>
