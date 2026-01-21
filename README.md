@@ -1,4 +1,13 @@
-# SGI 2025/2026 - PW2 - Thalassa
+# Thalassa θάλασσα
+
+[![Three.js](https://img.shields.io/badge/Three.js-black?style=flat&logo=three.js&logoColor=white)](https://threejs.org/)
+ 
+Explore a sunken ancient temple, navigate through corals, evade a lurking shark, and witness dynamic caustics, fog, and marine life.
+
+
+[![Demo video](images/demo.webp)](https://youtu.be/8Q-V7P8k5Qs)
+
+---
 
 ## Group: T05G05
 
@@ -7,6 +16,9 @@
 | Bruno Huang   | 202207517 | up202207517@up.pt  |
 | Pedro Gorobey | 202210292 | up202210292@up.pt  |
 | Ricardo Yang  | 202208465 | up202208465@up.pt  |
+
+
+
 
 ----
 ## Project information
@@ -120,3 +132,6 @@ Our project aimed to push the limits of what could be rendered on today's averag
 ## Conclusions
 
 very cool project
+
+---
+@SGI-2526-T05G05
