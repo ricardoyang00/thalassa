@@ -475,7 +475,7 @@ class MyApp  {
 
                 // Re-enable coral bubbles for other cameras
                 if (this.contents) {
-                    this.contents.coralBubblesEnabled = true;
+                    this.contents.coralBubblesEnabled = false;
                 }
 
                 // Re-enable volumetric light cone for non-fly cameras

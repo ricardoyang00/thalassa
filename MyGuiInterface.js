@@ -103,8 +103,8 @@ class MyGuiInterface  {
             if (!model)
                 continue;
 
-            model.castShadow = false;
-            model.receiveShadow = false;
+            model.castShadow = true;
+            model.receiveShadow = true;
             // model.traverse(child => {if (child.castShadow) model.castShadow = true;});
             // model.traverse(child => {if (child.receiveShadow) model.receiveShadow = true;});
 
@@ -119,8 +119,8 @@ class MyGuiInterface  {
         }
         const allHeavyModelsOpt = {
             visible: true,
-            castShadow: false,
-            receiveShadow: false,
+            castShadow: true,
+            receiveShadow: true,
         };
         allHeavyModelsFolder.add(allHeavyModelsOpt, 'visible').name('Visible')
             .onChange(value => Object.values(heavyModels).forEach(model => {if (model) model.visible = value}));
@@ -238,8 +238,8 @@ class MyGuiInterface  {
         rocksFolder.close();
 
         const coralOpt = {
-            castShadow: false,
-            receiveShadow: false,
+            castShadow: true,
+            receiveShadow: true,
         };
         const coralsFolder = this.datgui.addFolder('Corals');
         coralsFolder.add(this.contents.coralMeshes, 'visible').name('Show Corals');

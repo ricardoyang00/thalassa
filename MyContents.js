@@ -75,8 +75,8 @@ class MyContents  {
                 onLoad: () => {
                     this.colliders.push(SgiUtils.buildColliderGeo(this.apollo).boundsTree);
                     this.apollo.traverse(child => {
-                        child.castShadow = false;
-                        child.receiveShadow = false;
+                        child.castShadow = true;
+                        child.receiveShadow = true;
                     });
                 }
             });
@@ -100,8 +100,8 @@ class MyContents  {
             : new HorsePillar(this.app, () => {
                 this.colliders.push(SgiUtils.buildColliderGeo(this.horse1).boundsTree);
                 this.horse1.traverse(child => {
-                    child.castShadow = false;
-                    child.receiveShadow = false;
+                    child.castShadow = true;
+                    child.receiveShadow = true;
                 })
             });
         this.horse1.scale.setScalar(0.75);
@@ -114,8 +114,8 @@ class MyContents  {
             : new HorsePillar(this.app, () => {
                 this.colliders.push(SgiUtils.buildColliderGeo(this.horse2).boundsTree);
                 this.horse2.traverse(child => {
-                    child.castShadow = false;
-                    child.receiveShadow = false;
+                    child.castShadow = true;
+                    child.receiveShadow = true;
                 });
             });
         this.horse2.scale.setScalar(0.75);
@@ -203,7 +203,7 @@ class MyContents  {
 
         this.bubble = new Bubble(this.app.scene, this.app);
         // this.bubbleLodEnabled = true;
-        this.coralBubblesEnabled = true; // Toggle for coral bubbles
+        this.coralBubblesEnabled = false; // Toggle for coral bubbles
 
         // sand puff particle system
         this.sandPuff = new SandPuffManager(this.app.scene);
@@ -439,8 +439,8 @@ class MyContents  {
 
         this.coralMeshes.traverse((child) => {
             if (child.isMesh) {
-                child.castShadow = false;
-                child.receiveShadow = false;
+                child.castShadow = true;
+                child.receiveShadow = true;
             }
         });
 
@@ -498,8 +498,8 @@ class MyContents  {
                 this.submarine.traverse(child => {
                     if (child.isLight)
                         return;
-                    child.castShadow = false;
-                    child.receiveShadow = false;
+                    child.castShadow = true;
+                    child.receiveShadow = true;
                 })
             }
         });
@@ -626,8 +626,8 @@ class MyContents  {
         });
         this.sharkController.buildShark(() => {
             this.shark.traverse(child => {
-                child.castShadow = false;
-                child.receiveShadow = false;
+                child.castShadow = true;
+                child.receiveShadow = true;
             })
         });
         this.shark = this.sharkController.shark;
@@ -842,7 +842,7 @@ class MyContents  {
         spot4.penumbra = 0.5;
         spot4.decay = 2;
         spot4.distance = 150;
-        spot4.castShadow = false;
+        spot4.castShadow = true;
         spot4.shadow.mapSize.set(2048, 2048);
         spot4.shadow.camera.near = 0.5;
         spot4.shadow.camera.far = 200;
@@ -900,8 +900,8 @@ class MyContents  {
         this.colliders.push(templeBVHGeo.boundsTree);
 
         this.temple.traverse((child) => {
-            child.receiveShadow = false;
-            child.castShadow = false;
+            child.receiveShadow = true;
+            child.castShadow = true;
         });
 
         this.app.scene.add(this.temple);
