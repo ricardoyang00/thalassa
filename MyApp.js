@@ -64,6 +64,9 @@ class MyApp  {
         // FPV Control Panel Overlay
         this.fpvOverlay = null;
         this.fpvVideoElement = null;
+
+        // Time freeze/pause feature
+        this.timeFrozen = false;
     }
 
     /**
@@ -462,6 +465,7 @@ class MyApp  {
                     // Orbit controls allow the camera to orbit around a target.
                     this.controls = new OrbitControls( this.activeCamera, this.renderer.domElement );
                     this.controls.enableZoom = true;
+                    this.controls.target.set(0, 7, -4);
                     this.controls.update();
                 } else {
                     this.controls.object = this.activeCamera;
@@ -557,12 +561,17 @@ class MyApp  {
         this.stats.begin()
         this.updateCameraIfRequired()
 
-        const delta = this.clock.getDelta();
+        let delta = this.clock.getDelta();
         const elapsed = this.clock.getElapsedTime();
+
+        // If time is frozen, pass delta = 0 to stop all animations
+        if (this.timeFrozen) {
+            delta = 0;
+        }
 
         // update the animation if contents were provided
         if (this.activeCamera !== undefined && this.activeCamera !== null) {
-            this.contents.update(/* elapsed, delta */)
+            this.contents.update(this.timeFrozen)
         }
 
         // Update fly camera if active

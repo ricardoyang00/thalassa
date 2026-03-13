@@ -719,6 +719,7 @@ class MyContents  {
             // create and attach the axis to the scene
             this.axis = new MyAxis(this)
             this.app.scene.add(this.axis)
+            this.axis.visible = false;
         }       
 
         // shadows config
@@ -950,7 +951,12 @@ class MyContents  {
         this.fishScale = s;
     }
 
-    update(/* now, dt */) {
+    update(timeFrozen = false) {
+        // When time is frozen, skip all animations
+        if (timeFrozen) {
+            return;
+        }
+        
         const now = Date.now() * 0.001; // Convert to seconds
         const dt = this._lastUpdateTime ? Math.min(0.1, now - this._lastUpdateTime) : 0;
         this._lastUpdateTime = now;

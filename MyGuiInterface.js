@@ -85,6 +85,9 @@ class MyGuiInterface  {
 
         const renderFolder = this.datgui.addFolder('Rendering')
         renderFolder.add(this.app, 'wireframeMode', false).name("Wireframe Mode").onChange( (value) => { this.app.setWireframeMode(value) } );
+        if (this.contents.axis) {
+            renderFolder.add(this.contents.axis, 'visible').name('Show Axis');
+        }
         renderFolder.close()
 
         const heavyModelsFolder = this.datgui.addFolder('Heavy Models');
@@ -396,7 +399,8 @@ class MyGuiInterface  {
             this.datgui.add(this.contents.skylight, 'castShadow').name('Skylight Shadows');
 
             // I just use it to toggle console.log() calls when debugging to avoid flooding the console
-            this.datgui.add(SgiUtils, 'debug').name('Debug');
+            //this.datgui.add(SgiUtils, 'debug').name('Debug');
+            this.datgui.add(this.app, 'timeFrozen', false).name("❄️ Freeze Time");
         }
     }
 }
